@@ -12,12 +12,24 @@ public class TweetsCountByUsers {
     public static final Integer[][] GEOGRID =
             new Integer[GeoTwitterUtils.GRID_VERTICAL_SIZE][GeoTwitterUtils.GRID_HORIZONTAL_SIZE];
 
+    /**
+     * initialize the GEOGRID
+     */
+    static {
+        for (Integer[] row:GEOGRID) {
+            for (Integer cell:  row) {
+                cell = 0;
+            }
+        }
+    }
 
     public void incrementGridCount(Status status) {
         Tuple<Integer, Integer> gridIndex = GeoTwitterUtils.getGridIndex(status.getGeoLocation());
         if (gridIndex.isFullFilled()) {
-            synchronized (GEOGRID[gridIndex.getSecond()][gridIndex.getFirst()]) {
-                GEOGRID[gridIndex.getSecond()][gridIndex.getFirst()]++;
+            if (GEOGRID[gridIndex.getSecond()][gridIndex.getFirst()] != null) {
+                synchronized (GEOGRID[gridIndex.getSecond()][gridIndex.getFirst()]) {
+                    GEOGRID[gridIndex.getSecond()][gridIndex.getFirst()]++;
+                }
             }
         }
     }

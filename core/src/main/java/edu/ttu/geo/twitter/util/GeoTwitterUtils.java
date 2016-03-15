@@ -2,6 +2,8 @@ package edu.ttu.geo.twitter.util;
 
 import twitter4j.GeoLocation;
 
+import java.math.BigDecimal;
+
 /**
  *
  * Created by zhangwei on 3/11/16.
@@ -22,13 +24,13 @@ public class GeoTwitterUtils {
 
     public static final double US_HORIZONTAL_SPAN = US_RIGHT - US_LEFT;
 
-    public static final double US_VERTICAL_SPAN = US_LOWER - US_UPPER;
+    public static final double US_VERTICAL_SPAN = US_UPPER - US_LOWER;
 
-    public static final int GRID_HORIZONTAL_SIZE = Long.valueOf(Math
-            .round(US_HORIZONTAL_SPAN / CELL_LEN_500M)+1).intValue();
+    public static final int GRID_HORIZONTAL_SIZE = BigDecimal.valueOf(US_HORIZONTAL_SPAN / CELL_LEN_500M)
+                                                    .intValue() + 1;
 
-    public static final int GRID_VERTICAL_SIZE = Long.valueOf(Math
-            .round(US_VERTICAL_SPAN / CELL_LEN_500M)+1).intValue();
+    public static final int GRID_VERTICAL_SIZE = BigDecimal.valueOf(US_VERTICAL_SPAN / CELL_LEN_500M)
+                                                    .intValue() + 1;
 
 
     /**
@@ -45,26 +47,16 @@ public class GeoTwitterUtils {
         boolean horz_found = false;
         boolean vert_found = false;
 
-        while (grid_horz <= GRID_HORIZONTAL_SIZE) {
-            double grid_left_boarder = US_LEFT + (grid_horz) * CELL_LEN_500M;
-            double grid_right_boarder = US_LEFT + (grid_horz + 1) * CELL_LEN_500M;
-            if (grid_left_boarder <= location.getLongitude()
-                    && grid_right_boarder > location.getLongitude()) {
-                horz_found = true;
-                break;
-            }
-            grid_horz ++;
+        if (location.getLongitude() >= US_LEFT && location.getLongitude() <= US_RIGHT) {
+            grid_horz = BigDecimal.valueOf((location.getLongitude() - US_LEFT) / CELL_LEN_500M)
+                    .intValue() + 1;
+            horz_found = true;
         }
 
-        while (grid_vert <= GRID_VERTICAL_SIZE) {
-            double grid_lower_boarder = US_LOWER + (grid_vert) * CELL_LEN_500M;
-            double grid_upper_boarder = US_LOWER + (grid_vert + 1) * CELL_LEN_500M;
-            if (grid_lower_boarder <= location.getLatitude()
-                    && grid_upper_boarder > location.getLatitude()) {
-                vert_found = true;
-                break;
-            }
-            grid_vert ++;
+        if (location.getLatitude() >= US_LOWER && location.getLatitude() <= US_UPPER) {
+            grid_vert = BigDecimal.valueOf((location.getLatitude() - US_LOWER) / CELL_LEN_500M)
+                    .intValue() + 1;
+            vert_found = true;
         }
 
         return new Tuple<>(horz_found?grid_horz:null, vert_found?grid_vert:null);

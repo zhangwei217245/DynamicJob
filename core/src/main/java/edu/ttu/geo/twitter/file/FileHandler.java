@@ -2,11 +2,9 @@ package edu.ttu.geo.twitter.file;
 
 import edu.ttu.geo.twitter.data.TweetsCountByUsers;
 import edu.ttu.geo.twitter.data.TwitterDataHandler;
-import edu.ttu.geo.twitter.util.Tuple;
 import x.spirit.core.task.type.NormalTask;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,13 +18,20 @@ import java.util.logging.Logger;
  *
  * @author zhangwei
  */
-public class FileHandler extends NormalTask<Void, Tuple<String, FileFormat>>{
+public class FileHandler extends NormalTask<Void, String>{
 
 
     @Override
-    public Void executeTask(Tuple<String, FileFormat> input) {
-        Path dir = Paths.get(input.getFirst());
+    public Void executeTask(String input) {
+        Path dir = Paths.get(input);
         List<Path> subDir = new ArrayList<>();
+
+        TwitterFileReader tfr = new TwitterFileReader();
+        TwitterDataHandler twitterDataHandler = new TwitterDataHandler();
+        TweetsCountByUsers tweetsCountByUsers = new TweetsCountByUsers();
+        twitterDataHandler.setTweetsCountByUsers(tweetsCountByUsers);
+        tfr.setTwitterDataHandler(twitterDataHandler);
+
         try {
             Files.list(dir).forEach(path -> subDir.add(path));
             // work on each sub directory identified by different date
@@ -35,13 +40,8 @@ public class FileHandler extends NormalTask<Void, Tuple<String, FileFormat>>{
                     Files.list(path).filter(file -> file.endsWith("txt.gz"))
                             .forEach(file -> {
                                 try {
-                                    InputStream inputStream = Files.newInputStream(file);
-                                    Reader reader = input.getSecond().getFileReader(inputStream);
-                                    TwitterFileReader tfr = new TwitterFileReader();
-                                    TwitterDataHandler twitterDataHandler = new TwitterDataHandler();
-                                    TweetsCountByUsers tweetsCountByUsers = new TweetsCountByUsers();
-                                    twitterDataHandler.setTweetsCountByUsers(tweetsCountByUsers);
-                                    tfr.setTwitterDataHandler(twitterDataHandler);
+                                    Reader reader = FileFormat.getReaderBySuffix(file);
+                                    System.out.println("Start to processing file: " + file.toUri());
                                     tfr.processFile(reader);
                                 } catch (IOException e) {
                                     Logger.getLogger(FileHandler.class.getName()).log(Level.SEVERE, null, e);
@@ -53,6 +53,8 @@ public class FileHandler extends NormalTask<Void, Tuple<String, FileFormat>>{
             });
         } catch (IOException e) {
             Logger.getLogger(FileHandler.class.getName()).log(Level.SEVERE, null, e);
+        } finally {
+            tweetsCountByUsers.printGrid();
         }
         return null;
     }
