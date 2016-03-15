@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.ttu.geo.twitter.tiff;
+package x.spirit.dynamicjob.beak.twitter.tiff;
 
 /**
  *

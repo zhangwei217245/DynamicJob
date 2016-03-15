@@ -1,6 +1,4 @@
-package x.spirit.core.task.runner;
-
-import x.spirit.core.App;
+package x.spirit.dynamicjob.core.task.runner;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -39,10 +37,10 @@ public class JavaScriptRunner<V> implements Callable<V>{
             try {
                 result = (V)engine.eval(new FileReader(jsFilePath));
             } catch (ScriptException | FileNotFoundException ex) {
-                Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
             }
         }catch(Throwable t) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, t);
+            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, t);
         }finally {
             return result;
         }

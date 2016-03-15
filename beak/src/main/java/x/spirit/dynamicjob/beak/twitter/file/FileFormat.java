@@ -1,4 +1,4 @@
-package edu.ttu.geo.twitter.file;
+package x.spirit.dynamicjob.beak.twitter.file;
 
 import java.io.*;
 import java.nio.file.Path;

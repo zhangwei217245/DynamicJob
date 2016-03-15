@@ -1,4 +1,4 @@
-package edu.ttu.geo.twitter.util;
+package x.spirit.dynamicjob.beak.twitter.util;
 
 import twitter4j.GeoLocation;
 

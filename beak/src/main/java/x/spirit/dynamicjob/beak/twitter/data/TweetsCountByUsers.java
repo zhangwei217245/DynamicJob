@@ -1,8 +1,9 @@
-package edu.ttu.geo.twitter.data;
+package x.spirit.dynamicjob.beak.twitter.data;
 
-import edu.ttu.geo.twitter.util.GeoTwitterUtils;
-import edu.ttu.geo.twitter.util.Tuple;
+
 import twitter4j.Status;
+import x.spirit.dynamicjob.beak.twitter.util.GeoTwitterUtils;
+import x.spirit.dynamicjob.beak.twitter.util.Tuple;
 
 /**
  * Created by zhangwei on 3/11/16.

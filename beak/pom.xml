@@ -1,0 +1,57 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>DynamicJob</artifactId>
+        <groupId>x.spirit.dynamicjob</groupId>
+        <version>${project.release.version}</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>x.spirit.dynamicjob</groupId>
+    <artifactId>beak</artifactId>
+    <version>${project.release.version}</version>
+    <packaging>jar</packaging>
+
+    <name>beak</name>
+    <url>http://maven.apache.org</url>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>x.spirit.dynamicjob</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <archive>
+                        <index>true</index>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>x.spirit.dynamicjob.beak.App</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+
+</project>

@@ -1,4 +1,4 @@
-package x.spirit.core.task;
+package x.spirit.dynamicjob.core.task;
 
 /**
  * Created by zhangwei on 3/11/16.

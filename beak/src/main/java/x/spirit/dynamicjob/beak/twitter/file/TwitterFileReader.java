@@ -1,10 +1,10 @@
-package edu.ttu.geo.twitter.file;
+package x.spirit.dynamicjob.beak.twitter.file;
 
-import edu.ttu.geo.twitter.data.TwitterDataHandler;
-import edu.ttu.geo.twitter.util.Tuple;
 import twitter4j.Status;
 import twitter4j.TwitterException;
 import twitter4j.TwitterObjectFactory;
+import x.spirit.dynamicjob.beak.twitter.data.TwitterDataHandler;
+import x.spirit.dynamicjob.beak.twitter.util.Tuple;
 
 import java.io.BufferedReader;
 import java.io.Reader;

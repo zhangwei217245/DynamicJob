@@ -1,6 +1,7 @@
-package x.spirit.core.task.runner;
+package x.spirit.dynamicjob.core.task.runner;
 
-import x.spirit.core.task.Task;
+
+import x.spirit.dynamicjob.core.task.Task;
 
 import java.util.concurrent.Callable;
 import java.util.logging.Level;

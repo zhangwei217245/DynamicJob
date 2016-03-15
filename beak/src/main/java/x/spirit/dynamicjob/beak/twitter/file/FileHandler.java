@@ -1,8 +1,9 @@
-package edu.ttu.geo.twitter.file;
+package x.spirit.dynamicjob.beak.twitter.file;
 
-import edu.ttu.geo.twitter.data.TweetsCountByUsers;
-import edu.ttu.geo.twitter.data.TwitterDataHandler;
-import x.spirit.core.task.type.NormalTask;
+
+import x.spirit.dynamicjob.beak.twitter.data.TweetsCountByUsers;
+import x.spirit.dynamicjob.beak.twitter.data.TwitterDataHandler;
+import x.spirit.dynamicjob.core.task.type.NormalTask;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -18,7 +19,7 @@ import java.util.logging.Logger;
  *
  * @author zhangwei
  */
-public class FileHandler extends NormalTask<Void, String>{
+public class FileHandler extends NormalTask<Void, String> {
 
 
     @Override
