@@ -1,7 +1,6 @@
 package x.spirit.dynamicjob.beak;
 
 import x.spirit.dynamicjob.core.task.runner.NormalTaskRunner;
-import x.spirit.dynamicjob.core.utils.ConsoleUtils;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,14 +17,15 @@ public class App
     public static void main( String[] args )
     {
 
-        int corePoolSize = 1000;
-        corePoolSize = Integer.valueOf(
-                ConsoleUtils.readString("Please initialize thread pool with specific pool size : (default=%s)",
-                        corePoolSize));
+        int corePoolSize = 200;
+        //corePoolSize = Integer.valueOf(
+        //        ConsoleUtils.readString("Please initialize thread pool with specific pool size : (default=%s)",
+        //                corePoolSize));
 
         executorService = Executors.newScheduledThreadPool(corePoolSize);
         NormalTaskRunner<Void, String> taskRunner = new NormalTaskRunner<>();
-        taskRunner.setInput(ConsoleUtils.readString("Please enter the input parameter: (%s)", "path to directory"));
+        String dirPath = "/home/wesley/twitterdata";//ConsoleUtils.readString("Please enter the input parameter: (%s)", "path to directory");
+        taskRunner.setInput(dirPath);
         taskRunner.setTaskClass(FileHandler.class);
         executorService.submit(taskRunner);
 
