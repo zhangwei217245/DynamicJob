@@ -2,8 +2,6 @@ package x.spirit.dynamicjob.core.task.runner;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
@@ -34,13 +32,10 @@ public class JavaScriptRunner<V> implements Callable<V>{
                     = new ScriptEngineManager();
             ScriptEngine engine
                     = engineManager.getEngineByName("nashorn");
-            try {
-                result = (V)engine.eval(new FileReader(jsFilePath));
-            } catch (ScriptException | FileNotFoundException ex) {
-                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
-            }
+            result = (V)engine.eval(new FileReader(jsFilePath));
         }catch(Throwable t) {
             Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, t);
+            System.out.println(t);
         }finally {
             return result;
         }

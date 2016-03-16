@@ -8,7 +8,7 @@ import java.util.zip.GZIPInputStream;
  * Created by zhangwei on 3/11/16.
  *
  */
-public enum FileFormat {
+public enum TweetsFileFormat {
 
     TEXT {
         @Override
@@ -49,9 +49,9 @@ public enum FileFormat {
 
 
     public static Reader getReaderBySuffix(Path filePath) throws IOException{
-        if (filePath.endsWith(".txt")) {
+        if (filePath.toUri().toString().endsWith(".txt")) {
             return TEXT.getFileReader(filePath.toFile());
-        } else if (filePath.endsWith(".gz")) {
+        } else if (filePath.toUri().toString().endsWith(".gz")) {
             return GUNZIP.getFileReader(filePath.toFile());
         }
         return null;

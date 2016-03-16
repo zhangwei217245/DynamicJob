@@ -17,26 +17,34 @@ public class TweetsCountByUsers {
      * initialize the GEOGRID
      */
     static {
-        for (Integer[] row:GEOGRID) {
-            for (Integer cell:  row) {
-                cell = 0;
+        for (int i = 0; i < GEOGRID.length; i++) {
+            for (int j = 0; j < GEOGRID[i].length; j++) {
+                GEOGRID[i][j] = new Integer(0);
             }
         }
+
+
     }
 
     public void incrementGridCount(Status status) {
         Tuple<Integer, Integer> gridIndex = GeoTwitterUtils.getGridIndex(status.getGeoLocation());
+        if (gridIndex == null) {
+            return;
+        }
         if (gridIndex.isFullFilled()) {
             if (GEOGRID[gridIndex.getSecond()][gridIndex.getFirst()] != null) {
+                System.out.println(GEOGRID[gridIndex.getSecond()][gridIndex.getFirst()]);
                 synchronized (GEOGRID[gridIndex.getSecond()][gridIndex.getFirst()]) {
                     GEOGRID[gridIndex.getSecond()][gridIndex.getFirst()]++;
                 }
             }
         }
+        //printGrid();
     }
 
 
     public void printGrid() {
+        System.out.println("\n=======================\n");
         for (Integer[] row : GEOGRID) {
             for (Integer cell : row) {
                 System.out.print(cell + "\t");

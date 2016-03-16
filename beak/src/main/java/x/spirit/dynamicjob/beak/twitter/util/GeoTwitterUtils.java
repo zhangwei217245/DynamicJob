@@ -47,6 +47,10 @@ public class GeoTwitterUtils {
         boolean horz_found = false;
         boolean vert_found = false;
 
+        if (location == null) {
+            return null;
+        }
+
         if (location.getLongitude() >= US_LEFT && location.getLongitude() <= US_RIGHT) {
             grid_horz = BigDecimal.valueOf((location.getLongitude() - US_LEFT) / CELL_LEN_500M)
                     .intValue() + 1;

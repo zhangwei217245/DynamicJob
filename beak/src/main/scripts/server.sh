@@ -26,7 +26,7 @@ LOG_PATH=$PROCESSOR_HOME/logs
 LIB_PATH=$PROCESSOR_HOME/lib
 #
 mkdir -p $LOG_PATH
-touch $LOG_PATH/stdout.log
+#touch $LOG_PATH/stdout.log
 
 #
 CLASS_NAME=x.spirit.dynamicjob.beak.App
@@ -37,8 +37,8 @@ do
     CLASS_PATH=$CLASS_PATH:$f;
 done
 
-#DEBUG_ARGS="-agentlib:jdwp=transport=dt_socket,address=8759,server=y,suspend=y";
-DEBUG_ARGS="";
+DEBUG_ARGS="-agentlib:jdwp=transport=dt_socket,address=8759,server=y,suspend=y";
+#DEBUG_ARGS="";
 #
 PROGRAM_ARGS="-Xms4g -Xmx4g  -Xmn1g -Dapp.name=${SERVER_NAME} -Dapp.base=${PROCESSOR_HOME} -XX:+UseConcMarkSweepGC -server -XX:SurvivorRatio=5 -XX:CMSInitiatingOccupancyFraction=80 -XX:+PrintTenuringDistribution  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime ${DEBUG_ARGS} -Xloggc:./gc.log"
 PIDFILE=/tmp/beak.pid
@@ -50,9 +50,9 @@ STDERR=$LOG_PATH/stderr.${HOST}.log
 #STDOUT=/dev/null
 #STDERR=/dev/null
 
-#if [ "$(uname)" == "Darwin" ]; then
-#    JAVA_HOME=`/usr/libexec/java_home -v 1.7`
-#fi
+if [ "$(uname)" == "Darwin" ]; then
+    JAVA_HOME=`/usr/libexec/java_home -v 1.8`
+fi
 
 start()
 {
@@ -61,8 +61,8 @@ if test -e $PIDFILE
                 echo The $SERVER_NAME Server already Started!
         else
                 echo Start The $SERVER_NAME Server.... $@
-                #>>$STDOUT 2>>$STDERR # $JAVA_HOME/bin/
-                java $PROGRAM_ARGS -classpath $CLASS_PATH $CLASS_NAME -stopSign "${PROCESSOR_HOME}"/stopread $@ &
+                # #
+                $JAVA_HOME/bin/java $PROGRAM_ARGS -classpath $CLASS_PATH $CLASS_NAME -stopSign "${PROCESSOR_HOME}"/stopread $@ >>$STDOUT 2>>$STDERR &
                 echo $!>$PIDFILE
                 sleep 2
                 TPID=`cat $PIDFILE`
@@ -70,10 +70,10 @@ if test -e $PIDFILE
                 if test $STATUS
                         then
                                 echo The $SERVER_NAME Server Started with pid=$STATUS!
-				startreading
+				                startreading
                         else
                                 rm -f $PIDFILE
-				echo The $SERVER_NAME Server Start Failed
+				                echo The $SERVER_NAME Server Start Failed
                                 echo please Check the system
                                 echo
                 fi

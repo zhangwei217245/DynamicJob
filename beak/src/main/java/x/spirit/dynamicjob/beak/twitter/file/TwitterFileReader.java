@@ -25,8 +25,8 @@ public class TwitterFileReader {
     public void processFile(Reader reader) {
 
         BufferedReader in = new BufferedReader(reader);
-        in.lines().map(line -> getStatusFromLine(line))
-                .forEach(data -> twitterDataHandler.handleTwitterData(data));
+        in.lines().filter(line -> line.contains("|") && line.length()>100).map(line -> getStatusFromLine(line))
+                .filter(tuple -> tuple != null ).forEach(data -> twitterDataHandler.handleTwitterData(data));
 
     }
 
@@ -36,13 +36,16 @@ public class TwitterFileReader {
      * @return
      */
     private Tuple<Status, Long> getStatusFromLine(String line) {
+        String[] pair = line.split("\\|");
+        long timestamp = Long.valueOf(pair[0]);
+        String statusJson = pair[1];
         try {
-            String[] pair = line.split("\\|");
-            long timestamp = Long.valueOf(pair[0]);
-            String statusJson = pair[1];
+
             Status status = TwitterObjectFactory.createStatus(statusJson);
             return new Tuple<>(status, timestamp);
         } catch (TwitterException e) {
+            System.out.println(statusJson);
+            //e.printStackTrace();
             return null;
         }
     }

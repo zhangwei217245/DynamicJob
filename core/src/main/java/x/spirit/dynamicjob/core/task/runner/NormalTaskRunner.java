@@ -20,8 +20,10 @@ public class NormalTaskRunner<V, S> implements Callable<V> {
         Task task = null;
         try {
             task = (Task) taskClass.newInstance();
+            System.out.println("Task initialized! " + task.getClass());
             task.setInput(input);
-        } catch (InstantiationException | IllegalAccessException ex) {
+        } catch (Throwable ex) {
+            ex.printStackTrace();
             Logger.getLogger(NormalTaskRunner.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             return task;
@@ -30,8 +32,17 @@ public class NormalTaskRunner<V, S> implements Callable<V> {
 
     @Override
     public V call() throws Exception {
+        V result = null;
         Task<V, S> task = initializeTask();
-        return task.execute();
+        if (task != null) {
+            try {
+                result = task.execute();
+            } catch (Throwable t) {
+                t.printStackTrace();
+                Logger.getLogger(NormalTaskRunner.class.getName()).log(Level.SEVERE, null, t);
+            }
+        }
+        return result;
     }
 
     public S getInput() {
