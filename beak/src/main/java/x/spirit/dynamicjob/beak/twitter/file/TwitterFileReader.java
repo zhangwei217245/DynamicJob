@@ -1,7 +1,6 @@
 package x.spirit.dynamicjob.beak.twitter.file;
 
 import twitter4j.Status;
-import twitter4j.TwitterException;
 import twitter4j.TwitterObjectFactory;
 import x.spirit.dynamicjob.beak.twitter.data.TwitterDataHandler;
 import x.spirit.dynamicjob.beak.twitter.util.Tuple;
@@ -25,8 +24,11 @@ public class TwitterFileReader {
     public void processFile(Reader reader) {
 
         BufferedReader in = new BufferedReader(reader);
-        in.lines().filter(line -> line.contains("|") && line.length()>100).map(line -> getStatusFromLine(line))
-                .filter(tuple -> tuple != null ).forEach(data -> twitterDataHandler.handleTwitterData(data));
+        in.lines().filter(line -> line.contains("|")).forEach(line -> {
+                twitterDataHandler.handleTwitterData(getStatusFromLine(line));
+
+        });
+        //.filter(tuple -> tuple != null ).forEach(data -> twitterDataHandler.handleTwitterData(data));
 
     }
 
@@ -35,17 +37,15 @@ public class TwitterFileReader {
      * @param line
      * @return
      */
-    private Tuple<Status, Long> getStatusFromLine(String line) {
-        String[] pair = line.split("\\|");
-        long timestamp = Long.valueOf(pair[0]);
-        String statusJson = pair[1];
-        try {
-
+    private Tuple<String, Long> getStatusFromLine(String line) {
+        try{
+            String[] pair = line.split("\\|");
+            long timestamp = Long.valueOf(pair[0]);
+            String statusJson = pair[1];
             Status status = TwitterObjectFactory.createStatus(statusJson);
-            return new Tuple<>(status, timestamp);
-        } catch (TwitterException e) {
-            System.out.println(statusJson);
-            //e.printStackTrace();
+            return new Tuple<>(statusJson, timestamp);
+        } catch (Throwable t) {
+            System.out.println(" ===== "+ t.getMessage() +"====\n" +  line + "\n===== "+ t.getMessage() +"====");
             return null;
         }
     }

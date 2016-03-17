@@ -2,6 +2,10 @@ package x.spirit.dynamicjob.core.task.type;
 
 
 import x.spirit.dynamicjob.core.task.Task;
+import x.spirit.dynamicjob.core.task.runner.NormalTaskRunner;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by zhangwei on 3/11/16.
@@ -13,7 +17,14 @@ public abstract class NormalTask<T, S> implements Task<T, S> {
 
     @Override
     public T execute() {
-        return executeTask(input);
+        T result = null;
+        try{
+            result = executeTask(input);
+        }catch (Throwable t) {
+            t.printStackTrace();
+            Logger.getLogger(NormalTask.class.getName()).log(Level.SEVERE, null, t);
+        }
+        return result;
     }
 
     public abstract T executeTask(S input);

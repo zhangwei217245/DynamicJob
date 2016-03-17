@@ -37,8 +37,8 @@ do
     CLASS_PATH=$CLASS_PATH:$f;
 done
 
-DEBUG_ARGS="-agentlib:jdwp=transport=dt_socket,address=8759,server=y,suspend=y";
-#DEBUG_ARGS="";
+#DEBUG_ARGS="-agentlib:jdwp=transport=dt_socket,address=8759,server=y,suspend=y";
+DEBUG_ARGS="";
 #
 PROGRAM_ARGS="-Xms4g -Xmx4g  -Xmn1g -Dapp.name=${SERVER_NAME} -Dapp.base=${PROCESSOR_HOME} -XX:+UseConcMarkSweepGC -server -XX:SurvivorRatio=5 -XX:CMSInitiatingOccupancyFraction=80 -XX:+PrintTenuringDistribution  -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime ${DEBUG_ARGS} -Xloggc:./gc.log"
 PIDFILE=/tmp/beak.pid

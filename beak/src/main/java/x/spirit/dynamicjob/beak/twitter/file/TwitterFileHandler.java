@@ -5,8 +5,7 @@ import x.spirit.dynamicjob.beak.twitter.data.TweetsCountByUsers;
 import x.spirit.dynamicjob.beak.twitter.data.TwitterDataHandler;
 import x.spirit.dynamicjob.core.task.type.NormalTask;
 
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,18 +48,31 @@ public class TwitterFileHandler extends NormalTask<Void, String> {
                                     Logger.getLogger(TwitterFileHandler.class.getName()).log(Level.SEVERE, null, e);
                                 }
                             });
-                } catch (IOException e) {
+                } catch (Throwable t) {
                     System.out.println("Exception happened on " + path);
-                    Logger.getLogger(TwitterFileHandler.class.getName()).log(Level.SEVERE, null, e);
+                    Logger.getLogger(TwitterFileHandler.class.getName()).log(Level.SEVERE, null, t);
                 }
-                tweetsCountByUsers.printGrid();
+                //
             });
-        } catch (IOException e) {
-            e.printStackTrace();
-            Logger.getLogger(TwitterFileHandler.class.getName()).log(Level.SEVERE, null, e);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            Logger.getLogger(TwitterFileHandler.class.getName()).log(Level.SEVERE, null, t);
         } finally {
 
         }
+
+        printGridToFile(new File("/home/wesley/twitterdata/report.csv"));
+
         return null;
+    }
+
+    private void printGridToFile(File file) {
+        try {
+            file.deleteOnExit();
+            file.createNewFile();
+            TweetsCountByUsers.printGrid(new PrintStream(file));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

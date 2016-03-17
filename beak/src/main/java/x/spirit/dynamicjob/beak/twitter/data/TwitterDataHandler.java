@@ -5,7 +5,6 @@
  */
 package x.spirit.dynamicjob.beak.twitter.data;
 
-import twitter4j.Status;
 import x.spirit.dynamicjob.beak.twitter.util.Tuple;
 
 /**
@@ -16,8 +15,10 @@ public class TwitterDataHandler {
 
     TweetsCountByUsers tweetsCountByUsers;
 
-    public void handleTwitterData (Tuple<Status, Long> data){
-        tweetsCountByUsers.incrementGridCount(data.getFirst());
+    public void handleTwitterData (Tuple<String, Long> data){
+        if (data != null && data.getFirst() != null) {
+            tweetsCountByUsers.incrementGridCount(data.getFirst());
+        }
     }
 
     public void setTweetsCountByUsers(TweetsCountByUsers tweetsCountByUsers) {

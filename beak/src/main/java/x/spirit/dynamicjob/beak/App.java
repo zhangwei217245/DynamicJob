@@ -5,6 +5,7 @@ import x.spirit.dynamicjob.core.task.runner.NormalTaskRunner;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 
 /**
@@ -29,12 +30,9 @@ public class App
         taskRunner.setInput(dirPath);
         taskRunner.setTaskClass(TwitterFileHandler.class);
         System.out.println("Ready to submit task:");
-        //executorService.submit(taskRunner);
-        try {
-            taskRunner.call();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+        Future<Void> taskFuture = executorService.submit(taskRunner);
+
         System.out.println("Task submitted!");
 
         Runtime.getRuntime().addShutdownHook(new Thread(){
@@ -45,6 +43,16 @@ public class App
                 }
             }
         });
+        while (true) {
+            if (taskFuture.isDone()) {
+                System.exit(0);
+            }
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+            }
+        }
+
 
     }
 }
