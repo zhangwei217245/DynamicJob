@@ -28,7 +28,6 @@ public class TwitterFileReader {
                 twitterDataHandler.handleTwitterData(getStatusFromLine(line));
 
         });
-        //.filter(tuple -> tuple != null ).forEach(data -> twitterDataHandler.handleTwitterData(data));
 
     }
 
@@ -41,7 +40,7 @@ public class TwitterFileReader {
         try{
             String[] pair = line.split("\\|");
             long timestamp = Long.valueOf(pair[0]);
-            String statusJson = pair[1];
+            String statusJson = pair[1].replace("\r", "").replace("\n", "");
             Status status = TwitterObjectFactory.createStatus(statusJson);
             return new Tuple<>(statusJson, timestamp);
         } catch (Throwable t) {
