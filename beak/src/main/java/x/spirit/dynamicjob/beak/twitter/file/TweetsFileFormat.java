@@ -1,6 +1,12 @@
 package x.spirit.dynamicjob.beak.twitter.file;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.file.Path;
 import java.util.zip.GZIPInputStream;
 
