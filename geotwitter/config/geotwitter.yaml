@@ -2,8 +2,9 @@ default:
   server:
     port: 3000
   database:
-    host: 'localhost'
-    port: 27017
+    host: '127.0.0.1'
+    port: 6379
+    db: 0
   filedir: '/Users/zhangwei/Documents/docs'
 development:
   database:
