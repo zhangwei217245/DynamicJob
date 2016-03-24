@@ -1,5 +1,9 @@
 /**
  * Created by zhangwei on 3/24/16.
+ *
+ * Caution: More memory may be needed : --max_old_space_size=2048(2GB)
+ *
+ * --max_new_space_size and/or --max_old_space_size
  */
 const gdal = require('gdal');
 const config = require('node-yaml-config');
