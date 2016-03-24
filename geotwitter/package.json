@@ -1,0 +1,34 @@
+{
+  "name": "geotwitter",
+  "version": "1.0.0",
+  "description": "A lightweight geospatial twitter data analyzing software ",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "keywords": [
+    "geospatial",
+    "TTU",
+    "twitter"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/zhangwei217245/DynamicJob/tree/master/geotwitter"
+  },
+  "author": "zhangwei217245@gmail.com x-spirit.zhang@ttu.edu",
+  "license": "ISC",
+  "dependencies":{
+    "mongodb":"~2.0",
+    "twitter": "1.2.5",
+    "redis" : "2.5.3",
+    "readline-stream": "1.0.1",
+    "config": "1.19.0",
+    "node-yaml-config": "0.0.4",
+    "kerberos": "0.0.19",
+    "walk" : "2.3.9",
+    "json-path": "0.1.3",
+    "string" : "3.3.1",
+    "synchronize": "0.9.15",
+    "sleep":"3.0.1"
+  }
+}
