@@ -2,7 +2,7 @@
  * Created by zhangwei on 3/24/16.
  */
 const config = require('node-yaml-config');
-var conf = config.load('./config/geotwitter.yaml', 'default');
+var conf = config.load('./config/geotwitter.yaml', 'production');
 const scale = require('./scale/scale').scale(500);
 const redis = require('redis').createClient(conf.database);
 const S=require('string');
