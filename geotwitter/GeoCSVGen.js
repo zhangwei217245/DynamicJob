@@ -9,15 +9,17 @@ const S=require('string');
 
 var size = scale.size();
 
-scale.walkGrids(function (x, y) {
-    (function (i,j) {
-        var key = i+','+j;
-        redis.scard(key, function (err, data) {
-            if (j==0) {
-                console.log("\n")
-            }
-            console.log(data+",");
-            console.log(key, data);
-        })
-    })(x,y)
-})
+for (var x = 0; x < size[0]; x++) {
+    for (var y = 0; y < size[1]; y++){
+        (function (i,j) {
+            var key = i+','+j;
+            redis.scard(key, function (err, data) {
+                if (j==0) {
+                    console.log("\n")
+                }
+                console.log(data+",");
+                console.log(key, data);
+            })
+        })(x,y)
+    }
+}
