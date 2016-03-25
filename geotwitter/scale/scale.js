@@ -21,9 +21,9 @@
 
     const US_VERTICAL_SPAN = US_UPPER - US_LOWER;
 
-    const GRID_HORIZONTAL_SIZE = Math.ceil(US_HORIZONTAL_SPAN / CELL_LEN_500M)
+    const GRID_HORIZONTAL_SIZE = Math.ceil(US_HORIZONTAL_SPAN / CELL_LEN_500M) + 1
 
-    const GRID_VERTICAL_SIZE = Math.ceil(US_VERTICAL_SPAN / CELL_LEN_500M)
+    const GRID_VERTICAL_SIZE = Math.ceil(US_VERTICAL_SPAN / CELL_LEN_500M) + 1
 
     function ScaleService(scale) {
         console.log("ScaleService is called", scale)
