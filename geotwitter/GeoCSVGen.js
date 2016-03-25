@@ -17,7 +17,7 @@ scale.walkGrids(function (x, y) {
                 console.log("\n")
             }
             console.log(data+",");
-
+            console.log(key, data);
         })
     })(x,y)
 })
