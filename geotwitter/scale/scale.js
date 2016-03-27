@@ -78,5 +78,3 @@ exports.scale=function(scale){
 
 
 }())
-
-
