@@ -21,35 +21,43 @@ gdal.drivers.forEach(function (driver, i) {
 })
 
 var size = scale.size();
-var dataSet = GDALDriver.create("./pic.tif", 100, 100, 1, gdal.GDT_Int32)
+var dataSet = GDALDriver.create("./pic.tif", size[0], size[1], 1, gdal.GDT_Byte)
 
 
 // dataSet.bands.create(gdal.GDT_Byte)
 dataSet.bands.forEach(function (item, i) {
+  item.noDataValue=0
   console.log(item)
   //item.colorInterpretation="Blue";
-  for (var i = 0 ; i < item.size.x; i++) {
-    for (var j = 0; j < item.size.y; j++) {
-      item.pixels.set(i,j,2147483333);
-    }
-  }
-    // redis.KEYS('*', function(err, keylist){
-    //     keylist.forEach(function (key, i) {
-    //         redis.scard(key, function (err1, data) {
-    //             var x = parseInt(key.split(',')[0]);
-    //             var y = parseInt(key.split(',')[1]);
-    //             var gr_val = 1000 + parseInt(data);
-    //             //console.log(x, y, gr_val)
-    //             item.pixels.set(x, y, gr_val);
-    //         })
-    //     })
-    // })
+  //for (var i = 0 ; i < item.size.x; i++) {
+    //for (var j = 0; j < item.size.y; j++) {
+      //item.pixels.set(i,j,2147483333);
+    //}
+  //}
+     redis.KEYS('*', function(err, keylist){
+         keylist.forEach(function (key, i) {
+             redis.scard(key, function (err1, data) {
+                 var x = parseInt(key.split(',')[0]);
+                 var y = parseInt(key.split(',')[1]);
+                 var gr_val = parseInt(data);
+                 //console.log(x, y, gr_val)
+                 item.pixels.write(x, y, 1, 1, Int8Array.of(gr_val))
+		 item.flush();
+             })
+         })
+	 dataSet.flush();
+     })
 })
 
 process.on('exit', function(code){
-    dataSet.clone();
+    dataSet.bands.forEach(function (item, i) {
+	item.flush();	
+    })
+    dataSet.flush();
+    dataSet.close();
+    console.log("exit on code ", code)
 })
-//dataSet.close();
 
-
-//process.exit(0);
+setTimeout(function(){
+	process.exit(0);
+}, 10 * 60 * 1000)
