@@ -26,29 +26,26 @@ var dataSet = GDALDriver.create("./pic.tif", size[0], size[1], 1, gdal.GDT_Byte)
 
 // dataSet.bands.create(gdal.GDT_Byte)
 dataSet.bands.forEach(function (item, i) {
-  item.noDataValue=0
+  item.noDataValue=255// The entire picture should feature a white background.
   console.log(item)
-  //item.colorInterpretation="Blue";
-  //for (var i = 0 ; i < item.size.x; i++) {
-    //for (var j = 0; j < item.size.y; j++) {
-      //item.pixels.set(i,j,2147483333);
-    //}
-  //}
      redis.KEYS('*', function(err, keylist){
          keylist.forEach(function (key, i) {
              redis.scard(key, function (err1, data) {
                  var x = parseInt(key.split(',')[0]);
                  var y = parseInt(key.split(',')[1]);
-                 var gr_val = parseInt(data);
-                 //console.log(x, y, gr_val)
+                 // The more the people were posting tweets, the darker the color should be.
+                 // Then the picture should be easily to observe.
+                 var gr_val = 255 - parseInt(data);
                  item.pixels.write(x, y, 1, 1, Int8Array.of(gr_val))
-		 item.flush();
+                 // Flush every pixel's change onto disk.
+                 item.flush();
              })
          })
-	 dataSet.flush();
+         dataSet.flush();
      })
 })
 
+// When the program exits, it should flush the data onto the disk.
 process.on('exit', function(code){
     dataSet.bands.forEach(function (item, i) {
 	item.flush();	
@@ -58,6 +55,7 @@ process.on('exit', function(code){
     console.log("exit on code ", code)
 })
 
+//The program should exit in 10 min.
 setTimeout(function(){
 	process.exit(0);
 }, 10 * 60 * 1000)
