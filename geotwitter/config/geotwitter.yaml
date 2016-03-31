@@ -6,6 +6,7 @@ default:
     port: 6379
     db: 0
   filedir: '/home/wesley/Data'
+  scale: 500
 development:
   database:
     db: 'dev_db'
@@ -14,11 +15,10 @@ test:
     db: 'test_db'
 production:
   server:
-    port: 8000
+    port: 3000
   database:
-    db: 'prod_db'
-    user: 'dbuser'
-    password: 'pass'
-  cache:
-    dir: 'static'
-  filedir: '/home/wesley/twitterdata'
+    host: '127.0.0.1'
+    port: 6379
+    db: 0
+  filedir: '/home/wesley/Data'
+  scale: 500
