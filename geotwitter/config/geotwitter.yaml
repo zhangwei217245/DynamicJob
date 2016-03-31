@@ -6,6 +6,7 @@ default:
     port: 6379
     db: 0
   filedir: '/Users/zhangwei/Documents/docs'
+  scale: 500
 development:
   database:
     db: 'dev_db'

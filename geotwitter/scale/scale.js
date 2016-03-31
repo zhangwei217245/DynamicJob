@@ -15,18 +15,28 @@
     // 1km 30 Arc-Second in decimal degrees
     const CELL_LEN_1KM = 0.008333;
 
-    const CELL_LEN_500M = CELL_LEN_1KM / 2;
-
     const US_HORIZONTAL_SPAN = US_RIGHT - US_LEFT;
 
     const US_VERTICAL_SPAN = US_UPPER - US_LOWER;
 
-    const GRID_HORIZONTAL_SIZE = Math.ceil(US_HORIZONTAL_SPAN / CELL_LEN_500M) + 1
+    var multiplicand = 1;
 
-    const GRID_VERTICAL_SIZE = Math.ceil(US_VERTICAL_SPAN / CELL_LEN_500M) + 1
+    var CELL_LEN_SCALE = CELL_LEN_1KM / multiplicand;
+
+    var GRID_HORIZONTAL_SIZE = Math.ceil(US_HORIZONTAL_SPAN / CELL_LEN_SCALE) + 1
+
+    var GRID_VERTICAL_SIZE = Math.ceil(US_VERTICAL_SPAN / CELL_LEN_SCALE) + 1
+
 
     function ScaleService(scale) {
-        console.log("ScaleService is called", scale)
+        console.log("ScaleService is called. Scale = " + scale + " Meters.")
+        multiplicand = scale / 1000;
+        CELL_LEN_SCALE = CELL_LEN_1KM / multiplicand
+        GRID_HORIZONTAL_SIZE = Math.ceil(US_HORIZONTAL_SPAN / CELL_LEN_SCALE) + 1
+        GRID_VERTICAL_SIZE = Math.ceil(US_VERTICAL_SPAN / CELL_LEN_SCALE) + 1
+        console.log("CELL_LEN_SCALE=",CELL_LEN_SCALE)
+        console.log("GRID_HORIZONTAL_SIZE=",GRID_HORIZONTAL_SIZE)
+        console.log("GRID_VERTICAL_SIZE=",GRID_VERTICAL_SIZE)
     };
 
 
@@ -58,12 +68,12 @@
         }
 
         if (coordinates[0] >= US_LEFT && coordinates[0] <= US_RIGHT) {
-            grid_horz = Math.ceil((coordinates[0] - US_LEFT) / CELL_LEN_500M)
+            grid_horz = Math.ceil((coordinates[0] - US_LEFT) / CELL_LEN_SCALE)
             horz_found = true;
         }
 
         if (coordinates[1] >= US_LOWER && coordinates[1] <= US_UPPER) {
-            grid_vert = Math.ceil((coordinates[1] - US_LOWER) / CELL_LEN_500M)
+            grid_vert = Math.ceil((coordinates[1] - US_LOWER) / CELL_LEN_SCALE)
             vert_found = true;
         }
 
