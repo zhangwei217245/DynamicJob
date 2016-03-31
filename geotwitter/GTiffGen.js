@@ -5,10 +5,25 @@
  *
  * --max_new_space_size and/or --max_old_space_size
  */
+
+const commandLineArgs = require('command-line-args');
+
+var cli = commandLineArgs([
+    { name: 'help', alias: 'h', type: Boolean },
+    { name: 'config', type: String, multiple: false, defaultOption: false },
+])
+
+var options = cli.parse();
+
+if (options.help) {
+    cli.getUsage();
+    process.exit(0);
+}
+
 const gdal = require('gdal');
 const config = require('node-yaml-config');
-var conf = config.load('./config/geotwitter.yaml', 'default');
-const scale = require('./scale/scale').scale(500);
+var conf = config.load('./config/geotwitter.yaml', options.config);
+const scale = require('./scale/scale').scale(conf.scale);
 const redis = require('redis').createClient(conf.database);
 const S=require('string');
 
@@ -23,7 +38,8 @@ gdal.drivers.forEach(function (driver, i) {
 var size = scale.size();
 var dataSet = GDALDriver.create("./pic.tif", size[0], size[1], 1, gdal.GDT_Byte)
 
-console.log(dataSet);
+//console.log(dataSet);
+dataSet.geoTransform = scale.getGeoTransform();
 
 // dataSet.bands.create(gdal.GDT_Byte)
 dataSet.bands.forEach(function (item, i) {
@@ -33,7 +49,7 @@ dataSet.bands.forEach(function (item, i) {
          keylist.forEach(function (key, i) {
              redis.scard(key, function (err1, data) {
                  var x = parseInt(key.split(',')[0]);
-                 var y = parseInt(key.split(',')[1]);
+                 var y = size[1] - parseInt(key.split(',')[1]);
                  // The more the people were posting tweets, the darker the color should be.
                  // Then the picture should be easily to observe.
                  var gr_val = parseInt(data);

@@ -7,12 +7,6 @@ default:
     db: 0
   filedir: '/home/wesley/Data'
   scale: 500
-development:
-  database:
-    db: 'dev_db'
-test:
-  database:
-    db: 'test_db'
 production:
   server:
     port: 3000

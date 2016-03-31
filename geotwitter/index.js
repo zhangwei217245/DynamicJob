@@ -1,6 +1,19 @@
 /**
  * Created by zhangwei on 3/23/16.
  */
+const commandLineArgs = require('command-line-args');
+
+var cli = commandLineArgs([
+    { name: 'help', alias: 'h', type: Boolean },
+    { name: 'config', type: String, multiple: false, defaultOption: false },
+])
+
+var options = cli.parse();
+
+if (options.help) {
+    cli.getUsage();
+    process.exit(0);
+}
 
 const fs=require('fs');
 const readline = require('readline');
@@ -9,13 +22,14 @@ const walk=require('walk');
 const config = require('node-yaml-config');
 const path = require('path');
 const S=require('string');
-const sleep = require('sleep');
 const sync = require('sync');
 
-const scale = require('./scale/scale').scale(500);
+var conf = config.load('./config/geotwitter.yaml', options.config);
+
+const scale = require('./scale/scale').scale(conf.scale);
 
 
-var conf = config.load('./config/geotwitter.yaml', 'default');
+
 
 const redis = require('redis').createClient(conf.database);
 

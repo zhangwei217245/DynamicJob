@@ -13,28 +13,28 @@
 
     const US_RIGHT = -65.983272667;
     // 1km 30 Arc-Second in decimal degrees
-    const CELL_LEN_1KM = 0.008333;
+    const DEGREE_1KM = 0.008333;
 
     const US_HORIZONTAL_SPAN = US_RIGHT - US_LEFT;
 
     const US_VERTICAL_SPAN = US_UPPER - US_LOWER;
 
-    var multiplicand = 1;
+    var multiple = 1;
 
-    var CELL_LEN_SCALE = CELL_LEN_1KM / multiplicand;
+    var CELL_DEGREE = DEGREE_1KM * multiple;
 
-    var GRID_HORIZONTAL_SIZE = Math.ceil(US_HORIZONTAL_SPAN / CELL_LEN_SCALE) + 1
+    var GRID_HORIZONTAL_SIZE = Math.ceil(US_HORIZONTAL_SPAN / CELL_DEGREE) + 1
 
-    var GRID_VERTICAL_SIZE = Math.ceil(US_VERTICAL_SPAN / CELL_LEN_SCALE) + 1
+    var GRID_VERTICAL_SIZE = Math.ceil(US_VERTICAL_SPAN / CELL_DEGREE) + 1
 
 
     function ScaleService(scale) {
         console.log("ScaleService is called. Scale = " + scale + " Meters.")
-        multiplicand = scale / 1000;
-        CELL_LEN_SCALE = CELL_LEN_1KM / multiplicand
-        GRID_HORIZONTAL_SIZE = Math.ceil(US_HORIZONTAL_SPAN / CELL_LEN_SCALE) + 1
-        GRID_VERTICAL_SIZE = Math.ceil(US_VERTICAL_SPAN / CELL_LEN_SCALE) + 1
-        console.log("CELL_LEN_SCALE=",CELL_LEN_SCALE)
+        multiple = scale / 1000;
+        CELL_DEGREE = DEGREE_1KM * multiple
+        GRID_HORIZONTAL_SIZE = Math.ceil(US_HORIZONTAL_SPAN / CELL_DEGREE) + 1
+        GRID_VERTICAL_SIZE = Math.ceil(US_VERTICAL_SPAN / CELL_DEGREE) + 1
+        console.log("CELL_LEN_SCALE=",CELL_DEGREE)
         console.log("GRID_HORIZONTAL_SIZE=",GRID_HORIZONTAL_SIZE)
         console.log("GRID_VERTICAL_SIZE=",GRID_VERTICAL_SIZE)
     };
@@ -46,6 +46,10 @@
 
     ScaleService.prototype.boundings= function () {
         return [US_UPPER, US_LOWER, US_LEFT, US_RIGHT];
+    }
+
+    ScaleService.prototype.getGeoTransform=function(){
+        return Array.of(US_LEFT, CELL_DEGREE, 0, US_UPPER, 0, 0 - CELL_DEGREE);
     }
 
     ScaleService.prototype.walkGrids= function (callback) {
@@ -68,12 +72,12 @@
         }
 
         if (coordinates[0] >= US_LEFT && coordinates[0] <= US_RIGHT) {
-            grid_horz = Math.ceil((coordinates[0] - US_LEFT) / CELL_LEN_SCALE)
+            grid_horz = Math.ceil((coordinates[0] - US_LEFT) / CELL_DEGREE)
             horz_found = true;
         }
 
         if (coordinates[1] >= US_LOWER && coordinates[1] <= US_UPPER) {
-            grid_vert = Math.ceil((coordinates[1] - US_LOWER) / CELL_LEN_SCALE)
+            grid_vert = Math.ceil((coordinates[1] - US_LOWER) / CELL_DEGREE)
             vert_found = true;
         }
 
