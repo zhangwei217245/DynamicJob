@@ -5,8 +5,7 @@ default:
     host: '127.0.0.1'
     port: 6379
     db: 0
-  filedir: '/Users/zhangwei/Documents/docs'
-  scale: 500
+  filedir: '/home/wesley/Data'
 development:
   database:
     db: 'dev_db'

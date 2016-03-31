@@ -23,10 +23,11 @@ gdal.drivers.forEach(function (driver, i) {
 var size = scale.size();
 var dataSet = GDALDriver.create("./pic.tif", size[0], size[1], 1, gdal.GDT_Byte)
 
+console.log(dataSet);
 
 // dataSet.bands.create(gdal.GDT_Byte)
 dataSet.bands.forEach(function (item, i) {
-  item.noDataValue=255// The entire picture should feature a white background.
+  item.noDataValue=0// The entire picture should feature a white background.
   console.log(item)
      redis.KEYS('*', function(err, keylist){
          keylist.forEach(function (key, i) {
@@ -35,7 +36,7 @@ dataSet.bands.forEach(function (item, i) {
                  var y = parseInt(key.split(',')[1]);
                  // The more the people were posting tweets, the darker the color should be.
                  // Then the picture should be easily to observe.
-                 var gr_val = 255 - parseInt(data);
+                 var gr_val = parseInt(data);
                  item.pixels.write(x, y, 1, 1, Int8Array.of(gr_val))
                  // Flush every pixel's change onto disk.
                  item.flush();
