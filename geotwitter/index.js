@@ -65,7 +65,7 @@ function startWalkingThroughFiles() {
                         // Never expect that each line would be in the correct format.
                         // Because sometimes the error may emit an JS event which leads to a failure of
                         // the data processing, so print them out, and simply jump to next file.
-                        console.log("line =|"+line+ "|", e);
+                        //console.log("line =|"+line+ "|", e);
                         fileNext();
                     }
                 }
@@ -77,12 +77,12 @@ function startWalkingThroughFiles() {
             // if the program is done with iterating files in a sub-directory, jump to the next
             // sub-directory.
             dirNext()
-        }).on('end', function () {
+        })
+    }).on('end', function () {
             // If all the sub-directories is visited, then we can finish the job now!
             process.exit(0)
         })
 
-    });
 };
 
 startWalkingThroughFiles();
