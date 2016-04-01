@@ -36,11 +36,12 @@ gdal.drivers.forEach(function (driver, i) {
 })
 
 var size = scale.size();
-var dataSet = GDALDriver.create("./pic.tif", size[0], size[1], 1, gdal.GDT_Byte)
+var dataSet = GDALDriver.create("./pic.tif", size[0], size[1], 1, gdal.GDT_Int32)
 
 //console.log(dataSet);
 dataSet.geoTransform = scale.getGeoTransform();
-
+dataSet.srs = gdal.SpatialReference.fromEPSGA(4326);
+var maxValue = 0;
 // dataSet.bands.create(gdal.GDT_Byte)
 dataSet.bands.forEach(function (item, i) {
   item.noDataValue=0// The entire picture should feature a white background.
@@ -53,7 +54,10 @@ dataSet.bands.forEach(function (item, i) {
                  // The more the people were posting tweets, the darker the color should be.
                  // Then the picture should be easily to observe.
                  var gr_val = parseInt(data);
-                 item.pixels.write(x, y, 1, 1, Int8Array.of(gr_val))
+		 if (gr_val > maxValue){
+			maxValue = gr_val;
+		}
+                 item.pixels.write(x, y, 1, 1, Int32Array.of(gr_val))
                  // Flush every pixel's change onto disk.
                  item.flush();
              })
@@ -69,6 +73,8 @@ process.on('exit', function(code){
     })
     dataSet.flush();
     dataSet.close();
+
+    console.log("maxValue= ", maxValue)
     console.log("exit on code ", code)
 })
 
