@@ -2,15 +2,17 @@
  * Created by zhangwei on 3/24/16.
  *
  * Caution: More memory may be needed : --max_old_space_size=2048(2GB)
- *
  * --max_new_space_size and/or --max_old_space_size
+ * Example :
+ * node --max_old_space_size=4096 GTiffGen.js -o pic.tif --config=default
  */
 
 const commandLineArgs = require('command-line-args');
 
 var cli = commandLineArgs([
     { name: 'help', alias: 'h', type: Boolean },
-    { name: 'config', type: String, multiple: false, defaultOption: false },
+    { name: 'output', alias: 'o', type: String, multiple:false, defaultValue: "./pic.tif"},
+    { name: 'config', type: String, multiple: false, defaultValue: "default" },
 ])
 
 var options = cli.parse();
@@ -36,11 +38,12 @@ gdal.drivers.forEach(function (driver, i) {
 })
 
 var size = scale.size();
-var dataSet = GDALDriver.create("./pic.tif", size[0], size[1], 1, gdal.GDT_Int32)
+var dataSet = GDALDriver.create(options.output, size[0], size[1], 1, gdal.GDT_Int32)
 
 //console.log(dataSet);
 dataSet.geoTransform = scale.getGeoTransform();
 dataSet.srs = gdal.SpatialReference.fromEPSGA(4326);
+
 var maxValue = 0;
 // dataSet.bands.create(gdal.GDT_Byte)
 dataSet.bands.forEach(function (item, i) {

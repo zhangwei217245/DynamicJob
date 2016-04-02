@@ -1,11 +1,18 @@
 /**
  * Created by zhangwei on 3/23/16.
+ *
+ * Initiating the master instance.
+ * node --max_old_space_size=4096 index.js --config=default
+ *
+ * Initiating the slave instances.
+ * node --max_old_space_size=4096 index.js -c false --config=default
  */
 const commandLineArgs = require('command-line-args');
 
 var cli = commandLineArgs([
     { name: 'help', alias: 'h', type: Boolean },
-    { name: 'config', type: String, multiple: false, defaultOption: false },
+    { name: 'config', type: String, multiple: false, defaultValue: "default" },
+    { name: 'cleanstart', alias: 'c', type: Boolean, multiple: false, defaultValue: true },
 ])
 
 var options = cli.parse();
@@ -38,7 +45,9 @@ var wk = walk.walk(conf.filedir, {followlinks : false});
 function startWalkingThroughFiles() {
     //Everytime when the data is imported into the database, we flush all the keys in the current db
     //in order to get rid of being effected by the data that is previously imported.
-    redis.flushdb();
+    if (options.cleanstart) {
+        redis.flushdb();
+    }
     //Walk every directory under the root directory.
     wk.on('directory', function (dirRoot, dirStat, dirNext) {
         var dirPath = path.join(dirRoot, dirStat.name);
