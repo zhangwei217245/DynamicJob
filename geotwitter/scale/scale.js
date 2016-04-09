@@ -5,59 +5,68 @@
 (function () {
     "use strict";
 
-    const US_LOWER = 24.15275;
+    var YMIN = 24.15275;
 
-    const US_UPPER = 49.751726;
+    var YMAX = 49.751726;
 
-    const US_LEFT = -125.714216667;
+    var XMIN = -125.714216667;
 
-    const US_RIGHT = -65.983272667;
+    var XMAX = -65.983272667;
     // 1km 30 Arc-Second in decimal degrees
-    const DEGREE_1KM = 0.008333;
+    var DEGREE_1KM = 0.008333;
 
-    const US_HORIZONTAL_SPAN = US_RIGHT - US_LEFT;
+    var HORIZONTAL_SPAN = XMAX - XMIN;
 
-    const US_VERTICAL_SPAN = US_UPPER - US_LOWER;
+    var VERTICAL_SPAN = YMAX - YMIN;
 
-    var multiple = 1;
+    var CELL_XSIZE = DEGREE_1KM;
 
-    var CELL_DEGREE = DEGREE_1KM * multiple;
+    var CELL_YSIZE = DEGREE_1KM;
 
-    var GRID_HORIZONTAL_SIZE = Math.ceil(US_HORIZONTAL_SPAN / CELL_DEGREE) + 1
+    var NROW = Math.ceil(HORIZONTAL_SPAN / CELL_XSIZE) + 1
 
-    var GRID_VERTICAL_SIZE = Math.ceil(US_VERTICAL_SPAN / CELL_DEGREE) + 1
+    var NCOL = Math.ceil(VERTICAL_SPAN / CELL_YSIZE) + 1
+
+    var EPSG = 4326;
 
 
-    function ScaleService(scale) {
-        console.log("ScaleService is called. Scale = " + scale + " Meters.")
-        multiple = scale / 1000;
-        CELL_DEGREE = DEGREE_1KM * multiple
-        GRID_HORIZONTAL_SIZE = Math.ceil(US_HORIZONTAL_SPAN / CELL_DEGREE) + 1
-        GRID_VERTICAL_SIZE = Math.ceil(US_VERTICAL_SPAN / CELL_DEGREE) + 1
-        console.log("CELL_LEN_SCALE=",CELL_DEGREE)
-        console.log("GRID_HORIZONTAL_SIZE=",GRID_HORIZONTAL_SIZE)
-        console.log("GRID_VERTICAL_SIZE=",GRID_VERTICAL_SIZE)
+    function ScaleService(conf, scale) {
+        console.log("ScaleService is called. Scale = " + scale )
+        XMIN=conf.extent.xmin;
+        XMAX=conf.extent.xmax;
+        YMIN=conf.extent.ymin;
+        YMAX=conf.extent.ymax;
+
+        HORIZONTAL_SPAN = XMAX - XMIN;
+        VERTICAL_SPAN = YMAX - YMIN;
+
+        CELL_XSIZE = conf.resolution.x * scale;
+        CELL_YSIZE = conf.resolution.y * scale;
+
+        NROW = Math.ceil(HORIZONTAL_SPAN / CELL_XSIZE) + 1
+        NCOL = Math.ceil(VERTICAL_SPAN / CELL_XSIZE) + 1
+
+        EPSG = conf.EPSG;
+        console.log("CELL_NUM=",NROW * NCOL)
+        console.log("GRID_HORIZONTAL_SIZE=",NROW)
+        console.log("GRID_VERTICAL_SIZE=",NCOL)
     };
 
 
     ScaleService.prototype.size= function () {
-        return [GRID_HORIZONTAL_SIZE, GRID_VERTICAL_SIZE];
+        return [NROW, NCOL];
     }
 
     ScaleService.prototype.boundings= function () {
-        return [US_UPPER, US_LOWER, US_LEFT, US_RIGHT];
+        return [XMIN, XMAX, YMIN, YMAX];
     }
 
     ScaleService.prototype.getGeoTransform=function(){
-        return Array.of(US_LEFT, CELL_DEGREE, 0, US_UPPER, 0, 0 - CELL_DEGREE);
+        return Array.of(XMIN, CELL_XSIZE, 0, YMAX, 0, 0 - CELL_YSIZE);
     }
 
-    ScaleService.prototype.walkGrids= function (callback) {
-        for (var i= 0; i< GRID_HORIZONTAL_SIZE; i++) {
-            for (var j = 0; j < GRID_VERTICAL_SIZE; j++) {
-                callback(i,j);
-            }
-        }
+    ScaleService.prototype.getEPSG=function(){
+        return EPSG;
     }
 
     ScaleService.prototype.gridIndex=function (coordinates) {
@@ -71,23 +80,22 @@
             return null;
         }
 
-        if (coordinates[0] >= US_LEFT && coordinates[0] <= US_RIGHT) {
-            grid_horz = Math.ceil((coordinates[0] - US_LEFT) / CELL_DEGREE)
+        if (coordinates[0] >= XMIN && coordinates[0] <= XMAX) {
+            grid_horz = Math.floor((coordinates[0] - XMIN) / CELL_XSIZE)
             horz_found = true;
         }
 
-        if (coordinates[1] >= US_LOWER && coordinates[1] <= US_UPPER) {
-            grid_vert = Math.ceil((coordinates[1] - US_LOWER) / CELL_DEGREE)
+        if (coordinates[1] >= YMIN && coordinates[1] <= YMAX) {
+            grid_vert = Math.floor((coordinates[1] - YMIN) / CELL_YSIZE)
             vert_found = true;
         }
 
         var result = [horz_found?grid_horz:null, vert_found?grid_vert:null];
-        //console.log(result)
         return result;
     };
 
-exports.scale=function(scale){
-    return new ScaleService(scale)
+exports.scale=function(conf, scale){
+    return new ScaleService(conf, scale)
 };
 
 

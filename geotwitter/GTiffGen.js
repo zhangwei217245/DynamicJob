@@ -12,7 +12,8 @@ const commandLineArgs = require('command-line-args');
 var cli = commandLineArgs([
     { name: 'help', alias: 'h', type: Boolean },
     { name: 'output', alias: 'o', type: String, multiple:false, defaultValue: "./pic.tif"},
-    { name: 'config', type: String, multiple: false, defaultValue: "default" },
+    { name: 'config', alias:'c', type: String, multiple: false, defaultValue: "default" },
+    { name: 'task', alias: 't', type: String, multiple: false, defaultValue: "usercount" },
 ])
 
 var options = cli.parse();
@@ -25,9 +26,11 @@ if (options.help) {
 const gdal = require('gdal');
 const config = require('node-yaml-config');
 var conf = config.load('./config/geotwitter.yaml', options.config);
-const scale = require('./scale/scale').scale(conf.scale);
-const redis = require('redis').createClient(conf.database);
-const S=require('string');
+
+const redis = require('redis').createClient(conf.redis);
+var task_scale = redis.get(options.task+'.scale')
+const scale = require('./scale/scale').scale(conf, parseFloat(task_scale));
+
 
 var format = "GTiff"
 var GDALDriver = null;
@@ -42,28 +45,37 @@ var dataSet = GDALDriver.create(options.output, size[0], size[1], 1, gdal.GDT_In
 
 //console.log(dataSet);
 dataSet.geoTransform = scale.getGeoTransform();
-dataSet.srs = gdal.SpatialReference.fromEPSGA(4326);
+dataSet.srs = gdal.SpatialReference.fromEPSGA(scale.getEPSG());
 
 var maxValue = 0;
+
+function writeUserCount(key, item){
+    redis.scard(key, function (err1, data) {
+        var keyarr = key.split(',');
+        var x = parseInt(keyarr[keyarr.length-2]);
+        var y = size[1] - parseInt(keyarr[keyarr.length-1]) - 1;
+        // The more the people were posting tweets, the darker the color should be.
+        // Then the picture should be easily to observe.
+        var gr_val = parseInt(data);
+        if (gr_val > maxValue){
+            maxValue = gr_val;
+        }
+        item.pixels.write(x, y, 1, 1, Int32Array.of(gr_val))
+        // Flush every pixel's change onto disk.
+        item.flush();
+    })
+}
+
+
 // dataSet.bands.create(gdal.GDT_Byte)
 dataSet.bands.forEach(function (item, i) {
   item.noDataValue=0// The entire picture should feature a white background.
   console.log(item)
      redis.KEYS('*', function(err, keylist){
          keylist.forEach(function (key, i) {
-             redis.scard(key, function (err1, data) {
-                 var x = parseInt(key.split(',')[0]);
-                 var y = size[1] - parseInt(key.split(',')[1]);
-                 // The more the people were posting tweets, the darker the color should be.
-                 // Then the picture should be easily to observe.
-                 var gr_val = parseInt(data);
-		 if (gr_val > maxValue){
-			maxValue = gr_val;
-		}
-                 item.pixels.write(x, y, 1, 1, Int32Array.of(gr_val))
-                 // Flush every pixel's change onto disk.
-                 item.flush();
-             })
+             if (options.task == 'usercount'){
+                 writeUserCount(key, item)
+             }
          })
          dataSet.flush();
      })

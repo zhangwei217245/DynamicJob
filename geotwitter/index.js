@@ -11,8 +11,11 @@ const commandLineArgs = require('command-line-args');
 
 var cli = commandLineArgs([
     { name: 'help', alias: 'h', type: Boolean },
-    { name: 'config', type: String, multiple: false, defaultValue: "default" },
-    { name: 'cleanstart', alias: 'c', type: Boolean, multiple: false, defaultValue: true },
+    { name: 'config', alias: 'c', type: String, multiple: false, defaultValue: "default" },
+    { name: 'purge', alias: 'p', type: Boolean, multiple: false, defaultValue: true },
+    { name: 'task', alias: 't', type: String, multiple: false, defaultValue: 'usercount' },
+    { name: 'scale', alias: 's', type: Number, multiple: false, defaultValue: 1.0 },
+    { name: 'dir', alias: 'd', type: Boolean, multiple: false, defaultValue: '/home/wesley/Data' },
 ])
 
 var options = cli.parse();
@@ -33,21 +36,20 @@ const sync = require('sync');
 
 var conf = config.load('./config/geotwitter.yaml', options.config);
 
-const scale = require('./scale/scale').scale(conf.scale);
+const scale = require('./scale/scale').scale(conf, options.scale);
 
+const redis = require('redis').createClient(conf.redis);
 
-
-
-const redis = require('redis').createClient(conf.database);
-
-var wk = walk.walk(conf.filedir, {followlinks : false});
+var wk = walk.walk(options.dir, {followlinks : false});
 
 function startWalkingThroughFiles() {
     //Everytime when the data is imported into the database, we flush all the keys in the current db
     //in order to get rid of being effected by the data that is previously imported.
-    if (options.cleanstart) {
+    if (options.purge) {
         redis.flushdb();
     }
+    redis.set(options.task+'.scale', options.scale.toString())
+
     //Walk every directory under the root directory.
     wk.on('directory', function (dirRoot, dirStat, dirNext) {
         var dirPath = path.join(dirRoot, dirStat.name);
@@ -66,7 +68,7 @@ function startWalkingThroughFiles() {
             var rdline = readline.createInterface({
                 // The input would be a stream. Here we use zlib to inflate the gzipped stream.
                 // On any error, we should let the user know which file results in a failure.
-                input : ins.pipe(zlib.createGunzip({windowBits: 15, memLevel: 7 })).on('error', function (e) {
+                input : ins.pipe(zlib.createGunzip({windowBits: 15, memLevel: 8 })).on('error', function (e) {
                     console.log("zipErrorOccured at file", fileName, e)
                     //Whenever an error happens, we should continue for the next file.
                     fileNext();
@@ -78,10 +80,10 @@ function startWalkingThroughFiles() {
                     try{
                         var tweet = JSON.parse(S(line).split("|")[1]);
                         if (tweet.coordinates != null) {
-                            //redis.setnx(tweet.user.id + scale.gridIndex(tweet.coordinates.coordinates).stringify);
-                            var vl = ""+scale.gridIndex(tweet.coordinates.coordinates)
-                            redis.sadd(vl, tweet.user.id)
-
+                            var vl = options.task+','+scale.gridIndex(tweet.coordinates.coordinates)
+                            if (options.task == 'usercount') {
+                                redis.sadd(vl, tweet.user.id)
+                            }
                         }
                         count++
                     } catch(e) {
