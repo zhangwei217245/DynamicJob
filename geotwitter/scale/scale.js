@@ -15,6 +15,8 @@
     // 1km 30 Arc-Second in decimal degrees
     var DEGREE_1KM = 0.008333;
 
+    var SCALE = 1.0
+
     var HORIZONTAL_SPAN = XMAX - XMIN;
 
     var VERTICAL_SPAN = YMAX - YMIN;
@@ -37,11 +39,13 @@
         YMIN=conf.extent.ymin;
         YMAX=conf.extent.ymax;
 
+        SCALE = scale;
+
         HORIZONTAL_SPAN = XMAX - XMIN;
         VERTICAL_SPAN = YMAX - YMIN;
 
-        CELL_XSIZE = conf.resolution.x * scale;
-        CELL_YSIZE = conf.resolution.y * scale;
+        CELL_XSIZE = conf.resolution.x * SCALE;
+        CELL_YSIZE = conf.resolution.y * SCALE;
 
         NROW = Math.ceil(HORIZONTAL_SPAN / CELL_XSIZE) + 1
         NCOL = Math.ceil(VERTICAL_SPAN / CELL_XSIZE) + 1
@@ -67,6 +71,10 @@
 
     ScaleService.prototype.getEPSG=function(){
         return EPSG;
+    }
+
+    ScaleService.prototype.getScale=function(){
+        return SCALE;
     }
 
     ScaleService.prototype.gridIndex=function (coordinates) {

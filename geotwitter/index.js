@@ -2,10 +2,11 @@
  * Created by zhangwei on 3/23/16.
  *
  * Initiating the master instance.
- * node --max_old_space_size=4096 index.js --config=default
+ * node --max_old_space_size=4096 index.js -c default -s 0.5 -t UserCountExtractor -d /home/wesley/Data
  *
  * Initiating the slave instances.
- * node --max_old_space_size=4096 index.js -c false --config=default
+ * node --max_old_space_size=4096 index.js -p false -c default -s 0.5 -t UserCountExtractor -d /home/wesley/Data
+ *
  */
 const commandLineArgs = require('command-line-args');
 
@@ -13,7 +14,7 @@ var cli = commandLineArgs([
     { name: 'help', alias: 'h', type: Boolean },
     { name: 'config', alias: 'c', type: String, multiple: false, defaultValue: "default" },
     { name: 'purge', alias: 'p', type: Boolean, multiple: false, defaultValue: true },
-    { name: 'task', alias: 't', type: String, multiple: false, defaultValue: 'usercount' },
+    { name: 'task', alias: 't', type: String, multiple: false, defaultValue: 'UserCountExtractor' },
     { name: 'scale', alias: 's', type: Number, multiple: false, defaultValue: 1.0 },
     { name: 'dir', alias: 'd', type: Boolean, multiple: false, defaultValue: '/home/wesley/Data' },
 ])
@@ -80,8 +81,8 @@ function startWalkingThroughFiles() {
                     try{
                         var tweet = JSON.parse(S(line).split("|")[1]);
                         if (tweet.coordinates != null) {
-                            var vl = options.task+','+scale.gridIndex(tweet.coordinates.coordinates)
-                            if (options.task == 'usercount') {
+                            var vl = options.task+','+scale.getScale()+','+scale.gridIndex(tweet.coordinates.coordinates)
+                            if (options.task == 'UserCountExtractor') {
                                 redis.sadd(vl, tweet.user.id)
                             }
                         }
@@ -104,9 +105,9 @@ function startWalkingThroughFiles() {
             dirNext()
         })
     }).on('end', function () {
-            // If all the sub-directories is visited, then we can finish the job now!
-            process.exit(0)
-        })
+        // If all the sub-directories is visited, then we can finish the job now!
+        process.exit(0)
+    })
 
 };
 

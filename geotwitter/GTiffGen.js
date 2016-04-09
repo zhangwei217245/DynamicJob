@@ -4,7 +4,7 @@
  * Caution: More memory may be needed : --max_old_space_size=2048(2GB)
  * --max_new_space_size and/or --max_old_space_size
  * Example :
- * node --max_old_space_size=4096 GTiffGen.js -o pic.tif --config=default
+ * node --max_old_space_size=4096 GTiffGen.js -o pic.tif -c default -t usercount
  */
 
 const commandLineArgs = require('command-line-args');
@@ -13,7 +13,8 @@ var cli = commandLineArgs([
     { name: 'help', alias: 'h', type: Boolean },
     { name: 'output', alias: 'o', type: String, multiple:false, defaultValue: "./pic.tif"},
     { name: 'config', alias:'c', type: String, multiple: false, defaultValue: "default" },
-    { name: 'task', alias: 't', type: String, multiple: false, defaultValue: "usercount" },
+    { name: 'task', alias: 't', type: String, multiple: false, defaultValue: "UserCountExtractor" },
+    { name: 'scale', alias: 's', type: Number, multiple: false, defaultValue: 1.0 },
 ])
 
 var options = cli.parse();
@@ -28,8 +29,7 @@ const config = require('node-yaml-config');
 var conf = config.load('./config/geotwitter.yaml', options.config);
 
 const redis = require('redis').createClient(conf.redis);
-var task_scale = redis.get(options.task+'.scale')
-const scale = require('./scale/scale').scale(conf, parseFloat(task_scale));
+const scale = require('./scale/scale').scale(conf, options.scale);
 
 
 var format = "GTiff"
@@ -71,9 +71,9 @@ function writeUserCount(key, item){
 dataSet.bands.forEach(function (item, i) {
   item.noDataValue=0// The entire picture should feature a white background.
   console.log(item)
-     redis.KEYS('*', function(err, keylist){
+     redis.KEYS(options.task + ',' + scale.getScale()+ ',*', function(err, keylist){
          keylist.forEach(function (key, i) {
-             if (options.task == 'usercount'){
+             if (options.task == 'UserCountExtractor'){
                  writeUserCount(key, item)
              }
          })
