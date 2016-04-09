@@ -16,7 +16,7 @@ var cli = commandLineArgs([
     { name: 'purge', alias: 'p', type: Boolean, multiple: false, defaultValue: true },
     { name: 'task', alias: 't', type: String, multiple: false, defaultValue: 'UserCountExtractor' },
     { name: 'scale', alias: 's', type: Number, multiple: false, defaultValue: 1.0 },
-    { name: 'dir', alias: 'd', type: Boolean, multiple: false, defaultValue: '/home/wesley/Data' },
+    { name: 'dir', alias: 'd', type: String, multiple: false, defaultValue: '/home/wesley/Data' },
 ])
 
 var options = cli.parse();
@@ -41,6 +41,7 @@ const scale = require('./scale/scale').scale(conf, options.scale);
 
 const redis = require('redis').createClient(conf.redis);
 
+console.log(options.dir)
 var wk = walk.walk(options.dir, {followlinks : false});
 
 function startWalkingThroughFiles() {
