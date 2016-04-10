@@ -4,7 +4,7 @@
  * Caution: More memory may be needed : --max_old_space_size=2048(2GB)
  * --max_new_space_size and/or --max_old_space_size
  * Example :
- * node --max_old_space_size=4096 GTiffGen.js -o pic.tif -c default -t usercount
+ * node --max_old_space_size=4096 GTiffGen.js -o pic.tif -c default -t UserCountExtractor
  */
 
 const commandLineArgs = require('command-line-args');
