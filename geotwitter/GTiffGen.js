@@ -71,7 +71,7 @@ function writeUserCount(key, item){
 dataSet.bands.forEach(function (item, i) {
   item.noDataValue=0// The entire picture should feature a white background.
   console.log(item)
-     redis.KEYS(options.task + ',' + scale.getScale()+ ',*', function(err, keylist){
+     redis.KEYS(options.task + ',' + scale.getScale().toFixed(4)+ ',*', function(err, keylist){
          keylist.forEach(function (key, i) {
              if (options.task == 'UserCountExtractor'){
                  writeUserCount(key, item)

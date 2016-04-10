@@ -81,9 +81,12 @@ function startWalkingThroughFiles() {
                     try{
                         var tweet = JSON.parse(S(line).split("|")[1]);
                         if (tweet.coordinates != null) {
-                            var vl = options.task+','+scale.getScale()+','+scale.gridIndex(tweet.coordinates.coordinates)
-                            if (options.task == 'UserCountExtractor') {
-                                redis.sadd(vl, tweet.user.id)
+                            var grid_idx = scale.gridIndex(tweet.coordinates.coordinates);
+                            if (grid_idx[0]!=null && grid_idx[1]!=null) {
+                                var vl = options.task+','+scale.getScale().toFixed(4)+','+grid_idx
+                                if (options.task == 'UserCountExtractor') {
+                                    redis.sadd(vl, tweet.user.id)
+                                }
                             }
                         }
                         count++
