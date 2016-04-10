@@ -64,7 +64,7 @@ function startWalkingThroughFiles() {
             }
             var count = 0;
             // we need to which file are we processing.
-            console.log(fileName);
+            console.log('Processing ' + fileName);
             var ins = fs.createReadStream(fileName);
             // the readline lib is embedded in Node JS itself, just like fs library.
             var rdline = readline.createInterface({
