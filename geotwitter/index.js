@@ -50,7 +50,6 @@ function startWalkingThroughFiles() {
     if (options.purge) {
         redis.flushdb();
     }
-    redis.set(options.task+'.scale', options.scale.toString())
 
     //Walk every directory under the root directory.
     wk.on('directory', function (dirRoot, dirStat, dirNext) {
