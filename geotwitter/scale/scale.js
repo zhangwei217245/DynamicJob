@@ -58,7 +58,7 @@
 
 
     ScaleService.prototype.size= function () {
-        return [NROW, NCOL];
+        return [NCOL, NROW];
     }
 
     ScaleService.prototype.boundings= function () {

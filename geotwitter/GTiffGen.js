@@ -25,6 +25,7 @@ if (options.help) {
 }
 
 const gdal = require('gdal');
+const async = require('async');
 const config = require('node-yaml-config');
 var conf = config.load('./config/geotwitter.yaml', options.config);
 
@@ -70,15 +71,50 @@ function writeUserCount(key, item) {
 // dataSet.bands.create(gdal.GDT_Byte)
 dataSet.bands.forEach(function (item, i) {
     item.noDataValue = 0// The entire picture should feature a white background.
-    console.log(item)
-    redis.KEYS(options.task + ',' + scale.getScale().toFixed(4) + ',*', function (err, keylist) {
-        keylist.forEach(function (key, i) {
-            if (options.task == 'UserCountExtractor') {
-                writeUserCount(key, item)
+    console.log(item);
+
+    var key_pattern_prefix = options.task + ',' + scale.getScale().toFixed(4) + ',*';
+    var append = '';
+    for (r = 0; r < size[1]; i+=1000) {
+        data_arr = new Int32Array(1000);
+        for (i = 0; i < data_arr.length; i++){
+            data_arr[i] = new Int32Array(size[0])
+            for (j = 0; j < data_arr[i].length; j++) {
+                data_arr[i][j] = 0
             }
-        })
-        dataSet.flush();
-    })
+        }
+        var keys = [];
+        if (r < 1000) {
+            async.waterfall([
+                function (callback) {
+                    redis.KEYS(key_pattern_prefix + ',?', callback)
+                },
+                function (callback) {
+                    redis.KEYS(key_pattern_prefix + ',??', callback)
+                },
+                function (callback) {
+                    redis.KEYS(key_pattern_prefix + ',???', callback)
+                }
+            ],
+            function (err, keylist) {
+                keys.push(keylist)
+            })
+        } else {
+
+
+        }
+        console.log(keys)
+
+    }
+
+    // redis.KEYS(key_pattern_prefix + append, function (err, keylist) {
+    //     keylist.forEach(function (key, i) {
+    //         if (options.task == 'UserCountExtractor') {
+    //             writeUserCount(key, item)
+    //         }
+    //     })
+    //     dataSet.flush();
+    // })
 })
 
 // When the program exits, it should flush the data onto the disk.
