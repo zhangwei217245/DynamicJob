@@ -47,8 +47,8 @@
         CELL_XSIZE = conf.resolution.x * SCALE;
         CELL_YSIZE = conf.resolution.y * SCALE;
 
-        NROW = Math.ceil(HORIZONTAL_SPAN / CELL_XSIZE) + 1
-        NCOL = Math.ceil(VERTICAL_SPAN / CELL_XSIZE) + 1
+        NROW = Math.ceil(HORIZONTAL_SPAN / CELL_XSIZE)
+        NCOL = Math.ceil(VERTICAL_SPAN / CELL_XSIZE)
 
         EPSG = conf.EPSG;
         console.log("CELL_NUM=",NROW * NCOL)
