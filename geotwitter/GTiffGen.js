@@ -75,7 +75,7 @@ dataSet.bands.forEach(function (item, i) {
 
     var key_pattern_prefix = options.task + ',' + scale.getScale().toFixed(4) + ',*';
     var append = '';
-    for (r = 0; r < size[1]; i+=1000) {
+    for (r = 0; r < size[1]; r+=1000) {
         data_arr = new Int32Array(1000);
         for (i = 0; i < data_arr.length; i++){
             data_arr[i] = new Int32Array(size[0])
