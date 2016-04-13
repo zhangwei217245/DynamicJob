@@ -97,15 +97,14 @@ dataSet.bands.forEach(function (item, i) {
                 }
             ],
             function (arg1, err, keylist) {
-                console.log(keylist)
+                console.log(arg1)
                 keys.push(keylist)
             })
         } else {
 
 
         }
-        console.log(keys)
-
+        //console.log(keys)
     }
 
     // redis.KEYS(key_pattern_prefix + append, function (err, keylist) {
