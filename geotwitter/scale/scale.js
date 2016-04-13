@@ -94,7 +94,7 @@
         }
 
         if (coordinates[1] >= YMIN && coordinates[1] <= YMAX) {
-            grid_vert = Math.floor((coordinates[1] - YMIN) / CELL_YSIZE)
+            grid_vert = Math.floor((YMAX - coordinates[1]) / CELL_YSIZE)
             vert_found = true;
         }
 

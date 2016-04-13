@@ -58,7 +58,7 @@ public class GeoTwitterUtils {
         }
 
         if (location.getLatitude() >= US_LOWER && location.getLatitude() <= US_UPPER) {
-            grid_vert = BigDecimal.valueOf((location.getLatitude() - US_LOWER) / CELL_LEN_500M)
+            grid_vert = BigDecimal.valueOf((US_UPPER - location.getLatitude()) / CELL_LEN_500M)
                     .intValue() + 1;
             vert_found = true;
         }

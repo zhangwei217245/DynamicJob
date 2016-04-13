@@ -10,11 +10,11 @@
 const commandLineArgs = require('command-line-args');
 
 var cli = commandLineArgs([
-    { name: 'help', alias: 'h', type: Boolean },
-    { name: 'output', alias: 'o', type: String, multiple:false, defaultValue: "./pic.tif"},
-    { name: 'config', alias:'c', type: String, multiple: false, defaultValue: "default" },
-    { name: 'task', alias: 't', type: String, multiple: false, defaultValue: "UserCountExtractor" },
-    { name: 'scale', alias: 's', type: Number, multiple: false, defaultValue: 1.0 },
+    {name: 'help', alias: 'h', type: Boolean},
+    {name: 'output', alias: 'o', type: String, multiple: false, defaultValue: "./pic.tif"},
+    {name: 'config', alias: 'c', type: String, multiple: false, defaultValue: "default"},
+    {name: 'task', alias: 't', type: String, multiple: false, defaultValue: "UserCountExtractor"},
+    {name: 'scale', alias: 's', type: Number, multiple: false, defaultValue: 1.0},
 ])
 
 var options = cli.parse();
@@ -49,15 +49,15 @@ dataSet.srs = gdal.SpatialReference.fromEPSGA(scale.getEPSG());
 
 var maxValue = 0;
 
-function writeUserCount(key, item){
+function writeUserCount(key, item) {
     redis.scard(key, function (err1, data) {
         var keyarr = key.split(',');
-        var x = parseInt(keyarr[keyarr.length-2]);
-        var y = size[1] - parseInt(keyarr[keyarr.length-1]) - 1;
+        var x = parseInt(keyarr[keyarr.length - 2]);
+        var y = parseInt(keyarr[keyarr.length - 1]);
         // The more the people were posting tweets, the darker the color should be.
         // Then the picture should be easily to observe.
         var gr_val = parseInt(data);
-        if (gr_val > maxValue){
+        if (gr_val > maxValue) {
             maxValue = gr_val;
         }
         item.pixels.write(x, y, 1, 1, Int32Array.of(gr_val))
@@ -69,22 +69,22 @@ function writeUserCount(key, item){
 
 // dataSet.bands.create(gdal.GDT_Byte)
 dataSet.bands.forEach(function (item, i) {
-  item.noDataValue=0// The entire picture should feature a white background.
-  console.log(item)
-     redis.KEYS(options.task + ',' + scale.getScale().toFixed(4)+ ',*', function(err, keylist){
-         keylist.forEach(function (key, i) {
-             if (options.task == 'UserCountExtractor'){
-                 writeUserCount(key, item)
-             }
-         })
-         dataSet.flush();
-     })
+    item.noDataValue = 0// The entire picture should feature a white background.
+    console.log(item)
+    redis.KEYS(options.task + ',' + scale.getScale().toFixed(4) + ',*', function (err, keylist) {
+        keylist.forEach(function (key, i) {
+            if (options.task == 'UserCountExtractor') {
+                writeUserCount(key, item)
+            }
+        })
+        dataSet.flush();
+    })
 })
 
 // When the program exits, it should flush the data onto the disk.
-process.on('exit', function(code){
+process.on('exit', function (code) {
     dataSet.bands.forEach(function (item, i) {
-	item.flush();	
+        item.flush();
     })
     dataSet.flush();
     dataSet.close();
@@ -94,6 +94,6 @@ process.on('exit', function(code){
 })
 
 //The program should exit in 10 min.
-setTimeout(function(){
-	process.exit(0);
+setTimeout(function () {
+    process.exit(0);
 }, 10 * 60 * 1000)
