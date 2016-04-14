@@ -75,6 +75,7 @@ dataSet.bands.forEach(function (item, i) {
 
     var key_pattern_prefix = options.task + ',' + scale.getScale().toFixed(4) + ',*';
     var append = '';
+    var r = 0, i = 0, j = 0;
     for (r = 0; r < size[1]; r += 1000) {
         row_num = size[1] - r < 1000 ? size[1] - r: 1000;
         data_arr = new Int32Array(row_num);
@@ -90,6 +91,7 @@ dataSet.bands.forEach(function (item, i) {
                     if (r >= 1000) {
                         return;
                     }
+                    console.log('1')
                     redis.KEYS(key_pattern_prefix + ',?', function (err, keylist) {
                         keylist.forEach(function (entry) {
                             //keys.push(entry)
@@ -102,6 +104,7 @@ dataSet.bands.forEach(function (item, i) {
                     if (r >= 1000) {
                         return;
                     }
+                    console.log('2')
                     redis.KEYS(key_pattern_prefix + ',??', function (err, keylist) {
                         keylist.forEach(function (entry) {
                             // keys.push(entry)
@@ -114,6 +117,7 @@ dataSet.bands.forEach(function (item, i) {
                     if (r >= 1000) {
                         return;
                     }
+                    console.log('3')
                     redis.KEYS(key_pattern_prefix + ',???', function (err, keylist) {
                         keylist.forEach(function (entry) {
                             // keys.push(entry)
@@ -126,6 +130,7 @@ dataSet.bands.forEach(function (item, i) {
                     if (r < 1000) {
                         return;
                     }
+                    console.log('4')
                     redis.KEYS(key_pattern_prefix + append, function (err, keylist) {
                         keylist.forEach(function (entry) {
                             // keys.push(entry)
