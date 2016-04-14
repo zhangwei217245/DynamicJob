@@ -116,7 +116,7 @@ dataSet.bands.forEach(function (item, i) {
                 }
             ],
             function (err, keylist) {
-                console.log('called', keylist.length, keys.length)
+                //console.log('called', keylist.length, keys.length)
             })
         } else {
 
