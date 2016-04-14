@@ -30,7 +30,7 @@
     "string" : "3.3.1",
     "async": "1.5.2",
     "sleep":"3.0.1",
-    "gdal":"0.8.0",
+    "gdal":"0.9.1",
     "command-line-args":"2.1.6"
 
   }
