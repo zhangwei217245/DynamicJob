@@ -75,55 +75,77 @@ dataSet.bands.forEach(function (item, i) {
 
     var key_pattern_prefix = options.task + ',' + scale.getScale().toFixed(4) + ',*';
     var append = '';
-    for (r = 0; r < size[1]; r+=1000) {
-        data_arr = new Int32Array(1000);
-        for (i = 0; i < data_arr.length; i++){
+    for (r = 0; r < size[1]; r += 1000) {
+        row_num = size[1] - r < 1000 ? size[1] - r: 1000;
+        data_arr = new Int32Array(row_num);
+        for (i = 0; i < data_arr.length; i++) {
             data_arr[i] = new Int32Array(size[0])
             for (j = 0; j < data_arr[i].length; j++) {
                 data_arr[i][j] = 0
             }
         }
-        var keys = [];
-        if (r < 1000) {
-            console.log('r < ', 1000)
-            async.waterfall([
+        append = ',' + parseInt(r / 1000) + '???';
+        console.log('r < ', 1000);
+        async.waterfall([
                 function (callback) {
+                    if (r >= 1000) {
+                        return;
+                    }
                     redis.KEYS(key_pattern_prefix + ',?', function (err, keylist) {
                         keylist.forEach(function (entry) {
-                            keys.push(entry)
+                            //keys.push(entry)
                         })
                         console.log(keylist.length, keys.length)
                         callback(err)
                     })
                 },
                 function (callback) {
+                    if (r >= 1000) {
+                        return;
+                    }
                     redis.KEYS(key_pattern_prefix + ',??', function (err, keylist) {
                         keylist.forEach(function (entry) {
-                            keys.push(entry)
+                            // keys.push(entry)
                         })
                         console.log(keylist.length, keys.length)
                         callback(err)
                     })
                 },
                 function (callback) {
+                    if (r >= 1000) {
+                        return;
+                    }
                     redis.KEYS(key_pattern_prefix + ',???', function (err, keylist) {
                         keylist.forEach(function (entry) {
-                            keys.push(entry)
+                            // keys.push(entry)
+                        })
+                        console.log(keylist.length, keys.length)
+                        callback(err)
+                    })
+                },
+                function (callback) {
+                    if (r < 1000) {
+                        return;
+                    }
+                    redis.KEYS(key_pattern_prefix + append, function (err, keylist) {
+                        keylist.forEach(function (entry) {
+                            // keys.push(entry)
                         })
                         console.log(keylist.length, keys.length)
                         callback(err)
                     })
                 }
             ],
-            function (err, keylist) {
-                //console.log('called', keylist.length, keys.length)
+            function (err, result) {
+                console.log(err, result)
             })
-        } else {
-
-
-        }
-        //console.log(keys)
     }
+
+    // keys.forEach(function (key, i) {
+    //     if (options.task == 'UserCountExtractor') {
+    //         writeUserCount(key, item)
+    //     }
+    // })
 
     // redis.KEYS(key_pattern_prefix + append, function (err, keylist) {
     //     keylist.forEach(function (key, i) {
