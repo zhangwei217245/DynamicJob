@@ -73,16 +73,16 @@ dataSet.bands.forEach(function (item, i) {
     }
     console.log(offset_arr)
     async.forEachOfSeries(offset_arr, function (offset, index, cb) {
-        console.log(r)
+        console.log(offset)
         var patterns = [];
-        if (r < 1000) {
+        if (offset < 1000) {
             patterns.push(key_pattern_prefix + ",?", key_pattern_prefix + ",??", key_pattern_prefix + ",???");
         } else {
-            append = ',' + parseInt(r / 1000) + '???';
+            append = ',' + parseInt(offset / 1000) + '???';
             patterns.push(key_pattern_prefix + append)
         }
 
-        var row_num = size[1] - r < 1000 ? size[1] - r : 1000;
+        var row_num = size[1] - offset < 1000 ? size[1] - offset : 1000;
         var array = new Int32Array(row_num * size[0]);
 
         var keys = []
@@ -103,7 +103,7 @@ dataSet.bands.forEach(function (item, i) {
                         key_cb(null);
                     },
                     function (err1) {
-                        item.pixels.write(0, r, size[0], row_num, array);
+                        item.pixels.write(0, offset, size[0], row_num, array);
                         item.flush();
                         cb(null);
                     })
