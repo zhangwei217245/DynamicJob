@@ -89,21 +89,27 @@ dataSet.bands.forEach(function (item, i) {
             async.waterfall([
                 function (callback) {
                     redis.KEYS(key_pattern_prefix + ',?', function (err, keylist) {
-                        keys = keys.concat(keylist);
+                        keylist.forEach(function (entry) {
+                            keys.push(entry)
+                        })
                         console.log(keylist.length, keys.length)
                         callback(err)
                     })
                 },
                 function (callback) {
                     redis.KEYS(key_pattern_prefix + ',??', function (err, keylist) {
-                        keys = keys.concat(keylist);
+                        keylist.forEach(function (entry) {
+                            keys.push(entry)
+                        })
                         console.log(keylist.length, keys.length)
                         callback(err)
                     })
                 },
                 function (callback) {
                     redis.KEYS(key_pattern_prefix + ',???', function (err, keylist) {
-                        keys = keys.concat(keylist);
+                        keylist.forEach(function (entry) {
+                            keys.push(entry)
+                        })
                         console.log(keylist.length, keys.length)
                         callback(err)
                     })
