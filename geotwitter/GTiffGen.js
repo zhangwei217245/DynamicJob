@@ -72,7 +72,7 @@ dataSet.bands.forEach(function (item, i) {
         offset_arr.push(r)
     }
     console.log(offset_arr)
-    async.forEachOfSeries(offset_arr, function (offset, index, general_callback) {
+    async.each(offset_arr, function (offset, general_callback) {
         console.log(offset)
         var patterns = [];
         if (offset < 1000) {
@@ -85,11 +85,11 @@ dataSet.bands.forEach(function (item, i) {
         var row_num = size[1] - offset < 1000 ? size[1] - offset : 1000;
         var array = new Int32Array(row_num * size[0]);
 
-        async.forEachOf(patterns,
-            function (pattern, index, redis_callback) {
+        async.each(patterns,
+            function (pattern, redis_callback) {
                 redis.KEYS(pattern, function (err, keylist) {
                     if (err) return redis_callback(err);
-                    async.forEachOf(keylist, function (key, index, key_callback) {
+                    async.each(keylist, function (key, key_callback) {
                         tasks[options.task].fillArray(array, redis, key, size[0], key_callback)
                     }, function (err) {
                         redis_callback(null);
@@ -108,7 +108,3 @@ dataSet.bands.forEach(function (item, i) {
     })
 })
 
-//The program should exit in 10 min.
-setTimeout(function () {
-    process.exit(0);
-}, 10 * 60 * 1000)
