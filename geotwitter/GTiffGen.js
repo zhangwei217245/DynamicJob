@@ -72,7 +72,7 @@ dataSet.bands.forEach(function (item, i) {
         offset_arr.push(r)
     }
     console.log(offset_arr)
-    async.each(offset_arr, function (offset, general_callback) {
+    async.eachSeries(offset_arr, function (offset, general_callback) {
         console.log(offset)
         var patterns = [];
         if (offset < 1000) {
