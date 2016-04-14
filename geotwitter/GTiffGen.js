@@ -72,7 +72,7 @@ dataSet.bands.forEach(function (item, i) {
         offset_arr.push(r)
     }
     console.log(offset_arr)
-    async.forEachOfSeries(offset_arr, function (offset, index, cb) {
+    async.forEachOfSeries(offset_arr, function (offset, index, general_callback) {
         console.log(offset)
         var patterns = [];
         if (offset < 1000) {
@@ -85,28 +85,21 @@ dataSet.bands.forEach(function (item, i) {
         var row_num = size[1] - offset < 1000 ? size[1] - offset : 1000;
         var array = new Int32Array(row_num * size[0]);
 
-        var keys = []
         async.forEachOf(patterns,
-            function (pattern, index, callback) {
+            function (pattern, index, redis_callback) {
                 redis.KEYS(pattern, function (err, keylist) {
-                    if (err) return callback(err);
-                    keylist.forEach(function (key, i) {
-                        keys.push(key)
+                    if (err) return redis_callback(err);
+                    async.forEachOf(keylist, function (key, index, key_callback) {
+                        tasks[options.task].fillArray(array, redis, key, size[0], key_callback)
+                    }, function (err) {
+                        redis_callback(null);
                     })
-                    callback(null);
                 })
             },
             function (err) {
-                async.forEachOf(keys,
-                    function (key, index, key_cb) {
-                        tasks[options.task].fillArray(array, redis, key, size[0])
-                        key_cb(null);
-                    },
-                    function (err1) {
-                        item.pixels.write(0, offset, size[0], row_num, array);
-                        item.flush();
-                        cb(null);
-                    })
+                item.pixels.write(0, offset, size[0], row_num, array);
+                item.flush();
+                general_callback(null);
             })
     
     }, function (err) {
@@ -114,8 +107,6 @@ dataSet.bands.forEach(function (item, i) {
         process.exit(0);
     })
 })
-
-
 
 //The program should exit in 10 min.
 setTimeout(function () {

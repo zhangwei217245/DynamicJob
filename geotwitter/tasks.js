@@ -7,22 +7,23 @@ module.exports = {
         'extractFromTweet' : function (tweet, redis, key) {
             redis.sadd(key, tweet.user.id)
         },
-        'fillArray' : function (array, redis, key, xsize) {
+        'fillArray' : function (array, redis, key, xsize, callback) {
             redis.scard(key, function (err, data) {
                 var keyarr = key.split(',');
                 var x = parseInt(keyarr[keyarr.length - 2]);
                 var y = parseInt(keyarr[keyarr.length - 1]) % 1000;
                 var index = y * xsize + x
                 array[index] = data;
+                callback(null);
             })
         }
     },
 
     'InfoExtractor' : {
         'extractFromTweet' : function (tweet, redis, key) {
-            
+
         },
-        'fillArray' : function (array, redis, key, xsize) {
+        'fillArray' : function (array, redis, key, xsize, callback) {
 
         }
     }
