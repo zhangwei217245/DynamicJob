@@ -85,7 +85,6 @@ dataSet.bands.forEach(function (item, i) {
             }
         }
         append = ',' + parseInt(r / 1000) + '???';
-        console.log('r < ', 1000);
         async.waterfall([
                 function (callback) {
                     if (r >= 1000) {
@@ -95,7 +94,7 @@ dataSet.bands.forEach(function (item, i) {
                         keylist.forEach(function (entry) {
                             //keys.push(entry)
                         })
-                        console.log(keylist.length, keys.length)
+                        console.log(keylist.length, r)
                         callback(err)
                     })
                 },
@@ -107,7 +106,7 @@ dataSet.bands.forEach(function (item, i) {
                         keylist.forEach(function (entry) {
                             // keys.push(entry)
                         })
-                        console.log(keylist.length, keys.length)
+                        console.log(keylist.length, r)
                         callback(err)
                     })
                 },
@@ -119,7 +118,7 @@ dataSet.bands.forEach(function (item, i) {
                         keylist.forEach(function (entry) {
                             // keys.push(entry)
                         })
-                        console.log(keylist.length, keys.length)
+                        console.log(keylist.length, r)
                         callback(err)
                     })
                 },
@@ -131,7 +130,7 @@ dataSet.bands.forEach(function (item, i) {
                         keylist.forEach(function (entry) {
                             // keys.push(entry)
                         })
-                        console.log(keylist.length, keys.length)
+                        console.log(keylist.length, r)
                         callback(err)
                     })
                 }
@@ -141,20 +140,6 @@ dataSet.bands.forEach(function (item, i) {
             })
     }
 
-    // keys.forEach(function (key, i) {
-    //     if (options.task == 'UserCountExtractor') {
-    //         writeUserCount(key, item)
-    //     }
-    // })
-
-    // redis.KEYS(key_pattern_prefix + append, function (err, keylist) {
-    //     keylist.forEach(function (key, i) {
-    //         if (options.task == 'UserCountExtractor') {
-    //             writeUserCount(key, item)
-    //         }
-    //     })
-    //     dataSet.flush();
-    // })
 })
 
 // When the program exits, it should flush the data onto the disk.
