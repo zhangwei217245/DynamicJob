@@ -67,7 +67,7 @@ dataSet.bands.forEach(function (item, i) {
     var key_pattern_prefix = options.task + ',' + scale.getScale().toFixed(4) + ',*';
     var append = '';
 
-    var r, i, j;
+    var r;
     for (r = 0; r < size[1]; r += 1000) {
         console.log(r)
         var patterns = [];
@@ -96,6 +96,7 @@ dataSet.bands.forEach(function (item, i) {
                 async.forEachOf(keys,
                     function (key, index, callback) {
                         tasks[options.task].fillArray(array, redis, key, size[0])
+                        callback(null);
                     },
                     function (err1) {
                         item.pixels.write(0, r, size[0], row_num, array);

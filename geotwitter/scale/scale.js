@@ -25,9 +25,9 @@
 
     var CELL_YSIZE = DEGREE_1KM;
 
-    var NROW = Math.ceil(HORIZONTAL_SPAN / CELL_XSIZE) + 1
+    var NCOL = Math.ceil(HORIZONTAL_SPAN / CELL_XSIZE) + 1
 
-    var NCOL = Math.ceil(VERTICAL_SPAN / CELL_YSIZE) + 1
+    var NROW = Math.ceil(VERTICAL_SPAN / CELL_YSIZE) + 1
 
     var EPSG = 4326;
 
@@ -47,8 +47,8 @@
         CELL_XSIZE = conf.resolution.x * SCALE;
         CELL_YSIZE = conf.resolution.y * SCALE;
 
-        NROW = Math.ceil(HORIZONTAL_SPAN / CELL_XSIZE)
-        NCOL = Math.ceil(VERTICAL_SPAN / CELL_XSIZE)
+        NCOL = Math.ceil(HORIZONTAL_SPAN / CELL_XSIZE)
+        NROW = Math.ceil(VERTICAL_SPAN / CELL_XSIZE)
 
         EPSG = conf.EPSG;
         console.log("CELL_NUM=",NROW * NCOL)
