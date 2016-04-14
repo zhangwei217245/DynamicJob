@@ -67,8 +67,12 @@ dataSet.bands.forEach(function (item, i) {
     var key_pattern_prefix = options.task + ',' + scale.getScale().toFixed(4) + ',*';
     var append = '';
 
-    var r;
-    for (r = 0; r < size[1]; r += 1000) {
+    var offset_arr=[];
+    for (var r = 0; r < size[1]; r += 1000) {
+        offset_arr.push(r)
+    }
+    console.log(offset_arr)
+    async.forEachOfSeries(offset_arr, function (offset, index, cb) {
         console.log(r)
         var patterns = [];
         if (r < 1000) {
@@ -94,18 +98,21 @@ dataSet.bands.forEach(function (item, i) {
             },
             function (err) {
                 async.forEachOf(keys,
-                    function (key, index, callback) {
+                    function (key, index, key_cb) {
                         tasks[options.task].fillArray(array, redis, key, size[0])
-                        callback(null);
+                        key_cb(null);
                     },
                     function (err1) {
                         item.pixels.write(0, r, size[0], row_num, array);
                         item.flush();
+                        cb(null);
                     })
             })
-    }
-    console.log('about to exit');
-    process.exit(0);
+    
+    }, function (err) {
+        console.log('about to exit');
+        process.exit(0);
+    })
 })
 
 

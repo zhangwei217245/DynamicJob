@@ -52,8 +52,8 @@
 
         EPSG = conf.EPSG;
         console.log("CELL_NUM=",NROW * NCOL)
-        console.log("GRID_HORIZONTAL_SIZE=",NROW)
-        console.log("GRID_VERTICAL_SIZE=",NCOL)
+        console.log("GRID_HORIZONTAL_SIZE=",NCOL)
+        console.log("GRID_VERTICAL_SIZE=",NROW)
     };
 
 
