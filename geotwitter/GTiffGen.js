@@ -31,7 +31,7 @@ var conf = config.load('./config/geotwitter.yaml', options.config);
 
 const redis = require('redis').createClient(conf.redis);
 const scale = require('./scale/scale').scale(conf, options.scale);
-
+const tasks = require('./tasks');
 
 var format = "GTiff"
 var GDALDriver = null;
@@ -48,105 +48,6 @@ var dataSet = GDALDriver.create(options.output, size[0], size[1], 1, gdal.GDT_In
 dataSet.geoTransform = scale.getGeoTransform();
 dataSet.srs = gdal.SpatialReference.fromEPSGA(scale.getEPSG());
 
-var maxValue = 0;
-
-function writeUserCount(key, item) {
-    redis.scard(key, function (err1, data) {
-        var keyarr = key.split(',');
-        var x = parseInt(keyarr[keyarr.length - 2]);
-        var y = parseInt(keyarr[keyarr.length - 1]);
-        // The more the people were posting tweets, the darker the color should be.
-        // Then the picture should be easily to observe.
-        var gr_val = parseInt(data);
-        if (gr_val > maxValue) {
-            maxValue = gr_val;
-        }
-        item.pixels.write(x, y, 1, 1, Int32Array.of(gr_val))
-        // Flush every pixel's change onto disk.
-        item.flush();
-    })
-}
-
-
-// dataSet.bands.create(gdal.GDT_Byte)
-dataSet.bands.forEach(function (item, i) {
-    item.noDataValue = 0// The entire picture should feature a white background.
-    console.log(item);
-
-    var key_pattern_prefix = options.task + ',' + scale.getScale().toFixed(4) + ',*';
-    var append = '';
-    var r = 0, i = 0, j = 0;
-    for (r = 0; r < size[1]; r += 1000) {
-        row_num = size[1] - r < 1000 ? size[1] - r: 1000;
-        data_arr = new Int32Array(row_num);
-        for (i = 0; i < data_arr.length; i++) {
-            data_arr[i] = new Int32Array(size[0])
-            for (j = 0; j < data_arr[i].length; j++) {
-                data_arr[i][j] = 0
-            }
-        }
-        append = ',' + parseInt(r / 1000) + '???';
-        async.waterfall([
-                function (callback) {
-                    if (r >= 1000) {
-                        return;
-                    }
-                    console.log('1')
-                    redis.KEYS(key_pattern_prefix + ',?', function (err, keylist) {
-                        keylist.forEach(function (entry) {
-                            //keys.push(entry)
-                        })
-                        console.log(keylist.length, r)
-                        callback(err)
-                    })
-                },
-                function (callback) {
-                    if (r >= 1000) {
-                        return;
-                    }
-                    console.log('2')
-                    redis.KEYS(key_pattern_prefix + ',??', function (err, keylist) {
-                        keylist.forEach(function (entry) {
-                            // keys.push(entry)
-                        })
-                        console.log(keylist.length, r)
-                        callback(err)
-                    })
-                },
-                function (callback) {
-                    if (r >= 1000) {
-                        return;
-                    }
-                    console.log('3')
-                    redis.KEYS(key_pattern_prefix + ',???', function (err, keylist) {
-                        keylist.forEach(function (entry) {
-                            // keys.push(entry)
-                        })
-                        console.log(keylist.length, r)
-                        callback(err)
-                    })
-                },
-                function (callback) {
-                    if (r < 1000) {
-                        return;
-                    }
-                    console.log('4')
-                    redis.KEYS(key_pattern_prefix + append, function (err, keylist) {
-                        keylist.forEach(function (entry) {
-                            // keys.push(entry)
-                        })
-                        console.log(keylist.length, r)
-                        callback(err)
-                    })
-                }
-            ],
-            function (err, result) {
-                console.log(err, result)
-            })
-    }
-
-})
-
 // When the program exits, it should flush the data onto the disk.
 process.on('exit', function (code) {
     dataSet.bands.forEach(function (item, i) {
@@ -155,9 +56,58 @@ process.on('exit', function (code) {
     dataSet.flush();
     dataSet.close();
 
-    console.log("maxValue= ", maxValue)
     console.log("exit on code ", code)
 })
+
+// dataSet.bands.create(gdal.GDT_Byte)
+dataSet.bands.forEach(function (item, i) {
+    item.noDataValue = 0// The entire picture should feature a white background.
+    console.log(item);
+
+    var key_pattern_prefix = options.task + ',' + scale.getScale().toFixed(4) + ',*';
+    var append = '';
+
+    var r, i, j;
+    for (r = 0; r < size[1]; r += 1000) {
+        console.log(r)
+        var patterns = [];
+        if (r < 1000) {
+            patterns.push(key_pattern_prefix + ",?", key_pattern_prefix + ",??", key_pattern_prefix + ",???");
+        } else {
+            append = ',' + parseInt(r / 1000) + '???';
+            patterns.push(key_pattern_prefix + append)
+        }
+
+        var row_num = size[1] - r < 1000 ? size[1] - r : 1000;
+        var array = new Int32Array(row_num * size[0]);
+
+        var keys = []
+        async.forEachOf(patterns,
+            function (pattern, index, callback) {
+                redis.KEYS(pattern, function (err, keylist) {
+                    if (err) return callback(err);
+                    keylist.forEach(function (key, i) {
+                        keys.push(key)
+                    })
+                    callback(null);
+                })
+            },
+            function (err) {
+                async.forEachOf(keys,
+                    function (key, index, callback) {
+                        tasks[options.task].fillArray(array, redis, key, size[0])
+                    },
+                    function (err1) {
+                        item.pixels.write(0, r, size[0], row_num, array);
+                        item.flush();
+                    })
+            })
+    }
+    console.log('about to exit');
+    process.exit(0);
+})
+
+
 
 //The program should exit in 10 min.
 setTimeout(function () {

@@ -38,6 +38,7 @@ const sync = require('sync');
 var conf = config.load('./config/geotwitter.yaml', options.config);
 
 const scale = require('./scale/scale').scale(conf, options.scale);
+const tasks = require('./tasks');
 
 const redis = require('redis').createClient(conf.redis);
 
@@ -83,10 +84,8 @@ function startWalkingThroughFiles() {
                         if (tweet.coordinates != null) {
                             var grid_idx = scale.gridIndex(tweet.coordinates.coordinates);
                             if (grid_idx[0]!=null && grid_idx[1]!=null) {
-                                var vl = options.task+','+scale.getScale().toFixed(4)+','+grid_idx
-                                if (options.task == 'UserCountExtractor') {
-                                    redis.sadd(vl, tweet.user.id)
-                                }
+                                var key = options.task+','+scale.getScale().toFixed(4)+','+grid_idx
+                                tasks[options.task].extractFromTweet(tweet, redis, key)
                             }
                         }
                         count++
