@@ -90,27 +90,26 @@ dataSet.bands.forEach(function (item, i) {
                 function (callback) {
                     redis.KEYS(key_pattern_prefix + ',?', function (err, keylist) {
                         keys.push(...keylist);
-                        console.log(keys.length)
+                        console.log(keylist.length, keys.length)
                         callback(err)
                     })
                 },
                 function (callback) {
                     redis.KEYS(key_pattern_prefix + ',??', function (err, keylist) {
                         keys.push(...keylist);
-                        console.log(keys.length)
+                        console.log(keylist.length, keys.length)
                         callback(err)
                     })
                 },
                 function (callback) {
                     redis.KEYS(key_pattern_prefix + ',???', function (err, keylist) {
                         keys.push(...keylist);
-                        console.log(keys.length)
+                        console.log(keylist.length, keys.length)
                         callback(err)
                     })
                 }
             ],
             function (err, keylist) {
-                keys.push(...keylist);
                 console.log('called', keylist.length, keys.length)
             })
         } else {
