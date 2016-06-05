@@ -1,0 +1,31 @@
+usage: TwitterExtractor.py [-h] [-c <default/...>] -t <usercount/...>
+                           [-s <0.5/1.0/2.0/2.5/...>] [-o <./pic.tif>]
+                           [-f <gz/txt>] [-n <4/8/12/16/...>] [-p <Y/N>]
+                           <root_dir>
+
+positional arguments:
+  <root_dir>            The path of the root directory of the data files. This
+                        directory should contain several sub-directories named
+                        by the date on which the data is collected. If you
+                        only pass an empty directory as the argument, then the
+                        program will do nothing but only generate the image,
+                        in this case, you can specify the -o argument for the
+                        name of the output file, but if you omit -o argument,
+                        the output file will be named as "output.tif"
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c <default/...>, --config <default/...>
+                        The file path of the configuration file.
+  -t <usercount/...>, --task <usercount/...>
+                        Specify the task you wanna execute.
+  -s <0.5/1.0/2.0/2.5/...>, --scale <0.5/1.0/2.0/2.5/...>
+                        The scale ratio of both x resolution and y resolution
+  -o <./pic.tif>, --output <./pic.tif>
+                        The file name of the output
+  -f <gz/txt>, --format <gz/txt>
+                        The format of the input file, by default, it is "gz"
+  -n <4/8/12/16/...>, --thread_num <4/8/12/16/...>
+                        The number of threads
+  -p <Y/N>, --purge <Y/N>
+                        If Y, purge the data in redis

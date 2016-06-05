@@ -1,0 +1,32 @@
+default:
+  server:
+    port: 3000
+  redis:
+    host: '127.0.0.1'
+    port: 6379
+    db: 0
+  extent:
+    xmin: -125
+    xmax: -66.00002
+    ymin: 24.00003
+    ymax: 50.00003
+  resolution:
+    x: 0.008333333
+    y: 0.008333333
+  EPSG: 4326
+hongkong:
+  server:
+    port: 3000
+  redis:
+    host: '127.0.0.1'
+    port: 6379
+    db: 0
+  extent:
+    xmin: 113.747978
+    xmax: 114.462433
+    ymin: 22.117661
+    ymax: 22.570638
+  resolution:
+    x: 0.008333333
+    y: 0.008333333
+  EPSG: 4326
