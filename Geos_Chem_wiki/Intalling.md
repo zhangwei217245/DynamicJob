@@ -3,10 +3,9 @@
 ## Create a directory for everything that might be useful
 
 ```
-mkdir workspace
-cd workspace
-mkdir GEOS-CHEM
-cd GEOS-CHEM
+cd ~
+mkdir GC
+cd GC
 ```
 
 ## Download the source code:
@@ -46,7 +45,7 @@ Execute the downloaded shell script, and follow the instructions. Make sure you 
 as well as the computing frameworks and libraries. And for simplicity, you can install them in 
 
 ```
-~/workspace/intel
+~/intel
 ```
 
 ### Configure the corresponding environment variables.
@@ -54,7 +53,7 @@ as well as the computing frameworks and libraries. And for simplicity, you can i
 Open ~/.bashrc with any text editor you like, at the end of the file, add the following lines:
 
 ```
-export INTEL_HOME=/home/<username>/workspace/intel/compilers_and_libraries/linux
+export INTEL_HOME=/home/<username>/intel/compilers_and_libraries/linux
 export LD_LIBRARY_PATH=$INTEL_HOME/lib/intel64:$INTEL_HOME/mpi/lib64:$LD_LIBRARY_PATH
 source $INTEL_HOME/bin/compilervars.sh -arch intel64
 ```
@@ -64,7 +63,7 @@ Save the file, exit the file editor, exit the current opening terminal and re-op
 ### Download and build netCDF library
 
 ```
-cd ~/workspace/GEOS-CHEM/
+cd ~/GC/
 git clone -b netcdf-4.2 https://bitbucket.org/gcst/geos-chem-libraries GC-Lib
 ```
 
@@ -88,7 +87,7 @@ make verify
 Open ~/.bashrc with any text editor you like, at the end of the file, add the following lines:
 
 ```
-export GC_HOME=/home/<username>/workspace/GEOS-CHEM
+export GC_HOME=/home/<username>/GC
 export GC_BIN=$GC_HOME/GC-Lib/opt/ifort/nc4/bin
 export GC_INCLUDE=$GC_HOME/GC-Lib/opt/ifort/nc4/include
 export GC_LIB=$GC_HOME/GC-Lib/opt/ifort/nc4/lib
@@ -103,7 +102,7 @@ Save the file, exit the file editor, exit the current opening terminal and re-op
 Before doing so, we need to fix another issue in GEOS-Chem source code:
 
 ```
-cd ~/workspace/GEOS-CHEM/Code.v10-01
+cd ~/GC/Code.v10-01
 ```
 
 Open `HEMCO/Extensions/hcox_gc_RnPbBe_mod.F90` , go to line 773, change `54_hp` into `54.0_hp` .
@@ -115,7 +114,7 @@ Compile the GEOS-Chem executables.
 For example:
 
 ```
-cd ~/workspace/GEOS-CHEM/Code.v10-01
+cd ~/GC/Code.v10-01
 make all -j4 GRID=4x5 MET=GEOS-5 CHEM=standard UCX=YES
 ```
 
