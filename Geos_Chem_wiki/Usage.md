@@ -44,6 +44,56 @@
 ```
 ssh liu40@hrothgar.hpcc.ttu.edu
 ```
+## Download the ExtData that you need.
+
+Refer to the link below for the directory structure
+
+http://wiki.seas.harvard.edu/geos-chem/index.php/Downloading_GEOS-Chem_source_code_and_data#Shared_data_directory_archives
+
+1. Go to the lustre file system to download the data:
+```
+cd /lustre/scratch/liu40
+```
+2. Download the correspoinding data that is needed for your experiment:
+For downloading from Dalhousie University:
+```
+nohup wget -r "ftp://rain.ucis.dal.ca/DIRECTORY_NAME" > nohup_ucis.out &
+```
+For downloading from Harvard University:
+```
+nohup wget -r "ftp://ftp.as.harvard.edu/DIRECTORY_NAME" > nohup_harvard.out &
+```
+    * Note 1: for `DIRECTORY_NAME` at Dalhousie University, please refer to [Dalhousie data directory archive](http://wiki.seas.harvard.edu/geos-chem/index.php/Downloading_GEOS-Chem_source_code_and_data#Dalhousie_data_directory_archive)
+    * Note 2: for `DIRECTORY_NAME` at Harvard University, please refer to [Harvard data directory archive](http://wiki.seas.harvard.edu/geos-chem/index.php/Downloading_GEOS-Chem_source_code_and_data#Harvard_data_directory_archive)
+    * Note 3: During downloading, if you would like to see the downloading progress, do the following:
+    ```
+    cd /lustre/scratch/liu40
+    tail -f nohup_ucis.out
+    tail -f nohup_harvard.out
+    ```
+    Press `Ctrl + C` to terminate any process that is printing output in the console.
+    The following command will help you to terminate any process that is running in background, such as the `wget` process here:
+    ```
+    ps -ef | grep wget | grep -v grep
+    ```
+    You will see:
+    ```
+    liu40   3350     1  0 Jun22 ?        00:00:00 wget
+    ```
+    Which means `liu40` initiated a process, `wget`, with process ID=3350, and now it is running.
+    You can kill this process by the following command whenever you think it's better to terminate this wget process:
+    ```
+    kill -9 3350
+    ```
+    Here, `3350` is the process ID for the running wget process, but it may be different on your computer since every time when you initiate a process, it will be assigned with a different process ID.
+    * Note 3: After downloading, go to either `rain.ucis.dal.ca` or `ftp.as.harvard.edu` to verify your downloaded file. Remember the file path by executing `pwd` command.
+3. Link the downloaded data into you `ExtData` directory:
+Suppose you are going to link `/lustre/scratch/liu40/rain.ucis.dal.ca/ctm/GEOS_4x5/` into you `ExtData` directory:
+```
+cd /home/liu40/GC/ExtData/
+ln -s /lustre/scratch/liu40/rain.ucis.dal.ca/ctm/GEOS_4x5/ ./
+```
+Then, it's done!
 
 ## Change current working directory
 ```
