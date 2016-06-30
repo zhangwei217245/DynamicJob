@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>x.spirit.dynamicjob</groupId>
     <artifactId>DynamicJob</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
         <module>core</module>
@@ -12,20 +12,38 @@
         <module>mockingjay</module>
     </modules>
 
+    <scm>
+	<url>https://gitlab.com/zhangwei217245/DynamicJob</url>
+
+	<connection>scm:git:git://gitlab.com/zhangwei217245/DynamicJob.git</connection>
+	<developerConnection>scm:git:git@gitlab.com:zhangwei217245/DynamicJob.git</developerConnection>
+    </scm>
+
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>x.spirit.dynamicjob</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>core</artifactId>
-                <version>${project.release.version}</version>
+                <version>${project.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>beak</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
-                <groupId>x.spirit.dynamicjob</groupId>
-                <artifactId>beak</artifactId>
-                <version>${project.release.version}</version>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>mockingjay</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>vampire</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
