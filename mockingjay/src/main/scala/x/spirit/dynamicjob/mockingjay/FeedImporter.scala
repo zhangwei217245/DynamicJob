@@ -225,8 +225,8 @@ object FeedImporter extends App{
     if (admin.tableExists(table, families)) {
       (twRdd ++ rtRdd).toHBaseBulk(table);
     } else {
-//      admin.createTable(table, families);
-//      (twRdd ++ rtRdd).toHBaseBulk(table);
+      admin.createTable(table, families);
+      (twRdd ++ rtRdd).toHBaseBulk(table);
 
     }
 
