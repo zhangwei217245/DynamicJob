@@ -11,19 +11,7 @@ import x.spirit.dynamicjob.mockingjay.hbase._
 
 
 /**
-  * +--------------------+-----------------+--------------------+
-|                text|             name|          created_at|
-+--------------------+-----------------+--------------------+
-|This Asian girl s...|     John Kazalas|Wed Aug 01 04:00:...|
-|@WhoRaven_  ™®©  ...|  ™®© Affiliated |Wed Aug 01 04:00:...|
-|      Take a hint...|Cierra Lynn Rains|Wed Aug 01 04:00:...|
-|@ZK_LOVIN haven't...| spencer slattery|Wed Aug 01 04:00:...|
-|I'm at Caleb Turm...|   Bro McCracken.|Wed Aug 01 04:00:...|
-+--------------------+-----------------+--------------------+
-
-
-scala>
-
+  *
 scala> df.printSchema()
 root
  |-- coordinates: struct (nullable = true)
