@@ -3,11 +3,17 @@
 cd ~
 sudo echo ""
 
-wget "http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.tgz"
+#wget "http://downloads.lightbend.com/scala/2.11.8/scala-2.11.8.tgz"
 
-tar zxvf scala-2.11.8.tgz
+#tar zxvf scala-2.11.8.tgz
 
-mv scala-2.11.8 scala
+#mv scala-2.11.8 scala
+
+wget "http://downloads.lightbend.com/scala/2.10.6/scala-2.10.6.tgz"
+
+tar zxvf scala-2.10.6.tgz
+
+mv scala-2.10.6 scala
 
 wget "http://d3kbcqa49mib13.cloudfront.net/spark-1.6.1-bin-hadoop2.6.tgz"
 
