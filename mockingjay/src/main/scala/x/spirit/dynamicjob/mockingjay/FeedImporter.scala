@@ -1,6 +1,7 @@
 package x.spirit.dynamicjob.mockingjay
 
 import java.text.SimpleDateFormat
+import java.util
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.util.Bytes
@@ -8,6 +9,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
 import x.spirit.dynamicjob.mockingjay.hbase._
+import scala.collection.JavaConverters._
 
 
 /**
@@ -163,7 +165,10 @@ object FeedImporter extends App{
         text = text.concat("   ").concat(row.getString(row.fieldIndex("rt_text")));
       }
 
-      row.getList[Double](row.fieldIndex("coordinates"))
+      var coordinates = row.getList[Double](row.fieldIndex("coordinates"))
+      if (coordinates == null) {
+        coordinates = Seq[Double](0.0d, 0.0d).asJava;
+      }
 
       val content = Map(
         "user" -> Map(
@@ -183,8 +188,7 @@ object FeedImporter extends App{
           row.getAs("id").toString() -> Bytes.toBytes(text)
         ),
         "location" -> Map(
-          created_at.toString -> Bytes.toBytes(row.getList[Double](row.fieldIndex("coordinates"))
-            .toString.replace("[","").replace("]",""))
+          created_at.toString -> Bytes.toBytes(coordinates.toString.replace("[","").replace("]",""))
         )
       );
       row.getAs("u_id").toString -> content;
@@ -194,6 +198,10 @@ object FeedImporter extends App{
     val rtRdd = df.filter("retweeted=true").map({row =>
       val u_created_at = twitterDateFormat.parse(row.getAs("rt_u_created_at").toString()).getTime;
       val created_at = twitterDateFormat.parse(row.getAs("rt_created_at").toString()).getTime;
+      var coordinates = row.getList[Double](row.fieldIndex("rt_coordinates"))
+      if (coordinates == null) {
+        coordinates = Seq[Double](0.0d, 0.0d).asJava;
+      }
       val content = Map(
         "user" -> Map(
           "created_at" -> Bytes.toBytes(u_created_at),
@@ -212,8 +220,7 @@ object FeedImporter extends App{
           row.getAs("rt_id").toString() -> Bytes.toBytes(row.getAs("rt_text").toString)
         ),
         "location" -> Map(
-          created_at.toString -> Bytes.toBytes(row.getList[Double](row.fieldIndex("rt_coordinates"))
-            .toString.replace("[","").replace("]",""))
+          created_at.toString -> Bytes.toBytes(coordinates.toString.replace("[","").replace("]",""))
         )
       );
       row.getAs("rt_u_id").toString -> content;
