@@ -165,7 +165,11 @@ object FeedImporter extends App{
         text = Option(text.getOrElse("").concat("   ") + row.getString(row.fieldIndex("rt_text")));
       }
 
-      var coordinates = Option(row.getList[Double](row.fieldIndex("coordinates")))
+      var coordinates = "0.0, 0.0"
+      if (!row.isNullAt(row.fieldIndex("coordinates"))){
+        coordinates = row.getList[Double](row.fieldIndex("coordinates"))
+          .toString.replace("[","").replace("]","")
+      }
 
       val name = Option(row.getString(row.fieldIndex("u_name")))
       val screen_name = Option(row.getString(row.fieldIndex("u_screen_name")))
@@ -194,11 +198,10 @@ object FeedImporter extends App{
         ),
         "tweet" -> Map(
           row.getAs("id").toString() -> Bytes.toBytes(text.getOrElse(""))
-        )//,
-//        "location" -> Map(
-//          created_at.toString -> Bytes.toBytes(coordinates.getOrElse(List[Double](0.0d, 0.0d).asJava)
-//            .toString.replace("[","").replace("]",""))
-//        )
+        ),
+        "location" -> Map(
+          created_at.toString -> Bytes.toBytes(coordinates)
+        )
       );
       row.getAs("u_id").toString -> content;
     })
@@ -209,7 +212,11 @@ object FeedImporter extends App{
       val created_at = twitterDateFormat.parse(row.getAs("rt_created_at").toString()).getTime;
       var text = Option(row.getString(row.fieldIndex("rt_text")));
 
-      var coordinates = Option(row.getList[Double](row.fieldIndex("rt_coordinates")))
+      var coordinates = "0.0, 0.0"
+      if (!row.isNullAt(row.fieldIndex("rt_coordinates"))){
+        coordinates = row.getList[Double](row.fieldIndex("rt_coordinates"))
+          .toString.replace("[","").replace("]","")
+      }
 
       val name = Option(row.getString(row.fieldIndex("rt_u_name")))
       val screen_name = Option(row.getString(row.fieldIndex("rt_u_screen_name")))
@@ -237,19 +244,18 @@ object FeedImporter extends App{
           "statuses_count" -> Bytes.toBytes(statuses_count.getOrElse(0l))
         ),
         "tweet" -> Map(
-          row.getAs("id").toString() -> Bytes.toBytes(text.getOrElse(""))
-        )//,
-//        "location" -> Map(
-//          created_at.toString -> Bytes.toBytes(coordinates.getOrElse(List[Double](0.0d, 0.0d).asJava)
-//            .toString.replace("[","").replace("]",""))
-//        )
+          row.getAs("rt_id").toString() -> Bytes.toBytes(text.getOrElse(""))
+        ),
+        "location" -> Map(
+          created_at.toString -> Bytes.toBytes(coordinates)
+        )
       );
       row.getAs("rt_u_id").toString -> content;
     })
 
     val admin = Admin()
     val table = "twitterUser";
-    val families = Set("user", "twitter", "location", "guess1", "guess2");
+    val families = Set("user", "tweet", "location", "guess1", "guess2");
     if (admin.tableExists(table, families)) {
       (twRdd ++ rtRdd).toHBaseBulk(table);
     } else {
