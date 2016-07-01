@@ -151,7 +151,7 @@ object FeedImporter extends App{
       "retweeted_status.user.friends_count as rt_u_friends_count",
       "retweeted_status.user.statuses_count as rt_u_statuses_count")
 
-    val files = sc.textFile("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotestdata/20120801/*.gz")
+    val files = sc.textFile("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/*/*.gz")
     val txtrdd = files.filter(line => line.length>0 ).map(line=>line.split("\\|")(1))
     val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields:_*)
 
