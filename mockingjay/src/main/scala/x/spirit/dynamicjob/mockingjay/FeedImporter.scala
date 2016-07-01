@@ -194,11 +194,11 @@ object FeedImporter extends App{
         ),
         "tweet" -> Map(
           row.getAs("id").toString() -> Bytes.toBytes(text.getOrElse(""))
-        ),
-        "location" -> Map(
-          created_at.toString -> Bytes.toBytes(coordinates.getOrElse(List[Double](0.0d, 0.0d).asJava)
-            .toString.replace("[","").replace("]",""))
-        )
+        )//,
+//        "location" -> Map(
+//          created_at.toString -> Bytes.toBytes(coordinates.getOrElse(List[Double](0.0d, 0.0d).asJava)
+//            .toString.replace("[","").replace("]",""))
+//        )
       );
       row.getAs("u_id").toString -> content;
     })
@@ -238,11 +238,11 @@ object FeedImporter extends App{
         ),
         "tweet" -> Map(
           row.getAs("id").toString() -> Bytes.toBytes(text.getOrElse(""))
-        ),
-        "location" -> Map(
-          created_at.toString -> Bytes.toBytes(coordinates.getOrElse(List[Double](0.0d, 0.0d).asJava)
-            .toString.replace("[","").replace("]",""))
-        )
+        )//,
+//        "location" -> Map(
+//          created_at.toString -> Bytes.toBytes(coordinates.getOrElse(List[Double](0.0d, 0.0d).asJava)
+//            .toString.replace("[","").replace("]",""))
+//        )
       );
       row.getAs("rt_u_id").toString -> content;
     })
