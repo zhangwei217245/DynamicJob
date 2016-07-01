@@ -159,48 +159,45 @@ object FeedImporter extends App{
     val twRdd = df.map({row =>
       val u_created_at = twitterDateFormat.parse(row.getAs("u_created_at").toString()).getTime;
       val created_at = twitterDateFormat.parse(row.getAs("created_at").toString()).getTime;
-      val retweeted = row.getBoolean(row.fieldIndex("retweeted"));
-      var text = row.getString(row.fieldIndex("text"));
-      if (text == null) text = ""
-      if (retweeted) {
-        text = text.concat("   ").concat(row.getString(row.fieldIndex("rt_text")));
+      val retweeted = Option(row.getBoolean(row.fieldIndex("retweeted")));
+      var text = Option(row.getString(row.fieldIndex("text")));
+      if (retweeted.getOrElse(false)) {
+        text = Option(text.getOrElse("").concat("   ") + row.getString(row.fieldIndex("rt_text")));
       }
 
-      var coordinates = row.getList[Double](row.fieldIndex("coordinates"))
-      if (coordinates == null) {
-        coordinates = List[Double](0.0d, 0.0d).asJava;
-        System.out.println("Fixed coordinates" + coordinates)
-      }
-      val name = row.getString(row.fieldIndex("u_name"))
-      val screen_name = row.getString(row.fieldIndex("u_screen_name"))
-      val lang = row.getString(row.fieldIndex("u_lang"))
-      val time_zone = row.getString(row.fieldIndex("u_time_zone"))
-      val verified = row.getBoolean(row.fieldIndex("u_verified"))
-      val description = row.getString(row.fieldIndex("u_description"))
-      val location = row.getString(row.fieldIndex("u_location"))
-      val followers_count = row.getLong(row.fieldIndex("u_followers_count"))
-      val friends_count = row.getLong(row.fieldIndex("u_friends_count"))
-      val statuses_count = row.getLong(row.fieldIndex("u_statuses_count"))
+      var coordinates = Option(row.getList[Double](row.fieldIndex("coordinates")))
+
+      val name = Option(row.getString(row.fieldIndex("u_name")))
+      val screen_name = Option(row.getString(row.fieldIndex("u_screen_name")))
+      val lang = Option(row.getString(row.fieldIndex("u_lang")))
+      val time_zone = Option(row.getString(row.fieldIndex("u_time_zone")))
+      val verified = Option(row.getBoolean(row.fieldIndex("u_verified")))
+      val description = Option(row.getString(row.fieldIndex("u_description")))
+      val location = Option(row.getString(row.fieldIndex("u_location")))
+      val followers_count = Option(row.getLong(row.fieldIndex("u_followers_count")))
+      val friends_count = Option(row.getLong(row.fieldIndex("u_friends_count")))
+      val statuses_count = Option(row.getLong(row.fieldIndex("u_statuses_count")))
 
       val content = Map(
         "user" -> Map(
           "created_at" -> Bytes.toBytes(u_created_at),
-          "name" -> Bytes.toBytes(if (name == null) "" else name),
-          "screen_name" -> Bytes.toBytes(if (screen_name == null) "" else screen_name),
-          "lang" -> Bytes.toBytes(if(lang == null) "" else lang),
-          "time_zone" -> Bytes.toBytes(if (time_zone == null) "" else time_zone),
-          "verified" -> Bytes.toBytes(if (verified == null) false else verified),
-          "description" -> Bytes.toBytes(if (description == null) "" else description),
-          "location" -> Bytes.toBytes(if (location == null) "" else location),
-          "followers_count" -> Bytes.toBytes(if (followers_count == null) 0l else followers_count),
-          "friends_count" -> Bytes.toBytes(if (friends_count == null) 0l else friends_count),
-          "statuses_count" -> Bytes.toBytes(if (statuses_count == null) 0l else statuses_count)
+          "name" -> Bytes.toBytes(name.getOrElse("")),
+          "screen_name" -> Bytes.toBytes(screen_name.getOrElse("")),
+          "lang" -> Bytes.toBytes(lang.getOrElse("")),
+          "time_zone" -> Bytes.toBytes(time_zone.getOrElse("")),
+          "verified" -> Bytes.toBytes(verified.getOrElse(false)),
+          "description" -> Bytes.toBytes(description.getOrElse("")),
+          "location" -> Bytes.toBytes(location.getOrElse("")),
+          "followers_count" -> Bytes.toBytes(followers_count.getOrElse(0l)),
+          "friends_count" -> Bytes.toBytes(friends_count.getOrElse(0l)),
+          "statuses_count" -> Bytes.toBytes(statuses_count.getOrElse(0l))
         ),
         "tweet" -> Map(
-          row.getAs("id").toString() -> Bytes.toBytes(text)
+          row.getAs("id").toString() -> Bytes.toBytes(text.getOrElse(""))
         ),
         "location" -> Map(
-          created_at.toString -> Bytes.toBytes(coordinates.toString.replace("[","").replace("]",""))
+          created_at.toString -> Bytes.toBytes(coordinates.getOrElse(List[Double](0.0d, 0.0d).asJava)
+            .toString.replace("[","").replace("]",""))
         )
       );
       row.getAs("u_id").toString -> content;
@@ -210,43 +207,41 @@ object FeedImporter extends App{
     val rtRdd = df.filter("retweeted=true").map({row =>
       val u_created_at = twitterDateFormat.parse(row.getAs("rt_u_created_at").toString()).getTime;
       val created_at = twitterDateFormat.parse(row.getAs("rt_created_at").toString()).getTime;
-      var text = row.getString(row.fieldIndex("rt_text"));
-      if (text == null) text = ""
-      var coordinates = row.getList[Double](row.fieldIndex("rt_coordinates"))
-      if (coordinates == null) {
-        coordinates = List[Double](0.0d, 0.0d).asJava;
-      }
+      var text = Option(row.getString(row.fieldIndex("rt_text")));
 
-      val name = row.getString(row.fieldIndex("rt_u_name"))
-      val screen_name = row.getString(row.fieldIndex("rt_u_screen_name"))
-      val lang = row.getString(row.fieldIndex("rt_u_lang"))
-      val time_zone = row.getString(row.fieldIndex("rt_u_time_zone"))
-      val verified = row.getBoolean(row.fieldIndex("rt_u_verified"))
-      val description = row.getString(row.fieldIndex("rt_u_description"))
-      val location = row.getString(row.fieldIndex("rt_u_location"))
-      val followers_count = row.getLong(row.fieldIndex("rt_u_followers_count"))
-      val friends_count = row.getLong(row.fieldIndex("rt_u_friends_count"))
-      val statuses_count = row.getLong(row.fieldIndex("rt_u_statuses_count"))
+      var coordinates = Option(row.getList[Double](row.fieldIndex("rt_coordinates")))
+
+      val name = Option(row.getString(row.fieldIndex("rt_u_name")))
+      val screen_name = Option(row.getString(row.fieldIndex("rt_u_screen_name")))
+      val lang = Option(row.getString(row.fieldIndex("rt_u_lang")))
+      val time_zone = Option(row.getString(row.fieldIndex("rt_u_time_zone")))
+      val verified = Option(row.getBoolean(row.fieldIndex("rt_u_verified")))
+      val description = Option(row.getString(row.fieldIndex("rt_u_description")))
+      val location = Option(row.getString(row.fieldIndex("rt_u_location")))
+      val followers_count = Option(row.getLong(row.fieldIndex("rt_u_followers_count")))
+      val friends_count = Option(row.getLong(row.fieldIndex("rt_u_friends_count")))
+      val statuses_count = Option(row.getLong(row.fieldIndex("rt_u_statuses_count")))
 
       val content = Map(
         "user" -> Map(
           "created_at" -> Bytes.toBytes(u_created_at),
-          "name" -> Bytes.toBytes(if (name == null) "" else name),
-          "screen_name" -> Bytes.toBytes(if (screen_name == null) "" else screen_name),
-          "lang" -> Bytes.toBytes(if(lang == null) "" else lang),
-          "time_zone" -> Bytes.toBytes(if (time_zone == null) "" else time_zone),
-          "verified" -> Bytes.toBytes(if (verified == null) false else verified),
-          "description" -> Bytes.toBytes(if (description == null) "" else description),
-          "location" -> Bytes.toBytes(if (location == null) "" else location),
-          "followers_count" -> Bytes.toBytes(if (followers_count == null) 0l else followers_count),
-          "friends_count" -> Bytes.toBytes(if (friends_count == null) 0l else friends_count),
-          "statuses_count" -> Bytes.toBytes(if (statuses_count == null) 0l else statuses_count)
+          "name" -> Bytes.toBytes(name.getOrElse("")),
+          "screen_name" -> Bytes.toBytes(screen_name.getOrElse("")),
+          "lang" -> Bytes.toBytes(lang.getOrElse("")),
+          "time_zone" -> Bytes.toBytes(time_zone.getOrElse("")),
+          "verified" -> Bytes.toBytes(verified.getOrElse(false)),
+          "description" -> Bytes.toBytes(description.getOrElse("")),
+          "location" -> Bytes.toBytes(location.getOrElse("")),
+          "followers_count" -> Bytes.toBytes(followers_count.getOrElse(0l)),
+          "friends_count" -> Bytes.toBytes(friends_count.getOrElse(0l)),
+          "statuses_count" -> Bytes.toBytes(statuses_count.getOrElse(0l))
         ),
         "tweet" -> Map(
-          row.getAs("rt_id").toString() -> Bytes.toBytes(text)
+          row.getAs("id").toString() -> Bytes.toBytes(text.getOrElse(""))
         ),
         "location" -> Map(
-          created_at.toString -> Bytes.toBytes(coordinates.toString.replace("[","").replace("]",""))
+          created_at.toString -> Bytes.toBytes(coordinates.getOrElse(List[Double](0.0d, 0.0d).asJava)
+            .toString.replace("[","").replace("]",""))
         )
       );
       row.getAs("rt_u_id").toString -> content;
