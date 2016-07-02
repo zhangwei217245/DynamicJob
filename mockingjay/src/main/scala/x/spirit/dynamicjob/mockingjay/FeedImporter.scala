@@ -2,6 +2,7 @@ package x.spirit.dynamicjob.mockingjay
 
 import java.text.SimpleDateFormat
 import java.util
+import java.util.zip.GZIPInputStream
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.util.Bytes
@@ -9,7 +10,9 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
 import x.spirit.dynamicjob.mockingjay.hbase._
+
 import scala.collection.JavaConverters._
+import scala.io.Source
 
 
 /**
@@ -110,6 +113,28 @@ object FeedImporter extends App{
     val sc = new SparkContext(sparkConf)
     val sqlContext = new SQLContext(sc)
 
+    val files = sc.binaryFiles("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/*/*.gz")
+      .flatMap({
+        case (path, stream) =>
+          try {
+            val is =
+              if (path.toLowerCase.endsWith(".gz"))
+                new GZIPInputStream(stream.open)
+              else
+                stream.open
+
+            try {
+              Source.fromInputStream(is).getLines.toList
+            } finally {
+              try { is.close } catch { case _: Throwable => }
+            }
+          } catch {
+            case e: Throwable =>
+              System.err.printf("error reading from %s: %s", path, e.getMessage)
+              List.empty[String]
+          }
+      })
+
     val conf : Configuration = new Configuration()
 
     implicit val config = HBaseConfig(
@@ -151,7 +176,7 @@ object FeedImporter extends App{
       "retweeted_status.user.friends_count as rt_u_friends_count",
       "retweeted_status.user.statuses_count as rt_u_statuses_count")
 
-    val files = sc.textFile("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/*/*.gz")
+
     val txtrdd = files.filter(line => line.length>0 ).map(line=>line.split("\\|")(1))
     val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields:_*)
 
