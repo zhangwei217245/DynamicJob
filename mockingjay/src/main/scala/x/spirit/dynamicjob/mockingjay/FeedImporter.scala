@@ -1,14 +1,18 @@
 package x.spirit.dynamicjob.mockingjay
 
+import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.zip.GZIPInputStream
 
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import x.spirit.dynamicjob.mockingjay.hbase._
 
+import scala.collection.mutable
 import scala.io.Source
 
 
@@ -202,58 +206,44 @@ object FeedImporter extends App {
       hbaseXmlConfigFile = "hbase-site.xml"
     )
 
+    val dirs = FileSystem.get(sc.hadoopConfiguration)
+      .listFiles(new Path("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/"), true)
 
-    val allFiles = sc.binaryFiles("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/*/*.gz")
-      .map({ case (path, stream) =>
-        try {
-          val is =
-            if (path.toLowerCase.endsWith(".gz"))
-              new GZIPInputStream(stream.open)
-            else
-              stream.open
-          try {
-            val file_len = Source.fromInputStream(is).length;
-            path -> file_len
-          } finally {
-            try {
-              is.close
-            } catch {
-              case _: Throwable =>
-            }
-          }
-        } catch {
-          case e: Throwable =>
-            System.err.printf("error reading from %s: %s", path, e.getMessage)
-            ("" -> 0)
+    val monthlyDirs = mutable.Set[String]()
+    while (dirs.hasNext) {
+      monthlyDirs.add(dirs.next().getPath.getParent.toString)
+    }
+
+    monthlyDirs.foreach({ case(path) =>
+      try {
+        val content = sc.textFile(path+"/*.gz")
+
+        println("Processing file :" + path + "/*.gz @ " + new Date())
+        val txtrdd = content.filter(line => line.length > 0).map(line => line.split("\\|")(1))
+        val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields: _*)
+
+        // Transfer data frame into RDD, and prepare it for writing to HBase
+        val twRdd = df.map({ row => createTweetDataFrame(row) })
+
+        // Transfer data frame of all retweeted
+        val rtRdd = df.filter("retweeted=true").map({ row => createTweetDataFrame(row, "rt_") })
+
+        val admin = Admin()
+        val table = "twitterUser";
+        val families = Set("user", "tweet", "location", "guess1", "guess2");
+        if (admin.tableExists(table, families)) {
+          (twRdd ++ rtRdd).toHBaseBulk(table);
+        } else {
+          admin.createTable(table, families);
+          (twRdd ++ rtRdd).toHBaseBulk(table);
+
         }
-      }).filter(_._2 == 0).toLocalIterator
-
-    allFiles.foreach({ case (path, length) =>
-
-      val content = sc.textFile(path)
-
-      println("Processing file :" + path + " @ " + new Date())
-      val txtrdd = content.filter(line => line.length > 0).map(line => line.split("\\|")(1))
-      val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields: _*)
-
-      // Transfer data frame into RDD, and prepare it for writing to HBase
-      val twRdd = df.map({ row => createTweetDataFrame(row) })
-
-      // Transfer data frame of all retweeted
-      val rtRdd = df.filter("retweeted=true").map({ row => createTweetDataFrame(row, "rt_") })
-
-      val admin = Admin()
-      val table = "twitterUser";
-      val families = Set("user", "tweet", "location", "guess1", "guess2");
-      if (admin.tableExists(table, families)) {
-        (twRdd ++ rtRdd).toHBaseBulk(table);
-      } else {
-        admin.createTable(table, families);
-        (twRdd ++ rtRdd).toHBaseBulk(table);
-
+        admin.close
+      } catch {
+        case e:Throwable =>
+          System.err.println("Failed to import file : " + path +" due to the following error:" + e.getMessage)
+          e.printStackTrace(System.err)
       }
-      admin.close
-
     })
   }
 }
