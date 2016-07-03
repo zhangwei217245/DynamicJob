@@ -6,7 +6,7 @@ import java.util.zip.GZIPInputStream
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import x.spirit.dynamicjob.mockingjay.hbase._
 
@@ -102,6 +102,93 @@ import scala.io.Source
 
 object FeedImporter extends App {
 
+  val twitterDateFormat = new SimpleDateFormat("EEE MMM d kk:mm:ss ZZZZZ yyyy");
+
+  val fields = Array[String]("user.created_at as u_created_at",
+    "user.description as u_description",
+    "user.id as u_id",
+    "user.lang as u_lang",
+    "user.location as u_location",
+    "user.name as u_name",
+    "user.screen_name as u_screen_name",
+    "user.time_zone as u_time_zone",
+    "user.verified as u_verified",
+    "user.followers_count as u_followers_count",
+    "user.friends_count as u_friends_count",
+    "user.statuses_count as u_statuses_count",
+    "created_at",
+    "id",
+    "text",
+    "coordinates.coordinates",
+    "retweeted",
+    "retweeted_status.created_at as rt_created_at",
+    "retweeted_status.id as rt_id",
+    "retweeted_status.text as rt_text",
+    "retweeted_status.coordinates.coordinates as rt_coordinates",
+    "retweeted_status.user.created_at as rt_u_created_at",
+    "retweeted_status.user.description as rt_u_description",
+    "retweeted_status.user.id as rt_u_id",
+    "retweeted_status.user.lang as rt_u_lang",
+    "retweeted_status.user.location as rt_u_location",
+    "retweeted_status.user.name as rt_u_name",
+    "retweeted_status.user.screen_name as rt_u_screen_name",
+    "retweeted_status.user.time_zone as rt_u_time_zone",
+    "retweeted_status.user.verified as rt_u_verified",
+    "retweeted_status.user.followers_count as rt_u_followers_count",
+    "retweeted_status.user.friends_count as rt_u_friends_count",
+    "retweeted_status.user.statuses_count as rt_u_statuses_count")
+
+  def createTweetDataFrame(row: Row, prefix: String = ""): (String, Map[String, Map[String, Array[Byte]]]) = {
+    val u_created_at = twitterDateFormat.parse(row.getAs(prefix + "u_created_at").toString()).getTime;
+    val created_at = twitterDateFormat.parse(row.getAs(prefix + "created_at").toString()).getTime;
+    val retweeted = Option(row.getBoolean(row.fieldIndex("retweeted")));
+    var text = Option(row.getString(row.fieldIndex(prefix + "text")));
+    if (retweeted.getOrElse(false) && "".equals(prefix)) {
+      text = Option(text.getOrElse("").concat("   ") + row.getString(row.fieldIndex("rt_text")));
+    }
+
+    var coordinates = "0.0, 0.0"
+    if (!row.isNullAt(row.fieldIndex(prefix + "coordinates"))) {
+      coordinates = row.getList[Double](row.fieldIndex(prefix + "coordinates"))
+        .toString.replace("[", "").replace("]", "")
+    }
+
+    val name = Option(row.getString(row.fieldIndex(prefix + "u_name")))
+    val screen_name = Option(row.getString(row.fieldIndex(prefix + "u_screen_name")))
+    val lang = Option(row.getString(row.fieldIndex(prefix + "u_lang")))
+    val time_zone = Option(row.getString(row.fieldIndex(prefix + "u_time_zone")))
+    val verified = Option(row.getBoolean(row.fieldIndex(prefix + "u_verified")))
+    val description = Option(row.getString(row.fieldIndex(prefix + "u_description")))
+    val location = Option(row.getString(row.fieldIndex(prefix + "u_location")))
+    val followers_count = Option(row.getLong(row.fieldIndex(prefix + "u_followers_count")))
+    val friends_count = Option(row.getLong(row.fieldIndex(prefix + "u_friends_count")))
+    val statuses_count = Option(row.getLong(row.fieldIndex(prefix + "u_statuses_count")))
+
+    val content = Map(
+      "user" -> Map(
+        "created_at" -> Bytes.toBytes(u_created_at),
+        "name" -> Bytes.toBytes(name.getOrElse("")),
+        "screen_name" -> Bytes.toBytes(screen_name.getOrElse("")),
+        "lang" -> Bytes.toBytes(lang.getOrElse("")),
+        "time_zone" -> Bytes.toBytes(time_zone.getOrElse("")),
+        "verified" -> Bytes.toBytes(verified.getOrElse(false)),
+        "description" -> Bytes.toBytes(description.getOrElse("")),
+        "location" -> Bytes.toBytes(location.getOrElse("")),
+        "followers_count" -> Bytes.toBytes(followers_count.getOrElse(0l)),
+        "friends_count" -> Bytes.toBytes(friends_count.getOrElse(0l)),
+        "statuses_count" -> Bytes.toBytes(statuses_count.getOrElse(0l))
+      ),
+      "tweet" -> Map(
+        row.getAs(prefix + "id").toString() -> Bytes.toBytes(text.getOrElse(""))
+      ),
+      "location" -> Map(
+        created_at.toString -> Bytes.toBytes(coordinates)
+      )
+    );
+    row.getAs(prefix + "u_id").toString -> content
+  }
+
+
   override def main(args: Array[String]) {
     if (args.length < 1) {
       System.err.println("Usage: FeedImporter <file>")
@@ -111,8 +198,14 @@ object FeedImporter extends App {
     val sc = new SparkContext(sparkConf)
     val sqlContext = new SQLContext(sc)
 
-    val files = sc.binaryFiles("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/*/*.gz")
-      .map[String]({ case (path, stream) =>
+    val conf: Configuration = new Configuration()
+
+    implicit val config = HBaseConfig(
+      hbaseXmlConfigFile = "hbase-site.xml"
+    )
+
+    sc.binaryFiles("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/*/*.gz")
+      .foreach({ case (path, stream) =>
         try {
           val is =
             if (path.toLowerCase.endsWith(".gz"))
@@ -120,8 +213,30 @@ object FeedImporter extends App {
             else
               stream.open
           try {
-            val bfs = Source.fromInputStream(is).length//.getLines.toList
-            path
+            val content = sc.makeRDD(Source.fromInputStream(is).getLines().toSeq)
+
+            println("Processing file :" + path + " @ " + new Date())
+            val txtrdd = content.filter(line => line.length > 0).map(line => line.split("\\|")(1))
+            val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields: _*)
+
+            // Transfer data frame into RDD, and prepare it for writing to HBase
+            val twRdd = df.map({ row => createTweetDataFrame(row) })
+
+            // Transfer data frame of all retweeted
+            val rtRdd = df.filter("retweeted=true").map({ row => createTweetDataFrame(row, "rt_") })
+
+            val admin = Admin()
+            val table = "twitterUser";
+            val families = Set("user", "tweet", "location", "guess1", "guess2");
+            if (admin.tableExists(table, families)) {
+              (twRdd ++ rtRdd).toHBaseBulk(table);
+            } else {
+              admin.createTable(table, families);
+              (twRdd ++ rtRdd).toHBaseBulk(table);
+
+            }
+            admin.close
+
           } finally {
             try {
               is.close
@@ -132,168 +247,8 @@ object FeedImporter extends App {
         } catch {
           case e: Throwable =>
             System.err.printf("error reading from %s: %s", path, e.getMessage)
-            ""
+
         }
       })
-
-    val conf: Configuration = new Configuration()
-
-    implicit val config = HBaseConfig(
-      hbaseXmlConfigFile = "hbase-site.xml"
-    )
-
-    val twitterDateFormat = new SimpleDateFormat("EEE MMM d kk:mm:ss ZZZZZ yyyy");
-    val fields = Array[String]("user.created_at as u_created_at",
-      "user.description as u_description",
-      "user.id as u_id",
-      "user.lang as u_lang",
-      "user.location as u_location",
-      "user.name as u_name",
-      "user.screen_name as u_screen_name",
-      "user.time_zone as u_time_zone",
-      "user.verified as u_verified",
-      "user.followers_count as u_followers_count",
-      "user.friends_count as u_friends_count",
-      "user.statuses_count as u_statuses_count",
-      "created_at",
-      "id",
-      "text",
-      "coordinates.coordinates",
-      "retweeted",
-      "retweeted_status.created_at as rt_created_at",
-      "retweeted_status.id as rt_id",
-      "retweeted_status.text as rt_text",
-      "retweeted_status.coordinates.coordinates as rt_coordinates",
-      "retweeted_status.user.created_at as rt_u_created_at",
-      "retweeted_status.user.description as rt_u_description",
-      "retweeted_status.user.id as rt_u_id",
-      "retweeted_status.user.lang as rt_u_lang",
-      "retweeted_status.user.location as rt_u_location",
-      "retweeted_status.user.name as rt_u_name",
-      "retweeted_status.user.screen_name as rt_u_screen_name",
-      "retweeted_status.user.time_zone as rt_u_time_zone",
-      "retweeted_status.user.verified as rt_u_verified",
-      "retweeted_status.user.followers_count as rt_u_followers_count",
-      "retweeted_status.user.friends_count as rt_u_friends_count",
-      "retweeted_status.user.statuses_count as rt_u_statuses_count")
-
-
-    files.filter(_.length()>0).foreach({file =>
-      val lines = sc.textFile(file)
-      println("Processing file :" + file + " @ " + new Date())
-      val txtrdd = lines.filter(line => line.length > 0).map(line => line.split("\\|")(1))
-      val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields: _*)
-
-      // Transfer data frame into RDD, and prepare it for writing to HBase
-      val twRdd = df.map({ row =>
-        val u_created_at = twitterDateFormat.parse(row.getAs("u_created_at").toString()).getTime;
-        val created_at = twitterDateFormat.parse(row.getAs("created_at").toString()).getTime;
-        val retweeted = Option(row.getBoolean(row.fieldIndex("retweeted")));
-        var text = Option(row.getString(row.fieldIndex("text")));
-        if (retweeted.getOrElse(false)) {
-          text = Option(text.getOrElse("").concat("   ") + row.getString(row.fieldIndex("rt_text")));
-        }
-
-        var coordinates = "0.0, 0.0"
-        if (!row.isNullAt(row.fieldIndex("coordinates"))) {
-          coordinates = row.getList[Double](row.fieldIndex("coordinates"))
-            .toString.replace("[", "").replace("]", "")
-        }
-
-        val name = Option(row.getString(row.fieldIndex("u_name")))
-        val screen_name = Option(row.getString(row.fieldIndex("u_screen_name")))
-        val lang = Option(row.getString(row.fieldIndex("u_lang")))
-        val time_zone = Option(row.getString(row.fieldIndex("u_time_zone")))
-        val verified = Option(row.getBoolean(row.fieldIndex("u_verified")))
-        val description = Option(row.getString(row.fieldIndex("u_description")))
-        val location = Option(row.getString(row.fieldIndex("u_location")))
-        val followers_count = Option(row.getLong(row.fieldIndex("u_followers_count")))
-        val friends_count = Option(row.getLong(row.fieldIndex("u_friends_count")))
-        val statuses_count = Option(row.getLong(row.fieldIndex("u_statuses_count")))
-
-        val content = Map(
-          "user" -> Map(
-            "created_at" -> Bytes.toBytes(u_created_at),
-            "name" -> Bytes.toBytes(name.getOrElse("")),
-            "screen_name" -> Bytes.toBytes(screen_name.getOrElse("")),
-            "lang" -> Bytes.toBytes(lang.getOrElse("")),
-            "time_zone" -> Bytes.toBytes(time_zone.getOrElse("")),
-            "verified" -> Bytes.toBytes(verified.getOrElse(false)),
-            "description" -> Bytes.toBytes(description.getOrElse("")),
-            "location" -> Bytes.toBytes(location.getOrElse("")),
-            "followers_count" -> Bytes.toBytes(followers_count.getOrElse(0l)),
-            "friends_count" -> Bytes.toBytes(friends_count.getOrElse(0l)),
-            "statuses_count" -> Bytes.toBytes(statuses_count.getOrElse(0l))
-          ),
-          "tweet" -> Map(
-            row.getAs("id").toString() -> Bytes.toBytes(text.getOrElse(""))
-          ),
-          "location" -> Map(
-            created_at.toString -> Bytes.toBytes(coordinates)
-          )
-        );
-        row.getAs("u_id").toString -> content;
-      })
-
-      // Transfer data frame of all retweeted
-      val rtRdd = df.filter("retweeted=true").map({ row =>
-        val u_created_at = twitterDateFormat.parse(row.getAs("rt_u_created_at").toString()).getTime;
-        val created_at = twitterDateFormat.parse(row.getAs("rt_created_at").toString()).getTime;
-        var text = Option(row.getString(row.fieldIndex("rt_text")));
-
-        var coordinates = "0.0, 0.0"
-        if (!row.isNullAt(row.fieldIndex("rt_coordinates"))) {
-          coordinates = row.getList[Double](row.fieldIndex("rt_coordinates"))
-            .toString.replace("[", "").replace("]", "")
-        }
-
-        val name = Option(row.getString(row.fieldIndex("rt_u_name")))
-        val screen_name = Option(row.getString(row.fieldIndex("rt_u_screen_name")))
-        val lang = Option(row.getString(row.fieldIndex("rt_u_lang")))
-        val time_zone = Option(row.getString(row.fieldIndex("rt_u_time_zone")))
-        val verified = Option(row.getBoolean(row.fieldIndex("rt_u_verified")))
-        val description = Option(row.getString(row.fieldIndex("rt_u_description")))
-        val location = Option(row.getString(row.fieldIndex("rt_u_location")))
-        val followers_count = Option(row.getLong(row.fieldIndex("rt_u_followers_count")))
-        val friends_count = Option(row.getLong(row.fieldIndex("rt_u_friends_count")))
-        val statuses_count = Option(row.getLong(row.fieldIndex("rt_u_statuses_count")))
-
-        val content = Map(
-          "user" -> Map(
-            "created_at" -> Bytes.toBytes(u_created_at),
-            "name" -> Bytes.toBytes(name.getOrElse("")),
-            "screen_name" -> Bytes.toBytes(screen_name.getOrElse("")),
-            "lang" -> Bytes.toBytes(lang.getOrElse("")),
-            "time_zone" -> Bytes.toBytes(time_zone.getOrElse("")),
-            "verified" -> Bytes.toBytes(verified.getOrElse(false)),
-            "description" -> Bytes.toBytes(description.getOrElse("")),
-            "location" -> Bytes.toBytes(location.getOrElse("")),
-            "followers_count" -> Bytes.toBytes(followers_count.getOrElse(0l)),
-            "friends_count" -> Bytes.toBytes(friends_count.getOrElse(0l)),
-            "statuses_count" -> Bytes.toBytes(statuses_count.getOrElse(0l))
-          ),
-          "tweet" -> Map(
-            row.getAs("rt_id").toString() -> Bytes.toBytes(text.getOrElse(""))
-          ),
-          "location" -> Map(
-            created_at.toString -> Bytes.toBytes(coordinates)
-          )
-        );
-        row.getAs("rt_u_id").toString -> content;
-      })
-
-      val admin = Admin()
-      val table = "twitterUser";
-      val families = Set("user", "tweet", "location", "guess1", "guess2");
-      if (admin.tableExists(table, families)) {
-        (twRdd ++ rtRdd).toHBaseBulk(table);
-      } else {
-        admin.createTable(table, families);
-        (twRdd ++ rtRdd).toHBaseBulk(table);
-
-      }
-      admin.close
-
-    })
   }
 }
