@@ -194,11 +194,10 @@ object FeedImporter extends App {
       System.err.println("Usage: FeedImporter <file>")
       System.exit(1);
     }
-    val sparkConf = new SparkConf().setAppName("FeedImport")
-    val sc = new SparkContext(sparkConf)
-    val sqlContext = new SQLContext(sc)
-
-    sc.binaryFiles("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/*/*.gz")
+    val sparkConf_lf = new SparkConf().setAppName("ListFiles")
+    val scfiles = new SparkContext(sparkConf_lf)
+    
+    scfiles.binaryFiles("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/*/*.gz")
       .foreach({ case (path, stream) =>
         try {
           val is =
@@ -207,6 +206,10 @@ object FeedImporter extends App {
             else
               stream.open
           try {
+
+            val sparkConf = new SparkConf().setAppName("FileImport")
+            val sc = new SparkContext(sparkConf)
+            val sqlContext = new SQLContext(sc)
 
             implicit val config = HBaseConfig(
               hbaseXmlConfigFile = "hbase-site.xml"
