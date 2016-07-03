@@ -4,13 +4,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.zip.GZIPInputStream
 
-import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import x.spirit.dynamicjob.mockingjay.hbase._
 
-import scala.io.Source
 
 
 /**
@@ -194,11 +192,17 @@ object FeedImporter extends App {
       System.err.println("Usage: FeedImporter <file>")
       System.exit(1);
     }
-    val sparkConf_lf = new SparkConf().setAppName("ListFiles")
-    val scfiles = new SparkContext(sparkConf_lf)
-    
-    scfiles.binaryFiles("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/*/*.gz")
-      .foreach({ case (path, stream) =>
+    val sparkConf = new SparkConf().setAppName("ListFiles")
+    val sc = new SparkContext(sparkConf)
+    val sqlContext = new SQLContext(sc)
+
+    implicit val config = HBaseConfig(
+      hbaseXmlConfigFile = "hbase-site.xml"
+    )
+
+
+    val allFiles = sc.binaryFiles("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/*/*.gz")
+      .map({ case (path, stream) =>
         try {
           val is =
             if (path.toLowerCase.endsWith(".gz"))
@@ -206,39 +210,8 @@ object FeedImporter extends App {
             else
               stream.open
           try {
-
-            val sparkConf = new SparkConf().setAppName("FileImport")
-            val sc = new SparkContext(sparkConf)
-            val sqlContext = new SQLContext(sc)
-
-            implicit val config = HBaseConfig(
-              hbaseXmlConfigFile = "hbase-site.xml"
-            )
-
-            val content = sc.makeRDD(Source.fromInputStream(is).getLines().toSeq)
-
-            println("Processing file :" + path + " @ " + new Date())
-            val txtrdd = content.filter(line => line.length > 0).map(line => line.split("\\|")(1))
-            val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields: _*)
-
-            // Transfer data frame into RDD, and prepare it for writing to HBase
-            val twRdd = df.map({ row => createTweetDataFrame(row) })
-
-            // Transfer data frame of all retweeted
-            val rtRdd = df.filter("retweeted=true").map({ row => createTweetDataFrame(row, "rt_") })
-
-            val admin = Admin()
-            val table = "twitterUser";
-            val families = Set("user", "tweet", "location", "guess1", "guess2");
-            if (admin.tableExists(table, families)) {
-              (twRdd ++ rtRdd).toHBaseBulk(table);
-            } else {
-              admin.createTable(table, families);
-              (twRdd ++ rtRdd).toHBaseBulk(table);
-
-            }
-            admin.close
-
+            val file_len = Source.fromInputStream(is).length;
+            path -> file_len
           } finally {
             try {
               is.close
@@ -249,8 +222,36 @@ object FeedImporter extends App {
         } catch {
           case e: Throwable =>
             System.err.printf("error reading from %s: %s", path, e.getMessage)
-
+            ("" -> 0)
         }
-      })
+      }).filter(_._2 == 0).toLocalIterator
+
+    allFiles.foreach({ case (path, length) =>
+
+      val content = sc.textFile(path)
+
+      println("Processing file :" + path + " @ " + new Date())
+      val txtrdd = content.filter(line => line.length > 0).map(line => line.split("\\|")(1))
+      val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields: _*)
+
+      // Transfer data frame into RDD, and prepare it for writing to HBase
+      val twRdd = df.map({ row => createTweetDataFrame(row) })
+
+      // Transfer data frame of all retweeted
+      val rtRdd = df.filter("retweeted=true").map({ row => createTweetDataFrame(row, "rt_") })
+
+      val admin = Admin()
+      val table = "twitterUser";
+      val families = Set("user", "tweet", "location", "guess1", "guess2");
+      if (admin.tableExists(table, families)) {
+        (twRdd ++ rtRdd).toHBaseBulk(table);
+      } else {
+        admin.createTable(table, families);
+        (twRdd ++ rtRdd).toHBaseBulk(table);
+
+      }
+      admin.close
+
+    })
   }
 }
