@@ -211,12 +211,12 @@ object FeedImporter extends App {
 
     val monthlyDirs = mutable.Set[String]()
     while (dirs.hasNext) {
-      monthlyDirs.add(dirs.next().getPath.getParent.toString)
+      monthlyDirs.add(dirs.next().getPath/*.getParent*/.toString)
     }
 
     monthlyDirs.foreach({ case(path) =>
       try{
-        val content = sc.textFile(path+"/*.gz")
+        val content = sc.textFile(path)
         println("Processing file :" + path + " @ " + new Date())
         val txtrdd = content.filter(line => line.length > 0).map(line => line.split("\\|")(1))
         val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields: _*)
@@ -241,7 +241,7 @@ object FeedImporter extends App {
 
     } catch {
       case e:Throwable =>
-        System.err.println("Failed to import file : " + path +" due to the following error:" + e.getMessage)
+        println("Failed to import file : " + path +" due to the following error:" + e.getMessage)
         e.printStackTrace(System.err)
     }
     })
