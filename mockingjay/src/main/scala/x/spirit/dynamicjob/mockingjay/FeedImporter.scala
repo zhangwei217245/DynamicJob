@@ -198,12 +198,6 @@ object FeedImporter extends App {
     val sc = new SparkContext(sparkConf)
     val sqlContext = new SQLContext(sc)
 
-    val conf: Configuration = new Configuration()
-
-    implicit val config = HBaseConfig(
-      hbaseXmlConfigFile = "hbase-site.xml"
-    )
-
     sc.binaryFiles("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/*/*.gz")
       .foreach({ case (path, stream) =>
         try {
@@ -213,6 +207,11 @@ object FeedImporter extends App {
             else
               stream.open
           try {
+
+            implicit val config = HBaseConfig(
+              hbaseXmlConfigFile = "hbase-site.xml"
+            )
+
             val content = sc.makeRDD(Source.fromInputStream(is).getLines().toSeq)
 
             println("Processing file :" + path + " @ " + new Date())
