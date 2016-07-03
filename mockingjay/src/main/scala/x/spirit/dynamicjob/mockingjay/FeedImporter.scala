@@ -106,43 +106,12 @@ import scala.io.Source
 
 object FeedImporter extends App {
 
-  val twitterDateFormat = new SimpleDateFormat("EEE MMM d kk:mm:ss ZZZZZ yyyy");
 
-  val fields = Array[String]("user.created_at as u_created_at",
-    "user.description as u_description",
-    "user.id as u_id",
-    "user.lang as u_lang",
-    "user.location as u_location",
-    "user.name as u_name",
-    "user.screen_name as u_screen_name",
-    "user.time_zone as u_time_zone",
-    "user.verified as u_verified",
-    "user.followers_count as u_followers_count",
-    "user.friends_count as u_friends_count",
-    "user.statuses_count as u_statuses_count",
-    "created_at",
-    "id",
-    "text",
-    "coordinates.coordinates",
-    "retweeted",
-    "retweeted_status.created_at as rt_created_at",
-    "retweeted_status.id as rt_id",
-    "retweeted_status.text as rt_text",
-    "retweeted_status.coordinates.coordinates as rt_coordinates",
-    "retweeted_status.user.created_at as rt_u_created_at",
-    "retweeted_status.user.description as rt_u_description",
-    "retweeted_status.user.id as rt_u_id",
-    "retweeted_status.user.lang as rt_u_lang",
-    "retweeted_status.user.location as rt_u_location",
-    "retweeted_status.user.name as rt_u_name",
-    "retweeted_status.user.screen_name as rt_u_screen_name",
-    "retweeted_status.user.time_zone as rt_u_time_zone",
-    "retweeted_status.user.verified as rt_u_verified",
-    "retweeted_status.user.followers_count as rt_u_followers_count",
-    "retweeted_status.user.friends_count as rt_u_friends_count",
-    "retweeted_status.user.statuses_count as rt_u_statuses_count")
 
   def createTweetDataFrame(row: Row, prefix: String = ""): (String, Map[String, Map[String, Array[Byte]]]) = {
+
+    val twitterDateFormat = new SimpleDateFormat("EEE MMM d kk:mm:ss ZZZZZ yyyy")
+
     val u_created_at = twitterDateFormat.parse(row.getAs(prefix + "u_created_at").toString()).getTime;
     val created_at = twitterDateFormat.parse(row.getAs(prefix + "created_at").toString()).getTime;
     val retweeted = Option(row.getBoolean(row.fieldIndex("retweeted")));
@@ -216,10 +185,48 @@ object FeedImporter extends App {
 
     monthlyDirs.foreach({ case(path) =>
       try{
+
+
+
+        val fields = Array[String]("user.created_at as u_created_at",
+          "user.description as u_description",
+          "user.id as u_id",
+          "user.lang as u_lang",
+          "user.location as u_location",
+          "user.name as u_name",
+          "user.screen_name as u_screen_name",
+          "user.time_zone as u_time_zone",
+          "user.verified as u_verified",
+          "user.followers_count as u_followers_count",
+          "user.friends_count as u_friends_count",
+          "user.statuses_count as u_statuses_count",
+          "created_at",
+          "id",
+          "text",
+          "coordinates.coordinates",
+          "retweeted",
+          "retweeted_status.created_at as rt_created_at",
+          "retweeted_status.id as rt_id",
+          "retweeted_status.text as rt_text",
+          "retweeted_status.coordinates.coordinates as rt_coordinates",
+          "retweeted_status.user.created_at as rt_u_created_at",
+          "retweeted_status.user.description as rt_u_description",
+          "retweeted_status.user.id as rt_u_id",
+          "retweeted_status.user.lang as rt_u_lang",
+          "retweeted_status.user.location as rt_u_location",
+          "retweeted_status.user.name as rt_u_name",
+          "retweeted_status.user.screen_name as rt_u_screen_name",
+          "retweeted_status.user.time_zone as rt_u_time_zone",
+          "retweeted_status.user.verified as rt_u_verified",
+          "retweeted_status.user.followers_count as rt_u_followers_count",
+          "retweeted_status.user.friends_count as rt_u_friends_count",
+          "retweeted_status.user.statuses_count as rt_u_statuses_count")
+
+
         val content = sc.textFile(path)
         println("Processing file :" + path + " @ " + new Date())
         val txtrdd = content.filter(line => line.length > 0).map(line => line.split("\\|")(1))
-        val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields: _*)
+        val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields:_*)
 
         // Transfer data frame into RDD, and prepare it for writing to HBase
         val twRdd = df.map({ row => createTweetDataFrame(row) })
