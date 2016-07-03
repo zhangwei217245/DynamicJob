@@ -215,35 +215,51 @@ object FeedImporter extends App {
     }
 
     monthlyDirs.foreach({ case(path) =>
-      try {
-        val content = sc.textFile(path+"/*.gz")
 
-        println("Processing file :" + path + "/*.gz @ " + new Date())
-        val txtrdd = content.filter(line => line.length > 0).map(line => line.split("\\|")(1))
-        val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields: _*)
+        sc.binaryFiles(path+"/*.gz").foreach({case(filepath, stream)=>
+          try {
 
-        // Transfer data frame into RDD, and prepare it for writing to HBase
-        val twRdd = df.map({ row => createTweetDataFrame(row) })
+            val is =
+              if (filepath.toLowerCase().endsWith(".gz"))
+                new GZIPInputStream(stream.open)
+              else
+                stream.open
+            try{
+              val content = sc.makeRDD(Source.fromInputStream(is).getLines().toSeq)
+              println("Processing file :" + path + " @ " + new Date())
+              val txtrdd = content.filter(line => line.length > 0).map(line => line.split("\\|")(1))
+              val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields: _*)
 
-        // Transfer data frame of all retweeted
-        val rtRdd = df.filter("retweeted=true").map({ row => createTweetDataFrame(row, "rt_") })
+              // Transfer data frame into RDD, and prepare it for writing to HBase
+              val twRdd = df.map({ row => createTweetDataFrame(row) })
 
-        val admin = Admin()
-        val table = "twitterUser";
-        val families = Set("user", "tweet", "location", "guess1", "guess2");
-        if (admin.tableExists(table, families)) {
-          (twRdd ++ rtRdd).toHBaseBulk(table);
-        } else {
-          admin.createTable(table, families);
-          (twRdd ++ rtRdd).toHBaseBulk(table);
+              // Transfer data frame of all retweeted
+              val rtRdd = df.filter("retweeted=true").map({ row => createTweetDataFrame(row, "rt_") })
 
-        }
-        admin.close
-      } catch {
-        case e:Throwable =>
-          System.err.println("Failed to import file : " + path +" due to the following error:" + e.getMessage)
-          e.printStackTrace(System.err)
-      }
+              val admin = Admin()
+              val table = "twitterUser";
+              val families = Set("user", "tweet", "location", "guess1", "guess2");
+              if (admin.tableExists(table, families)) {
+                (twRdd ++ rtRdd).toHBaseBulk(table);
+              } else {
+                admin.createTable(table, families);
+                (twRdd ++ rtRdd).toHBaseBulk(table);
+
+              }
+              admin.close
+            } finally {
+              try {
+                is.close
+              } catch {
+                case _: Throwable =>
+              }
+            }
+          } catch {
+            case e:Throwable =>
+              System.err.println("Failed to import file : " + filepath +" due to the following error:" + e.getMessage)
+              e.printStackTrace(System.err)
+          }
+        })
     })
   }
 }
