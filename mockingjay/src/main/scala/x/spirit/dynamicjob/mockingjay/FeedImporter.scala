@@ -9,6 +9,8 @@ import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import x.spirit.dynamicjob.mockingjay.hbase._
 
+import scala.io.Source
+
 
 
 /**
