@@ -1,11 +1,8 @@
 package x.spirit.dynamicjob.mockingjay
 
-import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.zip.GZIPInputStream
 
-import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.sql.{Row, SQLContext}
@@ -13,8 +10,6 @@ import org.apache.spark.{SparkConf, SparkContext}
 import x.spirit.dynamicjob.mockingjay.hbase._
 
 import scala.collection.mutable
-import scala.io.Source
-
 
 
 /**
@@ -107,16 +102,15 @@ import scala.io.Source
 object FeedImporter extends App {
 
 
-
-  def createTweetDataFrame(row: Row, prefix: String = ""): (String, Map[String, Map[String, Array[Byte]]]) = {
+  def createTweetDataFrame(row: Row, prefix: String = "", hasRt: Boolean = false): (String, Map[String, Map[String, Array[Byte]]]) = {
 
     val twitterDateFormat = new SimpleDateFormat("EEE MMM d kk:mm:ss ZZZZZ yyyy")
 
     val u_created_at = twitterDateFormat.parse(row.getAs(prefix + "u_created_at").toString()).getTime;
     val created_at = twitterDateFormat.parse(row.getAs(prefix + "created_at").toString()).getTime;
-    val retweeted = Option(row.getBoolean(row.fieldIndex("retweeted")));
     var text = Option(row.getString(row.fieldIndex(prefix + "text")));
-    if (retweeted.getOrElse(false) && "".equals(prefix)) {
+
+    if (hasRt && "".equals(prefix)) {
       text = Option(text.getOrElse("").concat("   ") + row.getString(row.fieldIndex("rt_text")));
     }
 
@@ -179,16 +173,26 @@ object FeedImporter extends App {
       .listFiles(new Path("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/"), true)
 
     val monthlyDirs = mutable.Set[String]()
+
     while (dirs.hasNext) {
-      monthlyDirs.add(dirs.next().getPath/*.getParent*/.toString)
+      monthlyDirs.add(dirs.next().getPath.getParent.toString)
     }
 
-    monthlyDirs.foreach({ case(path) =>
-      try{
+    val testFiles = sc.textFile("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotestdata/20120801/*.gz")
+    val testText = testFiles.filter(line => line.length > 0).map(line => line.split("\\|")(1))
+    val dfschema = sqlContext.read.json(testText).schema
 
+    val admin = Admin()
+    val table = "twitterUser";
+    val families = Set("user", "tweet", "location", "guess1", "guess2");
+    if (!admin.tableExists(table, families)) {
+      admin.createTable(table, families)
+    }
 
+    monthlyDirs.foreach({ case (path) =>
+      try {
 
-        val fields = Array[String]("user.created_at as u_created_at",
+        val fieldsWithRT = Array[String]("user.created_at as u_created_at",
           "user.description as u_description",
           "user.id as u_id",
           "user.lang as u_lang",
@@ -204,7 +208,6 @@ object FeedImporter extends App {
           "id",
           "text",
           "coordinates.coordinates",
-          "retweeted",
           "retweeted_status.created_at as rt_created_at",
           "retweeted_status.id as rt_id",
           "retweeted_status.text as rt_text",
@@ -222,35 +225,54 @@ object FeedImporter extends App {
           "retweeted_status.user.friends_count as rt_u_friends_count",
           "retweeted_status.user.statuses_count as rt_u_statuses_count")
 
+        val fieldsWithoutRT = Array[String]("user.created_at as u_created_at",
+          "user.description as u_description",
+          "user.id as u_id",
+          "user.lang as u_lang",
+          "user.location as u_location",
+          "user.name as u_name",
+          "user.screen_name as u_screen_name",
+          "user.time_zone as u_time_zone",
+          "user.verified as u_verified",
+          "user.followers_count as u_followers_count",
+          "user.friends_count as u_friends_count",
+          "user.statuses_count as u_statuses_count",
+          "created_at",
+          "id",
+          "text",
+          "coordinates.coordinates")
 
-        val content = sc.textFile(path)
+        val fileSuffix = "/*.gz";
+
+        val content = sc.textFile(path + fileSuffix)
         println("Processing file :" + path + " @ " + new Date())
         val txtrdd = content.filter(line => line.length > 0).map(line => line.split("\\|")(1))
-        val df = sqlContext.read.json(txtrdd).filter("user.geo_enabled=true").selectExpr(fields:_*)
+        val dfWithoutRT = sqlContext.read.schema(dfschema).json(txtrdd).filter("user.geo_enabled=true").where("retweeted_status is null")
 
-        // Transfer data frame into RDD, and prepare it for writing to HBase
-        val twRdd = df.map({ row => createTweetDataFrame(row) })
+        if (dfWithoutRT.count > 0) {
+          // Transfer data frame into RDD, and prepare it for writing to HBase
+          var twRdd = dfWithoutRT.selectExpr(fieldsWithoutRT: _*).map({ row => createTweetDataFrame(row, "", false) })
+          twRdd.toHBaseBulk(table);
+        }
+        val dfWithRT = sqlContext.read.schema(dfschema).json(txtrdd).filter("user.geo_enabled=true").where("retweeted_status is not null")
 
-        // Transfer data frame of all retweeted
-        val rtRdd = df.filter("retweeted=true").map({ row => createTweetDataFrame(row, "rt_") })
+        if (dfWithRT.count > 0) {
+          // Transfer data frame of all retweeted
+          var twRdd = dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "", true) })
 
-        val admin = Admin()
-        val table = "twitterUser";
-        val families = Set("user", "tweet", "location", "guess1", "guess2");
-        if (admin.tableExists(table, families)) {
-          (twRdd ++ rtRdd).toHBaseBulk(table);
-        } else {
-          admin.createTable(table, families);
-          (twRdd ++ rtRdd).toHBaseBulk(table);
+          twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "rt_", true) })
+
+          twRdd.toHBaseBulk(table);
+
 
         }
-        admin.close
 
-    } catch {
-      case e:Throwable =>
-        println("Failed to import file : " + path +" due to the following error:" + e.getMessage)
-        e.printStackTrace(System.err)
-    }
+      } catch {
+        case e: Throwable =>
+          println("Failed to import file : " + path + " due to the following error:" + e.getMessage)
+          e.printStackTrace(System.err)
+      }
     })
+    admin.close
   }
 }
