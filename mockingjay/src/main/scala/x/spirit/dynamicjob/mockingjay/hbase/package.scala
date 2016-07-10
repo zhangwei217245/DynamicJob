@@ -14,7 +14,4 @@ package object hbase extends HBaseWriteSupport
   with DefaultReads
   with HBaseDeleteSupport
   with HFileSupport
-  with HBaseUtils{
-
-
-}
+  with HBaseUtils

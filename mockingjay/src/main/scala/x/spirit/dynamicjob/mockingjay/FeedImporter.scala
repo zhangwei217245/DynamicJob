@@ -12,6 +12,7 @@ import x.spirit.dynamicjob.mockingjay.hbase._
 import scala.collection.mutable.WrappedArray
 
 
+
 /**
   *
   * scala> df.printSchema()
@@ -162,10 +163,10 @@ object FeedImporter extends App {
         created_at.toString() -> Bytes.toBytes(text.getOrElse(""))
       ),
       "location" -> Map(
-        created_at.toString -> Bytes.toBytes(coordinates)
+        created_at.toString -> Bytes.toBytes(coordinates.toString())
       ),
       "place" -> Map(
-        created_at.toString ->
+        created_at.toString -> Bytes.toBytes(coordinates.toString())
       )
     );
     row.getAs(prefix + "u_id").toString -> content
@@ -188,7 +189,7 @@ object FeedImporter extends App {
     val dirs = FileSystem.get(sc.hadoopConfiguration)
       .listFiles(new Path("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/"), true)
 
-    val monthlyDirs = mutable.Set[String]()
+    val monthlyDirs = scala.collection.mutable.Set[String]()
 
     while (dirs.hasNext) {
       monthlyDirs.add(dirs.next().getPath.getParent.toString)
