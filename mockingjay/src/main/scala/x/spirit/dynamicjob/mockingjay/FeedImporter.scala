@@ -9,7 +9,7 @@ import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import x.spirit.dynamicjob.mockingjay.hbase._
 
-import scala.collection.mutable
+import scala.collection.mutable.WrappedArray
 
 
 /**
@@ -106,18 +106,31 @@ object FeedImporter extends App {
 
     val twitterDateFormat = new SimpleDateFormat("EEE MMM d kk:mm:ss ZZZZZ yyyy")
 
-    val u_created_at = twitterDateFormat.parse(row.getAs(prefix + "u_created_at").toString()).getTime;
-    val created_at = twitterDateFormat.parse(row.getAs(prefix + "created_at").toString()).getTime;
-    var text = Option(row.getString(row.fieldIndex(prefix + "text")));
+    val u_created_at = twitterDateFormat.parse(row.getAs[String](prefix + "u_created_at")).getTime;
+    val created_at = twitterDateFormat.parse(row.getAs[String](prefix + "created_at")).getTime;
+    var text = Option(row.getAs[String](prefix + "text"));
+
+    val place_id = Option(row.getAs[String](prefix + "place_id"))
+    val place_type = Option(row.getAs[String](prefix + "place_type"))
+    val place_full_name = Option(row.getAs[String](prefix + "place_full_name"))
+    val place_bounding_box : Option[WrappedArray[WrappedArray[WrappedArray[Double]]]]
+    = Option(row.getAs[WrappedArray[WrappedArray[WrappedArray[Double]]]](prefix + "place_bounding_box"))
 
     if (hasRt && "".equals(prefix)) {
-      text = Option(text.getOrElse("").concat("   ") + row.getString(row.fieldIndex("rt_text")));
+      text = Option(text.getOrElse("").concat("   ") + row.getAs[String]("rt_text"));
     }
 
-    var coordinates = "0.0, 0.0"
+    var coordinates : WrappedArray[Double] = WrappedArray.make(0.0, 0.0);
     if (!row.isNullAt(row.fieldIndex(prefix + "coordinates"))) {
-      coordinates = row.getList[Double](row.fieldIndex(prefix + "coordinates"))
-        .toString.replace("[", "").replace("]", "")
+      coordinates = row.getAs[WrappedArray[Double]](prefix + "coordinates")
+    } else {
+      val boxes : WrappedArray[WrappedArray[WrappedArray[Double]]] = place_bounding_box.getOrElse(WrappedArray.make(WrappedArray.make(
+        WrappedArray.make(0.0, 0.0), WrappedArray.make(0.0, 0.0), WrappedArray.make(0.0, 0.0), WrappedArray.make(0.0, 0.0))))
+      boxes.foreach({layer =>
+        layer.foreach({ point =>
+
+        })
+      })
     }
 
     val name = Option(row.getString(row.fieldIndex(prefix + "u_name")))
@@ -146,10 +159,13 @@ object FeedImporter extends App {
         "statuses_count" -> Bytes.toBytes(statuses_count.getOrElse(0l))
       ),
       "tweet" -> Map(
-        row.getAs(prefix + "id").toString() -> Bytes.toBytes(text.getOrElse(""))
+        created_at.toString() -> Bytes.toBytes(text.getOrElse(""))
       ),
       "location" -> Map(
         created_at.toString -> Bytes.toBytes(coordinates)
+      ),
+      "place" -> Map(
+        created_at.toString ->
       )
     );
     row.getAs(prefix + "u_id").toString -> content
@@ -161,7 +177,7 @@ object FeedImporter extends App {
       System.err.println("Usage: FeedImporter <file>")
       System.exit(1);
     }
-    val sparkConf = new SparkConf().setAppName("ListFiles")
+    val sparkConf = new SparkConf().setAppName("FileImporter")
     val sc = new SparkContext(sparkConf)
     val sqlContext = new SQLContext(sc)
 
@@ -178,21 +194,23 @@ object FeedImporter extends App {
       monthlyDirs.add(dirs.next().getPath.getParent.toString)
     }
 
+    //Prefetch the data schema from testing data. For the data on 2012-08-01, the data schema is thorough.
     val testFiles = sc.textFile("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotestdata/20120801/*.gz")
     val testText = testFiles.filter(line => line.length > 0).map(line => line.split("\\|")(1))
     val dfschema = sqlContext.read.json(testText).schema
 
     val admin = Admin()
     val table = "twitterUser";
-    val families = Set("user", "tweet", "location", "guess1", "guess2");
+    val families = Set("user", "tweet", "location", "place", "sentiment", "race", "age", "gender", "religion", "education");
     if (!admin.tableExists(table, families)) {
       admin.createTable(table, families)
     }
 
-    monthlyDirs.foreach({ case (path) =>
+    monthlyDirs.toList.sorted.foreach({ case (path) =>
       try {
-
-        val fieldsWithRT = Array[String]("user.created_at as u_created_at",
+        // This is the SQL selection criteria for JSON DataFrame
+        val fieldsWithRT = Array[String](
+          "user.created_at as u_created_at",
           "user.description as u_description",
           "user.id as u_id",
           "user.lang as u_lang",
@@ -208,10 +226,18 @@ object FeedImporter extends App {
           "id",
           "text",
           "coordinates.coordinates",
+          "place.id as place_id",
+          "place.place_type as place_type",
+          "place.full_name as place_full_name",
+          "place.bounding_box.coordinates as place_bounding_box",
           "retweeted_status.created_at as rt_created_at",
           "retweeted_status.id as rt_id",
           "retweeted_status.text as rt_text",
           "retweeted_status.coordinates.coordinates as rt_coordinates",
+          "retweeted_status.place.id as rt_place_id",
+          "retweeted_status.place.place_type as rt_place_type",
+          "retweeted_status.place.full_name as rt_place_full_name",
+          "retweeted_status.place.bounding_box.coordinates as rt_place_bounding_box",
           "retweeted_status.user.created_at as rt_u_created_at",
           "retweeted_status.user.description as rt_u_description",
           "retweeted_status.user.id as rt_u_id",
@@ -225,7 +251,8 @@ object FeedImporter extends App {
           "retweeted_status.user.friends_count as rt_u_friends_count",
           "retweeted_status.user.statuses_count as rt_u_statuses_count")
 
-        val fieldsWithoutRT = Array[String]("user.created_at as u_created_at",
+        val fieldsWithoutRT = Array[String](
+          "user.created_at as u_created_at",
           "user.description as u_description",
           "user.id as u_id",
           "user.lang as u_lang",
@@ -240,7 +267,11 @@ object FeedImporter extends App {
           "created_at",
           "id",
           "text",
-          "coordinates.coordinates")
+          "coordinates.coordinates",
+          "place.id as place_id",
+          "place.place_type as place_type",
+          "place.full_name as place_full_name",
+          "place.bounding_box.coordinates as place_bounding_box")
 
         val fileSuffix = "/*.gz";
 
