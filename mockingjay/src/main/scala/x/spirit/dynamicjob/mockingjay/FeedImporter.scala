@@ -134,16 +134,26 @@ object FeedImporter extends App {
         val multipol : mutable.Buffer[Polygon] = mutable.Buffer[Polygon]()
         boxes.foreach({pg =>
           val points : mutable.Buffer[Point] = mutable.Buffer[Point]()
+          var i = 0;
           pg.foreach({p=>
             val point = Point(p(0),p(1));
             points.append(point);
+            if (i == 0){
+              points.insert(pg.length, point);
+            }
+            i+=1;
           })
           multipol.append(Polygon(points))
         })
         var mPolygon = MultiPolygon(multipol)
         point = mPolygon.centroid.as[Point].getOrElse(Point(0.0, 0.0))
+        System.out.println("Centroid got from Multipolygon")
       } catch {
         case e : Throwable =>
+          System.err.println("Polygon failed to be created!" + e);
+          if (boxes(0).length > 4) {
+            throw new RuntimeException("it is not a rectangular space")
+          }
           val x1 = boxes(0)(0)(0); val x2 = boxes(0)(2)(0)
           val y1 = boxes(0)(0)(1); val y2 = boxes(0)(2)(1)
           point = Point((x1+(x2-x1)/2.0), y1+(y2-y1)/2.0);
@@ -180,9 +190,9 @@ object FeedImporter extends App {
       ),
       "location" -> Map(
         created_at.toString -> Bytes.toBytes(
-          "{\"place_id\" : \"%s\", \"place_type\" : \"%s\", " +
-            "\"place_full_name\" : \"%s\", \"place_coordinates\" : [%f, %f]}"
-              .format(place_id.getOrElse(""), place_type.getOrElse(""), place_full_name.getOrElse(""), point.x, point.y)
+          ("{\"place_coordinates\" : [%f, %f], \"place_id\" : \"%s\", \"place_type\" : \"%s\", " +
+            "\"place_full_name\" : \"%s\"}")
+              .format(point.x, point.y, place_id.getOrElse(""), place_type.getOrElse(""), place_full_name.getOrElse(""))
           )
       )
     );
