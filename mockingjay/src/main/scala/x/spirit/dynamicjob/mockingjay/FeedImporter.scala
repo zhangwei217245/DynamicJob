@@ -130,30 +130,18 @@ object FeedImporter extends App {
     } else {
       val boxes : WrappedArray[WrappedArray[WrappedArray[Double]]] = place_bounding_box.getOrElse(WrappedArray.make(WrappedArray.make(
         WrappedArray.make(1.0, 0.0), WrappedArray.make(0.0, 1.0), WrappedArray.make(1.0, 1.0), WrappedArray.make(0.0, 1.0))))
-      try{
-        val multipol : mutable.Buffer[Polygon] = mutable.Buffer[Polygon]()
-        boxes.foreach({pg =>
-          val points : mutable.Buffer[Point] = mutable.Buffer[Point]()
-          pg.foreach({p=>
-            val point = Point(p(0),p(1));
-            points.append(point);
-          })
-          points.append(Point(pg(0)(0), pg(0)(1)));
-          multipol.append(Polygon(points))
+      val multipol : mutable.Buffer[Polygon] = mutable.Buffer[Polygon]()
+      boxes.foreach({pg =>
+        val points : mutable.Buffer[Point] = mutable.Buffer[Point]()
+        pg.foreach({p=>
+          val point = Point(p(0),p(1));
+          points.append(point);
         })
-        var mPolygon = MultiPolygon(multipol)
-        point = mPolygon.centroid.as[Point].getOrElse(Point(0.0, 0.0))
-        System.out.println("Centroid got from Multipolygon")
-      } catch {
-        case e : Throwable =>
-          System.err.println("Polygon failed to be created!" + e);
-          if (boxes(0).length > 4) {
-            throw new RuntimeException("it is not a rectangular space")
-          }
-          val x1 = boxes(0)(0)(0); val x2 = boxes(0)(2)(0)
-          val y1 = boxes(0)(0)(1); val y2 = boxes(0)(2)(1)
-          point = Point((x1+(x2-x1)/2.0), y1+(y2-y1)/2.0);
-      }
+        points.append(Point(pg(0)(0), pg(0)(1)));
+        multipol.append(Polygon(points))
+      })
+      var mPolygon = MultiPolygon(multipol)
+      point = mPolygon.centroid.as[Point].getOrElse(Point(0.0, 0.0))
     }
 
     val name = Option(row.getAs[String](prefix + "u_name"))
