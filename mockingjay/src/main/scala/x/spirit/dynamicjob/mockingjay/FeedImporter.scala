@@ -134,15 +134,11 @@ object FeedImporter extends App {
         val multipol : mutable.Buffer[Polygon] = mutable.Buffer[Polygon]()
         boxes.foreach({pg =>
           val points : mutable.Buffer[Point] = mutable.Buffer[Point]()
-          var i = 0;
           pg.foreach({p=>
             val point = Point(p(0),p(1));
             points.append(point);
-            if (i == 0){
-              points.insert(pg.length, point);
-            }
-            i+=1;
           })
+          points.append(Point(pg(0)(0), pg(0)(1)));
           multipol.append(Polygon(points))
         })
         var mPolygon = MultiPolygon(multipol)
