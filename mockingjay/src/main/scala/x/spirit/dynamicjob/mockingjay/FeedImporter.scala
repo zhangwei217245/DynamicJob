@@ -174,7 +174,10 @@ object FeedImporter extends App {
         created_at.toString() -> Bytes.toBytes(text.getOrElse(""))
       ),
       "location" -> Map(
-        created_at.toString -> Bytes.toBytes(String.format("[%f, %f]", point.x, point.y))
+        created_at.toString -> Bytes.toBytes(
+          String.format("{\"place_id\" : \"%s\", \"place_type\" : \"%s\", " +
+            "\"place_full_name\" : \"%s\", \"place_coordinates\" : [%f, %f]}",
+            place_id, place_type, place_full_name, point.x, point.y))
       )
     );
     row.getAs(prefix + "u_id").toString -> content
