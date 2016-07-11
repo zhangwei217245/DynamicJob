@@ -223,6 +223,11 @@
                 <artifactId>geotrellis-s3_2.10</artifactId>
                 <version>${geotrellis.version}</version>
             </dependency>
+            <dependency>
+                <groupId>databricks</groupId>
+                <artifactId>spark-corenlp</artifactId>
+                <version>${spark.corenlp.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -261,6 +266,12 @@
             <url>http://repo.maven.apache.org/maven2/</url>
         </repository>
         <repository>
+            <id>SparkPackagesRepo</id>
+            <name>Spark Packages Repo</name>
+            <url>https://dl.bintray.com/spark-packages/maven/</url>
+            <layout>default</layout>
+        </repository>
+        <repository>
             <id>maven2-repository.dev.java.net</id>
             <name>Java.net repository</name>
             <url>http://download.java.net/maven/2</url>
@@ -287,5 +298,6 @@
         <spark.version>1.6.1</spark.version>
         <hbase.version>1.1.5</hbase.version>
         <geotrellis.version>0.10.1</geotrellis.version>
+        <spark.corenlp.version>0.1</spark.corenlp.version>
     </properties>
 </project>

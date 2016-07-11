@@ -3,12 +3,14 @@ package x.spirit.dynamicjob.mockingjay
 import java.text.SimpleDateFormat
 import java.util.Date
 
+import geotrellis.vector.{MultiPolygon, Point, Polygon}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import x.spirit.dynamicjob.mockingjay.hbase._
 
+import scala.collection.mutable
 import scala.collection.mutable.WrappedArray
 
 
@@ -117,33 +119,42 @@ object FeedImporter extends App {
     val place_bounding_box : Option[WrappedArray[WrappedArray[WrappedArray[Double]]]]
     = Option(row.getAs[WrappedArray[WrappedArray[WrappedArray[Double]]]](prefix + "place_bounding_box"))
 
+    val boxes : WrappedArray[WrappedArray[WrappedArray[Double]]] = place_bounding_box.getOrElse(WrappedArray.make(WrappedArray.make(
+      WrappedArray.make(0.0, 0.0), WrappedArray.make(0.0, 0.0), WrappedArray.make(0.0, 0.0), WrappedArray.make(0.0, 0.0))))
+
+    val multipol : mutable.Buffer[Polygon] = mutable.Buffer[Polygon]()
+    boxes.foreach({pg =>
+      val points : mutable.Buffer[Point] = mutable.Buffer[Point]()
+      pg.foreach({p=>
+          val point = Point((p(0),p(1)));
+          points+=point;
+      })
+      multipol+=Polygon(points)
+    })
+    var mPolygon = MultiPolygon.apply(multipol)
+
     if (hasRt && "".equals(prefix)) {
       text = Option(text.getOrElse("").concat("   ") + row.getAs[String]("rt_text"));
     }
 
-    var coordinates : WrappedArray[Double] = WrappedArray.make(0.0, 0.0);
+    var point : Point = Point.apply((0.0, 0.0))
     if (!row.isNullAt(row.fieldIndex(prefix + "coordinates"))) {
-      coordinates = row.getAs[WrappedArray[Double]](prefix + "coordinates")
+      val coordinates : WrappedArray[Double] = row.getAs[WrappedArray[Double]](prefix + "coordinates")
+      point = Point((coordinates(0), coordinates(1)));
     } else {
-      val boxes : WrappedArray[WrappedArray[WrappedArray[Double]]] = place_bounding_box.getOrElse(WrappedArray.make(WrappedArray.make(
-        WrappedArray.make(0.0, 0.0), WrappedArray.make(0.0, 0.0), WrappedArray.make(0.0, 0.0), WrappedArray.make(0.0, 0.0))))
-      boxes.foreach({layer =>
-        layer.foreach({ point =>
-
-        })
-      })
+      point = mPolygon.centroid.as[Point].getOrElse(Point(0.0, 0.0))
     }
 
-    val name = Option(row.getString(row.fieldIndex(prefix + "u_name")))
-    val screen_name = Option(row.getString(row.fieldIndex(prefix + "u_screen_name")))
-    val lang = Option(row.getString(row.fieldIndex(prefix + "u_lang")))
-    val time_zone = Option(row.getString(row.fieldIndex(prefix + "u_time_zone")))
-    val verified = Option(row.getBoolean(row.fieldIndex(prefix + "u_verified")))
-    val description = Option(row.getString(row.fieldIndex(prefix + "u_description")))
-    val location = Option(row.getString(row.fieldIndex(prefix + "u_location")))
-    val followers_count = Option(row.getLong(row.fieldIndex(prefix + "u_followers_count")))
-    val friends_count = Option(row.getLong(row.fieldIndex(prefix + "u_friends_count")))
-    val statuses_count = Option(row.getLong(row.fieldIndex(prefix + "u_statuses_count")))
+    val name = Option(row.getAs[String](prefix + "u_name"))
+    val screen_name = Option(row.getAs[String](prefix + "u_screen_name"))
+    val lang = Option(row.getAs[String](prefix + "u_lang"))
+    val time_zone = Option(row.getAs[String](prefix + "u_time_zone"))
+    val verified = Option(row.getAs[Boolean](prefix + "u_verified"))
+    val description = Option(row.getAs[String](prefix + "u_description"))
+    val location = Option(row.getAs[String](prefix + "u_location"))
+    val followers_count = Option(row.getAs[Long](prefix + "u_followers_count"))
+    val friends_count = Option(row.getAs[Long](prefix + "u_friends_count"))
+    val statuses_count = Option(row.getAs[Long](prefix + "u_statuses_count"))
 
     val content = Map(
       "user" -> Map(
@@ -163,10 +174,7 @@ object FeedImporter extends App {
         created_at.toString() -> Bytes.toBytes(text.getOrElse(""))
       ),
       "location" -> Map(
-        created_at.toString -> Bytes.toBytes(coordinates.toString())
-      ),
-      "place" -> Map(
-        created_at.toString -> Bytes.toBytes(coordinates.toString())
+        created_at.toString -> Bytes.toBytes(String.format("[%f, %f]", point.x, point.y))
       )
     );
     row.getAs(prefix + "u_id").toString -> content
@@ -202,7 +210,8 @@ object FeedImporter extends App {
 
     val admin = Admin()
     val table = "twitterUser";
-    val families = Set("user", "tweet", "location", "place", "sentiment", "race", "age", "gender", "religion", "education");
+    val families = Set("user", "tweet", "location", "sentiment", "residential", "political", "race", "age", "gender",
+      "religion", "education", "other1", "other2");
     if (!admin.tableExists(table, families)) {
       admin.createTable(table, families)
     }
@@ -295,8 +304,6 @@ object FeedImporter extends App {
           twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "rt_", true) })
 
           twRdd.toHBaseBulk(table);
-
-
         }
 
       } catch {

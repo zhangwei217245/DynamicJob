@@ -146,6 +146,10 @@
             <groupId>com.azavea.geotrellis</groupId>
             <artifactId>geotrellis-s3_2.10</artifactId>
         </dependency>
+        <dependency>
+            <groupId>databricks</groupId>
+            <artifactId>spark-corenlp</artifactId>
+        </dependency>
         <!--<dependency>-->
             <!--<groupId>eu.unicredit</groupId>-->
             <!--<artifactId>hbase-rdd</artifactId>-->
