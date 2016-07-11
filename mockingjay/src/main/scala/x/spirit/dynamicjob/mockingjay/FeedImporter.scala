@@ -120,24 +120,24 @@ object FeedImporter extends App {
     = Option(row.getAs[WrappedArray[WrappedArray[WrappedArray[Double]]]](prefix + "place_bounding_box"))
 
     val boxes : WrappedArray[WrappedArray[WrappedArray[Double]]] = place_bounding_box.getOrElse(WrappedArray.make(WrappedArray.make(
-      WrappedArray.make(0.0, 0.0), WrappedArray.make(0.0, 0.0), WrappedArray.make(0.0, 0.0), WrappedArray.make(0.0, 0.0))))
+      WrappedArray.make(1.0, 0.0), WrappedArray.make(0.0, 1.0), WrappedArray.make(1.0, 1.0), WrappedArray.make(0.0, 1.0))))
 
     val multipol : mutable.Buffer[Polygon] = mutable.Buffer[Polygon]()
     boxes.foreach({pg =>
       val points : mutable.Buffer[Point] = mutable.Buffer[Point]()
       pg.foreach({p=>
-          val point = Point((p(0),p(1)));
-          points+=point;
+          val point = Point(p(0),p(1));
+          points.append(point);
       })
-      multipol+=Polygon(points)
+      multipol.append(Polygon(points))
     })
-    var mPolygon = MultiPolygon.apply(multipol)
+    var mPolygon = MultiPolygon(multipol)
 
     if (hasRt && "".equals(prefix)) {
       text = Option(text.getOrElse("").concat("   ") + row.getAs[String]("rt_text"));
     }
 
-    var point : Point = Point.apply((0.0, 0.0))
+    var point : Point = Point(0.0, 0.0)
     if (!row.isNullAt(row.fieldIndex(prefix + "coordinates"))) {
       val coordinates : WrappedArray[Double] = row.getAs[WrappedArray[Double]](prefix + "coordinates")
       point = Point((coordinates(0), coordinates(1)));
