@@ -119,20 +119,6 @@ object FeedImporter extends App {
     val place_bounding_box : Option[WrappedArray[WrappedArray[WrappedArray[Double]]]]
     = Option(row.getAs[WrappedArray[WrappedArray[WrappedArray[Double]]]](prefix + "place_bounding_box"))
 
-    val boxes : WrappedArray[WrappedArray[WrappedArray[Double]]] = place_bounding_box.getOrElse(WrappedArray.make(WrappedArray.make(
-      WrappedArray.make(1.0, 0.0), WrappedArray.make(0.0, 1.0), WrappedArray.make(1.0, 1.0), WrappedArray.make(0.0, 1.0))))
-
-    val multipol : mutable.Buffer[Polygon] = mutable.Buffer[Polygon]()
-    boxes.foreach({pg =>
-      val points : mutable.Buffer[Point] = mutable.Buffer[Point]()
-      pg.foreach({p=>
-          val point = Point(p(0),p(1));
-          points.append(point);
-      })
-      multipol.append(Polygon(points))
-    })
-    var mPolygon = MultiPolygon(multipol)
-
     if (hasRt && "".equals(prefix)) {
       text = Option(text.getOrElse("").concat("   ") + row.getAs[String]("rt_text"));
     }
@@ -142,7 +128,26 @@ object FeedImporter extends App {
       val coordinates : WrappedArray[Double] = row.getAs[WrappedArray[Double]](prefix + "coordinates")
       point = Point((coordinates(0), coordinates(1)));
     } else {
-      point = mPolygon.centroid.as[Point].getOrElse(Point(0.0, 0.0))
+      val boxes : WrappedArray[WrappedArray[WrappedArray[Double]]] = place_bounding_box.getOrElse(WrappedArray.make(WrappedArray.make(
+        WrappedArray.make(1.0, 0.0), WrappedArray.make(0.0, 1.0), WrappedArray.make(1.0, 1.0), WrappedArray.make(0.0, 1.0))))
+      try{
+        val multipol : mutable.Buffer[Polygon] = mutable.Buffer[Polygon]()
+        boxes.foreach({pg =>
+          val points : mutable.Buffer[Point] = mutable.Buffer[Point]()
+          pg.foreach({p=>
+            val point = Point(p(0),p(1));
+            points.append(point);
+          })
+          multipol.append(Polygon(points))
+        })
+        var mPolygon = MultiPolygon(multipol)
+        point = mPolygon.centroid.as[Point].getOrElse(Point(0.0, 0.0))
+      } catch {
+        case e : Throwable =>
+          val x1 = boxes(0)(0)(0); val x2 = boxes(0)(2)(0)
+          val y1 = boxes(0)(0)(1); val y2 = boxes(0)(2)(1)
+          point = Point((x1+(x2-x1)/2.0), y1+(y2-y1)/2.0);
+      }
     }
 
     val name = Option(row.getAs[String](prefix + "u_name"))
