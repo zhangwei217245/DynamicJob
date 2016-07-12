@@ -213,8 +213,7 @@ object FeedImporter extends App {
 
     val admin = Admin()
     val table = "twitterUser";
-    val families = Set("user", "tweet", "location", "sentiment", "residential", "political", "race", "age", "gender",
-      "religion", "education", "other1", "other2");
+    val families = Set("user", "tweet", "location", "sentiment", "residential", "political", "race", "age", "gender");
     if (!admin.tableExists(table, families)) {
       admin.createTable(table, families)
     }
