@@ -111,6 +111,8 @@ object FeedImporter extends App {
 
     val u_created_at = twitterDateFormat.parse(row.getAs[String](prefix + "u_created_at")).getTime;
     val created_at = twitterDateFormat.parse(row.getAs[String](prefix + "created_at")).getTime;
+
+    val t_id = Option(row.getAs[String](prefix + "id"));
     var text = Option(row.getAs[String](prefix + "text"));
 
     val place_id = Option(row.getAs[String](prefix + "place_id"))
@@ -144,6 +146,7 @@ object FeedImporter extends App {
       point = mPolygon.centroid.as[Point].getOrElse(Point(0.0, 0.0))
     }
 
+    val u_id = Option(row.getAs[String](prefix + "u_id"))
     val name = Option(row.getAs[String](prefix + "u_name"))
     val screen_name = Option(row.getAs[String](prefix + "u_screen_name"))
     val lang = Option(row.getAs[String](prefix + "u_lang"))
@@ -157,30 +160,58 @@ object FeedImporter extends App {
 
     val content = Map(
       "user" -> Map(
-        "created_at" -> Bytes.toBytes(u_created_at),
-        "name" -> Bytes.toBytes(name.getOrElse("")),
-        "screen_name" -> Bytes.toBytes(screen_name.getOrElse("")),
-        "lang" -> Bytes.toBytes(lang.getOrElse("")),
-        "time_zone" -> Bytes.toBytes(time_zone.getOrElse("")),
-        "verified" -> Bytes.toBytes(verified.getOrElse(false)),
-        "description" -> Bytes.toBytes(description.getOrElse("")),
-        "location" -> Bytes.toBytes(location.getOrElse("")),
-        "followers_count" -> Bytes.toBytes(followers_count.getOrElse(0l)),
-        "friends_count" -> Bytes.toBytes(friends_count.getOrElse(0l)),
-        "statuses_count" -> Bytes.toBytes(statuses_count.getOrElse(0l))
+        /**
+          * JSON ARRAY:
+          * 00 name
+          * 01 screen_name
+          * 02 lang
+          * 03 time_zone
+          * 04 description
+          * 05 location
+          * 10 followers_count
+          * 11 friends_count
+          * 12 statuses_count
+          * 13 u_created_at
+          * 20 verified
+         */
+        u_id.get -> Bytes.toBytes(("[[\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"]," +
+          "[%b]," +
+          "[%d,%d,%d,%d]]")
+          .format(
+            name.getOrElse(""),
+            screen_name.getOrElse(""),
+            lang.getOrElse(""),
+            time_zone.getOrElse(""),
+            description.getOrElse(""),
+            location.getOrElse(""),
+            verified.getOrElse(false),
+            followers_count.getOrElse(0l),
+            friends_count.getOrElse(0l),
+            statuses_count.getOrElse(0l),
+            u_created_at))
       ),
       "tweet" -> Map(
-        created_at.toString() -> Bytes.toBytes(text.getOrElse(""))
-      ),
-      "location" -> Map(
-        // JSON ARRAY 0, id, 1, type, 2, full_name, 3, coordinates
-        created_at.toString -> Bytes.toBytes(
-          ("[[\"%s\",\"%s\",\"%s\"][%f,%f]]")
-              .format(place_id.getOrElse(""),
-                place_type.getOrElse(""),
-                place_full_name.getOrElse(""),
-                point.x, point.y)
-          )
+        /**
+          * JSON ARRAY
+          * 00, created_at,
+          * 10, text,
+          * 11, place_id,
+          * 12, place_type,
+          * 13, place_full_name,
+          * 20, x,
+          * 21, y
+          */
+        t_id.get -> Bytes.toBytes(("[[%d]," +
+          "[\"%s\",\"%s\",\"%s\",\"%s\"]," +
+          "[%f,%f]]")
+          .format(
+            created_at,
+            text.getOrElse(""),
+            place_id.getOrElse(""),
+            place_type.getOrElse(""),
+            place_full_name.getOrElse(""),
+            point.x,
+            point.y))
       )
     );
     row.getAs(prefix + "u_id").toString -> content
@@ -216,7 +247,7 @@ object FeedImporter extends App {
 
     val admin = Admin()
     val table = "twitterUser";
-    val families = Set("user", "tweet", "location", "sentiment", "residential", "political", "race", "age", "gender");
+    val families = Set("user", "tweet");//"location", "sentiment", "residential", "political", "race", "age", "gender"
     if (!admin.tableExists(table, families)) {
       admin.createTable(table, families)
     }

@@ -1,0 +1,1 @@
+Remember to link hdfs-site.xml to the conf directory. In that case the replicate factor of HDFS will take effect on HBase.
