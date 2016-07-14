@@ -173,10 +173,13 @@ object FeedImporter extends App {
         created_at.toString() -> Bytes.toBytes(text.getOrElse(""))
       ),
       "location" -> Map(
+        // JSON ARRAY 0, id, 1, type, 2, full_name, 3, coordinates
         created_at.toString -> Bytes.toBytes(
-          ("{\"coord\" : [%f, %f], \"id\" : \"%s\", \"type\" : \"%s\", " +
-            "\"name\" : \"%s\"}")
-              .format(point.x, point.y, place_id.getOrElse(""), place_type.getOrElse(""), place_full_name.getOrElse(""))
+          ("[[\"%s\",\"%s\",\"%s\"][%f,%f]]")
+              .format(place_id.getOrElse(""),
+                place_type.getOrElse(""),
+                place_full_name.getOrElse(""),
+                point.x, point.y)
           )
       )
     );
