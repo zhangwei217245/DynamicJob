@@ -208,7 +208,7 @@ object FeedImporter extends App {
         )
       )
     );
-    u_id.toString -> content
+    u_id.get.toString -> content
   }
 
 
