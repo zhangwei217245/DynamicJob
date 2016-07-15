@@ -1,5 +1,6 @@
 package x.spirit.dynamicjob.mockingjay
 
+import java.math.{BigDecimal, BigInteger}
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -8,6 +9,7 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.sql.{Row, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
+import org.json.JSONArray
 import x.spirit.dynamicjob.mockingjay.hbase._
 
 import scala.collection.mutable
@@ -112,7 +114,7 @@ object FeedImporter extends App {
     val u_created_at = twitterDateFormat.parse(row.getAs[String](prefix + "u_created_at")).getTime;
     val created_at = twitterDateFormat.parse(row.getAs[String](prefix + "created_at")).getTime;
 
-    val t_id = Option(row.getAs[String](prefix + "id"));
+    val t_id = Option(row.getAs[Long](prefix + "id"));
     var text = Option(row.getAs[String](prefix + "text"));
 
     val place_id = Option(row.getAs[String](prefix + "place_id"))
@@ -146,7 +148,7 @@ object FeedImporter extends App {
       point = mPolygon.centroid.as[Point].getOrElse(Point(0.0, 0.0))
     }
 
-    val u_id = Option(row.getAs[String](prefix + "u_id"))
+    val u_id = Option(row.getAs[Long](prefix + "u_id"))
     val name = Option(row.getAs[String](prefix + "u_name"))
     val screen_name = Option(row.getAs[String](prefix + "u_screen_name"))
     val lang = Option(row.getAs[String](prefix + "u_lang"))
@@ -158,37 +160,33 @@ object FeedImporter extends App {
     val friends_count = Option(row.getAs[Long](prefix + "u_friends_count"))
     val statuses_count = Option(row.getAs[Long](prefix + "u_statuses_count"))
 
+    val t_time = new JSONArray(){
+      put(created_at)
+    }
+    val t_content = new JSONArray(){
+      put(text.getOrElse(""));
+      put(place_id.getOrElse(""));
+      put(place_type.getOrElse(""));
+      put(place_full_name.getOrElse(""));
+    }
+    val t_coord = new JSONArray() {
+      put(point.x);
+      put(point.y);
+    }
+
     val content = Map(
       "user" -> Map(
-        /**
-          * JSON ARRAY:
-          * 00 name
-          * 01 screen_name
-          * 02 lang
-          * 03 time_zone
-          * 04 description
-          * 05 location
-          * 10 followers_count
-          * 11 friends_count
-          * 12 statuses_count
-          * 13 u_created_at
-          * 20 verified
-         */
-        u_id.get -> Bytes.toBytes(("[[\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"]," +
-          "[%b]," +
-          "[%d,%d,%d,%d]]")
-          .format(
-            name.getOrElse(""),
-            screen_name.getOrElse(""),
-            lang.getOrElse(""),
-            time_zone.getOrElse(""),
-            description.getOrElse(""),
-            location.getOrElse(""),
-            verified.getOrElse(false),
-            followers_count.getOrElse(0l),
-            friends_count.getOrElse(0l),
-            statuses_count.getOrElse(0l),
-            u_created_at))
+        "created_at" -> Bytes.toBytes(u_created_at),
+        "name" -> Bytes.toBytes(name.getOrElse("")),
+        "screen_name" -> Bytes.toBytes(screen_name.getOrElse("")),
+        "lang" -> Bytes.toBytes(lang.getOrElse("")),
+        "time_zone" -> Bytes.toBytes(time_zone.getOrElse("")),
+        "verified" -> Bytes.toBytes(verified.getOrElse(false)),
+        "description" -> Bytes.toBytes(description.getOrElse("")),
+        "location" -> Bytes.toBytes(location.getOrElse("")),
+        "followers_count" -> Bytes.toBytes(followers_count.getOrElse(0l)),
+        "friends_count" -> Bytes.toBytes(friends_count.getOrElse(0l)),
+        "statuses_count" -> Bytes.toBytes(statuses_count.getOrElse(0l))
       ),
       "tweet" -> Map(
         /**
@@ -201,20 +199,16 @@ object FeedImporter extends App {
           * 20, x,
           * 21, y
           */
-        t_id.get -> Bytes.toBytes(("[[%d]," +
-          "[\"%s\",\"%s\",\"%s\",\"%s\"]," +
-          "[%f,%f]]")
-          .format(
-            created_at,
-            text.getOrElse(""),
-            place_id.getOrElse(""),
-            place_type.getOrElse(""),
-            place_full_name.getOrElse(""),
-            point.x,
-            point.y))
+        t_id.get.toString -> Bytes.toBytes(
+            new JSONArray(){
+              put(t_time);
+              put(t_content);
+              put(t_coord);
+            }.toString
+        )
       )
     );
-    row.getAs(prefix + "u_id").toString -> content
+    u_id.toString -> content
   }
 
 
