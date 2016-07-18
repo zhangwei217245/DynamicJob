@@ -28,4 +28,10 @@ public class ConsoleUtils {
         }
         return console.readLine(prompt, args);
     }
+
+    public static void main(String[] args) {
+        String s = "A função, Ãugent!_{10028.2al-ksjd}";
+        String r = s.replaceAll("[^a-zA-Z\\s\\.\\_\\-]", "").replace('-',' ').replace('_',' ');
+        System.out.println(r);
+    }
 }
