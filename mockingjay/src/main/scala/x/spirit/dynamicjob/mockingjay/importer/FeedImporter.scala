@@ -146,13 +146,10 @@ object FeedImporter extends App {
           if (dfWithoutRT.count > 0) {
             // Transfer data frame into RDD, and prepare it for writing to HBase
             var twRdd = dfWithoutRT.selectExpr(fieldsWithoutRT: _*).map({ row => createTweetDataFrame(row, "", false) })
-
+            twRdd.toHBaseBulk(table)
             if (args.length >= 1) {
               twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable)
-            } else {
-              twRdd.toHBaseBulk(table)
             }
-
           }
           val dfWithRT = sqlContext.read.schema(dfschema).json(txtrdd).filter("user.geo_enabled=true").where("retweeted_status is not null")
 
@@ -160,11 +157,9 @@ object FeedImporter extends App {
             // Transfer data frame of all retweeted
             var twRdd = dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "", true) })
             twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "rt_", true) })
-
+            twRdd.toHBaseBulk(table)
             if (args.length >= 1) {
               twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable)
-            } else {
-              twRdd.toHBaseBulk(table)
             }
           }
 
