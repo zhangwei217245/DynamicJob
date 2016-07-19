@@ -62,7 +62,7 @@ object functions {
 
   def cleanNonAlphabet(document : String,removeDash:Boolean=false, removeComma:Boolean=false,
                        removePeriod:Boolean=false):String ={
-    var rst = document.replaceAll("[^a-zA-Z\\s\\.\\,\\_\\-]", "").replace('_',' ');
+    var rst = document.replaceAll("[^a-zA-Z\\s\\.,_-]", "").replace('_',' ');
     if (removeDash) {rst = rst.replace('-',' ')}
     if (removePeriod) {rst = rst.replace('.',' ')}
     if (removeComma) {rst = rst.replace(',',' ')}
@@ -71,7 +71,7 @@ object functions {
 
   def cleanNonAscii(document: String, removeDash:Boolean=false, removeComma:Boolean=false,
                     removePeriod:Boolean=false):String = {
-    var rst = document.replaceAll("[^\\x00-\\x7F\\s\\.\\,\\_\\-]", "").replace('_',' ');
+    var rst = document.replaceAll("[^\\x00-\\x7F\\s\\.,_-]", "").replace('_',' ');
     if (removeDash) {rst = rst.replace('-',' ')}
     if (removePeriod) {rst = rst.replace('.',' ')}
     if (removeComma) {rst = rst.replace(',',' ')}
@@ -80,7 +80,8 @@ object functions {
 
   def cleanUrl(document: String):String = {
     var str = document;
-    val urlPattern = "((https?|ftp|gopher|telnet|file|Unsure|http):((//)|(\\\\))+[\\w\\d:#@%/;$()~_?\\+-=\\\\\\.&]*)";
+    val urlPattern = "((https?|ftp|gopher|telnet|file|Unsure|http):((//)|(\\\\))+" +
+      "[\\w\\d:#@%/;\\$\\(\\)~_\\?\\+-=\\\\\\.&]*)";
     val p = Pattern.compile(urlPattern,Pattern.CASE_INSENSITIVE);
     val m = p.matcher(str);
     var i = 0;
