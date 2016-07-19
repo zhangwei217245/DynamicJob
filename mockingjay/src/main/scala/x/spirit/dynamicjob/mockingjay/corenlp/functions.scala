@@ -84,10 +84,8 @@ object functions {
       "[\\w\\d:#@%/;\\$\\(\\)~_\\?\\+-=\\\\\\.&]*)";
     val p = Pattern.compile(urlPattern,Pattern.CASE_INSENSITIVE);
     val m = p.matcher(str);
-    var i = 0;
     while (m.find()) {
-      str = str.replace(m.group(i),"").trim();
-      i+=1;
+      str = str.replace(m.group(),"").trim();
     }
     return str;
   }
