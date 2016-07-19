@@ -212,7 +212,7 @@ object DataTransformer {
       .map({ tweet => // Iterate each tweet,
       val jarr = new JSONArray(Bytes.toString(tweet._2));
       val text = jarr.getJSONArray(1).getString(0);
-      val overall = sentiment(purifyTweet(removeMemtion(removeHashTag(text))))
+      //val overall = sentiment(purifyTweet(removeMemtion(removeHashTag(text))))
       // calculate the overall sentiment score for the entire content.
       val blue_red = purifyTweetAsSentences(text).map({ sentence =>
         var hasBlue = false;
@@ -235,7 +235,7 @@ object DataTransformer {
         (blueScore, redScore, 1) // make a triple like bluescore , redscore, sentence count
       })
     val jsonArr = new JSONArray() {
-        put(overall); // The overall sentiment score
+        //put(overall); // The overall sentiment score
         put(blue_red.map(_._1).sum); // The blue sentiment score.
         put(blue_red.map(_._2).sum); // The red sentiment score.
         put(blue_red.map(_._3).sum); // The number of sentences that this tweet has.

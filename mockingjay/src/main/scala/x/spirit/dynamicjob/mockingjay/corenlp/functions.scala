@@ -1,7 +1,6 @@
 package x.spirit.dynamicjob.mockingjay.corenlp
 
 import java.util.Properties
-import java.util.regex.Pattern
 
 import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations
@@ -19,13 +18,14 @@ import scala.collection.JavaConverters._
   * Created by zhangwei on 7/17/16.
   */
 object functions {
-  @transient private var sentimentPipeline: StanfordCoreNLP = _
+  private var sentimentPipeline: StanfordCoreNLP = null;
 
   private def getOrCreateSentimentPipeline(): StanfordCoreNLP = {
     if (sentimentPipeline == null) {
       val props = new Properties()
-      props.setProperty("annotators", "tokenize, ssplit, parse, sentiment")
+      props.setProperty("annotators", "tokenize, ssplit, pos, parse, sentiment")
       sentimentPipeline = new StanfordCoreNLP(props)
+      System.out.println("Loading corenlp annotators.")
     }
     sentimentPipeline
   }
@@ -102,8 +102,8 @@ object functions {
     * @see [[Sentence#words]]
     */
   def tokenize (sentence: String) : Iterable[String] ={
-    sentence.replace('.',' ').replace(',',' ').split("[\\s]+")
-    //new Sentence(sentence).words().asScala
+    //sentence.replace('.',' ').replace(',',' ').split("[\\s]+")
+    new Sentence(sentence).words().asScala
   }
 
   /**
@@ -112,8 +112,8 @@ object functions {
     * @see [[Document#sentences]]
     */
   def ssplit (document: String) : Iterable[String] = {
-    document.split('.').map(_.trim)
-    //new Document(document).sentences().asScala.map(_.text())
+    //document.split('.').map(_.trim)
+    new Document(document).sentences().asScala.map(_.text())
   }
 
   /**
@@ -207,10 +207,10 @@ object functions {
     if (annotation == null || annotation.isEmpty) {
       return 0;
     } else {
-      val tree = annotation
-      .head
-      .get(classOf[SentimentCoreAnnotations.SentimentAnnotatedTree])
-      return (RNNCoreAnnotations.getPredictedClass(tree) - 2);
+      val senti_scores = annotation.map(_.get(classOf[SentimentCoreAnnotations.SentimentAnnotatedTree]))
+        .map((RNNCoreAnnotations.getPredictedClass(_) - 2))
+      val avg_score = Math.round(senti_scores.sum.toDouble/senti_scores.length.toDouble).toInt;
+      return avg_score;
     }
   }
 
