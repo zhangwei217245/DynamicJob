@@ -2,6 +2,7 @@ package x.spirit.dynamicjob.mockingjay.corenlp
 
 import java.util.Properties
 import java.util.regex.Pattern
+
 import edu.stanford.nlp.ling.{CoreAnnotations, CoreLabel}
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations
 import edu.stanford.nlp.pipeline.{CleanXmlAnnotator, StanfordCoreNLP}
@@ -9,8 +10,9 @@ import edu.stanford.nlp.pipeline.CoreNLPProtos.Sentiment
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations
 import edu.stanford.nlp.simple.{Document, Sentence}
 import edu.stanford.nlp.util.Quadruple
-import scala.collection._
+import x.spirit.dynamicjob.core.utils.StringUtils
 
+import scala.collection._
 import scala.collection.JavaConverters._
 
 /**
@@ -79,15 +81,7 @@ object functions {
   }
 
   def cleanUrl(document: String):String = {
-    var str = document;
-    val urlPattern = "((https?|ftp|gopher|telnet|file|Unsure|http):((//)|(\\\\))+" +
-      "[\\w\\d:#@%/;\\$\\(\\)~_\\?\\+-=\\\\\\.&]*)";
-    val p = Pattern.compile(urlPattern,Pattern.CASE_INSENSITIVE);
-    val m = p.matcher(str);
-    while (m.find()) {
-      str = str.replace(m.group(),"").trim();
-    }
-    return str;
+    StringUtils.removeUrl(document);
   }
 
   def purifyProfileName(name : String):String = {

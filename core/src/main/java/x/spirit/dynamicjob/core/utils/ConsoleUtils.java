@@ -3,6 +3,8 @@ package x.spirit.dynamicjob.core.utils;
 import java.io.Console;
 import java.util.Scanner;
 
+import static x.spirit.dynamicjob.core.utils.StringUtils.removeUrl;
+
 /**
  * Created by zhangwei on 3/15/16.
  */
@@ -29,9 +31,9 @@ public class ConsoleUtils {
         return console.readLine(prompt, args);
     }
 
+
     public static void main(String[] args) {
-        String s = "A função, Ãugent!_{10028.2al-ksjd}";
-        String r = s.replaceAll("[^a-zA-Z\\s\\.\\_\\-]", "").replace('-',' ').replace('_',' ');
-        System.out.println(r);
+        String s = "laksjdfoiausdofi http://t.co/sJOSIUO), alskdjfoiu https://oiuosiu.com/234o oiuoiuxoiu http://lslowo.com/slshttp://slsow.c/slslo";
+        System.out.println(removeUrl(s));
     }
 }
