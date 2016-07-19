@@ -206,14 +206,17 @@ object functions {
     *
     * @see [[Sentiment]]
     */
-  def sentiment (sentence: String): Int ={
+  def sentiment (sentence: String): Int = {
     val pipeline = getOrCreateSentimentPipeline()
-    val annotation = pipeline.process(sentence)
-    val tree = annotation.get(classOf[CoreAnnotations.SentencesAnnotation])
-      .asScala
+    val annotation = pipeline.process(sentence).get(classOf[CoreAnnotations.SentencesAnnotation]).asScala
+    if (annotation == null || annotation.isEmpty) {
+      return 0;
+    } else {
+      val tree = annotation
       .head
       .get(classOf[SentimentCoreAnnotations.SentimentAnnotatedTree])
-    RNNCoreAnnotations.getPredictedClass(tree) - 2
+      return (RNNCoreAnnotations.getPredictedClass(tree) - 2);
+    }
   }
 
 }
