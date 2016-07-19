@@ -150,6 +150,10 @@
             <groupId>databricks</groupId>
             <artifactId>spark-corenlp</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+        </dependency>
         <!--<dependency>-->
             <!--<groupId>eu.unicredit</groupId>-->
             <!--<artifactId>hbase-rdd</artifactId>-->
