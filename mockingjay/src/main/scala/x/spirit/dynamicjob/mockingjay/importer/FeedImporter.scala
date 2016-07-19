@@ -101,11 +101,9 @@ object FeedImporter extends App {
 
   override def main(args: Array[String]) {
     var sentiSuffix = "blue_red_";
-    if (args.length < 1) {
-      System.err.println("Usage: FeedImporter <file>")
-      System.exit(1);
+    if (args.length >= 1) {
+      sentiSuffix += args(0);
     }
-    sentiSuffix += args(0);
     val sparkConf = new SparkConf().setAppName("FileImporter")
     val sc = new SparkContext(sparkConf)
     val sqlContext = new SQLContext(sc)
@@ -150,7 +148,7 @@ object FeedImporter extends App {
             var twRdd = dfWithoutRT.selectExpr(fieldsWithoutRT: _*).map({ row => createTweetDataFrame(row, "", false) })
             twRdd.toHBaseBulk(table);
 
-            twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable);
+            if (args.length >= 1) twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable);
 
           }
           val dfWithRT = sqlContext.read.schema(dfschema).json(txtrdd).filter("user.geo_enabled=true").where("retweeted_status is not null")
@@ -161,7 +159,7 @@ object FeedImporter extends App {
             twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "rt_", true) })
             twRdd.toHBaseBulk(table);
 
-            twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable);
+            if (args.length >= 1) twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable);
           }
 
         } catch {
