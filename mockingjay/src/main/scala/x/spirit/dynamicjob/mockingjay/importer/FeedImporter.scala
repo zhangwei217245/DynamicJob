@@ -131,7 +131,7 @@ object FeedImporter extends App {
     val sentable = "sent_"+sentiSuffix;
     val families = Set("user", "tweet"); //"location", "sentiment", "residential", "political", "race", "age", "gender"
     val sent_families = Set("tsent");
-    if (admin.tableExists(table, families) && admin.tableExists(sentable, sent_families)) {
+    if (admin.tableExists(table, families)) {
       monthlyDirs.toList.sorted.foreach({ case (path) =>
         try {
           // This is the SQL selection criteria for JSON DataFrame
@@ -147,7 +147,7 @@ object FeedImporter extends App {
             // Transfer data frame into RDD, and prepare it for writing to HBase
             var twRdd = dfWithoutRT.selectExpr(fieldsWithoutRT: _*).map({ row => createTweetDataFrame(row, "", false) })
             twRdd.toHBaseBulk(table)
-            if (args.length >= 1) {
+            if (args.length >= 1 && admin.tableExists(sentable, sent_families)) {
               twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable)
             }
           }
@@ -158,7 +158,7 @@ object FeedImporter extends App {
             var twRdd = dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "", true) })
             twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "rt_", true) })
             twRdd.toHBaseBulk(table)
-            if (args.length >= 1) {
+            if (args.length >= 1 && admin.tableExists(sentable, sent_families)) {
               twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable)
             }
           }
@@ -171,8 +171,8 @@ object FeedImporter extends App {
       })
 
     } else {
-      System.out.println("Table '%s' with column families '%s' and table '%s' with column families '%s' must be created."
-        .format(table, families.toString(), sentable, sent_families.toString()))
+      System.out.println("Table '%s' with column families '%s' must be created."
+        .format(table, families.toString()))
     }
 
     admin.close
