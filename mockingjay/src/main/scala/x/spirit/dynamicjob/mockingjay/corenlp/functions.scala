@@ -102,7 +102,8 @@ object functions {
     * @see [[Sentence#words]]
     */
   def tokenize (sentence: String) : Iterable[String] ={
-    new Sentence(sentence).words().asScala
+    sentence.replace('.',' ').replace(',',' ').split("[\\s]+")
+    //new Sentence(sentence).words().asScala
   }
 
   /**
@@ -111,7 +112,8 @@ object functions {
     * @see [[Document#sentences]]
     */
   def ssplit (document: String) : Iterable[String] = {
-    new Document(document).sentences().asScala.map(_.text())
+    document.split('.').map(_.trim)
+    //new Document(document).sentences().asScala.map(_.text())
   }
 
   /**
