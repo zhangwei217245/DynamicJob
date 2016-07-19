@@ -86,7 +86,7 @@ object functions {
     val m = p.matcher(str);
     var i = 0;
     while (m.find()) {
-      str = str.replaceAll(m.group(i),"").trim();
+      str = str.replace(m.group(i),"").trim();
       i+=1;
     }
     return str;
