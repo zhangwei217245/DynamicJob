@@ -4,15 +4,13 @@ import java.text.SimpleDateFormat
 
 import geotrellis.vector.{MultiPolygon, Point, Polygon}
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Row
 import org.json.JSONArray
+import x.spirit.dynamicjob.mockingjay._
 import x.spirit.dynamicjob.mockingjay.corenlp.functions._
 
 import scala.collection.mutable
 import scala.collection.mutable.WrappedArray
-
-import x.spirit.dynamicjob.mockingjay._
 
 /**
   * Created by zhangwei on 7/19/16.
@@ -147,36 +145,45 @@ object DataTransformer {
     u_id.get.toString -> content
   }
 
-  def toSentimentRDD(rddRow:(String, Map[String, Map[String, Array[Byte]]])):(String, Map[String, Map[String, Array[Byte]]]) ={
-      val tweetSenti = rddRow._2
-        .get("tweet").getOrElse(Map[String, Array[Byte]]()) // Get column family "tweet"
-        .map({tweet => // Iterate each tweet,
-        val jarr = new JSONArray(Bytes.toString(tweet._2));
-        val text = jarr.getJSONArray(1).getString(0);
-        val overall = sentiment(purifyTweet(text));  // calculate the overall sentiment score for the entire content.
-      val blue_red = purifyTweetAsSentences(text).map({sentence=>
-          var hasBlue = false;
-          var hasRed = false;
-          tokenize(sentence).foreach({word =>
-            if (Blue.contains(word)) hasBlue = true;
-            if (Red.contains(word)) hasRed = true;
-          }) // determine whether this sentence ever talked about either RED or BLUE
-        val sentimentScore = sentiment(sentence);
-          val blueScore = if (hasBlue){sentimentScore}else{0} // calculate blue score
-        val redScore = if (hasRed){sentimentScore}else{0} // calculate red score
-          (blueScore, redScore, 1) // make a triple like bluescore , redscore, sentence count
-        }).sum // sum them together.
-      val jsonArr = new JSONArray(){
-          put(overall);  // The overall sentiment score
-          put(blue_red._1); // The blue sentiment score.
-          put(blue_red._2); // The red sentiment score.
-          put(blue_red._3); // The number of sentences that this tweet has.
-        }
-        tweet._1 -> Bytes.toBytes(jsonArr.toString)
+  def toSentimentRDD(rddRow: (String, Map[String, Map[String, Array[Byte]]])): (String, Map[String, Map[String, Array[Byte]]]) = {
+    val tweetSenti = rddRow._2
+      .get("tweet").getOrElse(Map[String, Array[Byte]]()) // Get column family "tweet"
+      .map({ tweet => // Iterate each tweet,
+      val jarr = new JSONArray(Bytes.toString(tweet._2));
+      val text = jarr.getJSONArray(1).getString(0);
+      val overall = sentiment(purifyTweet(text));
+      // calculate the overall sentiment score for the entire content.
+      val blue_red = purifyTweetAsSentences(text).map({ sentence =>
+        var hasBlue = false;
+        var hasRed = false;
+        tokenize(sentence).foreach({ word =>
+          if (Blue.contains(word)) hasBlue = true;
+          if (Red.contains(word)) hasRed = true;
+        }) // determine whether this sentence ever talked about either RED or BLUE
+      val sentimentScore = sentiment(sentence);
+        val blueScore = if (hasBlue) {
+          sentimentScore
+        } else {
+          0
+        } // calculate blue score
+      val redScore = if (hasRed) {
+          sentimentScore
+        } else {
+          0
+        } // calculate red score
+        (blueScore, redScore, 1) // make a triple like bluescore , redscore, sentence count
       })
-      val content = Map(
-        "tweetSentiment" -> tweetSenti
-      )
+    val jsonArr = new JSONArray() {
+        put(overall); // The overall sentiment score
+        put(blue_red.map(_._1).sum); // The blue sentiment score.
+        put(blue_red.map(_._2).sum); // The red sentiment score.
+        put(blue_red.map(_._3).sum); // The number of sentences that this tweet has.
+      }
+      tweet._1 -> Bytes.toBytes(jsonArr.toString)
+    })
+    val content = Map(
+      "tweetSentiment" -> tweetSenti
+    )
     rddRow._1 -> content
   }
 
