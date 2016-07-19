@@ -6,6 +6,7 @@ import geotrellis.vector.{MultiPolygon, Point, Polygon}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.sql.Row
 import org.json.JSONArray
+import x.spirit.dynamicjob.core.utils.StringUtils._
 import x.spirit.dynamicjob.mockingjay._
 import x.spirit.dynamicjob.mockingjay.corenlp.functions._
 
@@ -211,7 +212,7 @@ object DataTransformer {
       .map({ tweet => // Iterate each tweet,
       val jarr = new JSONArray(Bytes.toString(tweet._2));
       val text = jarr.getJSONArray(1).getString(0);
-      val overall = sentiment(purifyTweet(text));
+      val overall = sentiment(purifyTweet(removeMemtion(removeHashTag(text))))
       // calculate the overall sentiment score for the entire content.
       val blue_red = purifyTweetAsSentences(text).map({ sentence =>
         var hasBlue = false;
@@ -220,7 +221,7 @@ object DataTransformer {
           if (Blue.contains(word)) hasBlue = true;
           if (Red.contains(word)) hasRed = true;
         }) // determine whether this sentence ever talked about either RED or BLUE
-      val sentimentScore = sentiment(sentence);
+      val sentimentScore = sentiment(removeMemtion(removeHashTag(sentence)));
         val blueScore = if (hasBlue) {
           sentimentScore
         } else {

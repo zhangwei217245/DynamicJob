@@ -11,12 +11,41 @@ public class StringUtils {
     public static String removeUrl(String document){
         String str = document;
         String urlPattern = "((https?|ftp|gopher|telnet|file|Unsure|http):((//)|(\\\\))+" +
-                "[\\w\\d:#@%/;\\$\\(\\)~_\\?\\+-=\\\\\\.&]*)";
+                "[\\w\\d:#\\@%/;\\$\\(\\)~_\\?\\+-=\\\\\\.&]*)";
         Pattern p = Pattern.compile(urlPattern,Pattern.CASE_INSENSITIVE);
         Matcher m = p.matcher(str);
         while (m.find()) {
             str = str.replace(m.group(),"").trim();
         }
         return str;
+    }
+    public static String removeHashTag(String document){
+        String str = document;
+        String urlPattern = "(#[_\\-\\w\\d]+)";
+        Pattern p = Pattern.compile(urlPattern,Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(str);
+        while (m.find()) {
+            str = str.replace(m.group(),"").trim();
+        }
+        return str;
+    }
+
+    public static String removeMemtion(String document){
+        String str = document;
+        String urlPattern = "(\\@[_\\-\\w\\d]+)";
+        Pattern p = Pattern.compile(urlPattern,Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(str);
+        while (m.find()) {
+            str = str.replace(m.group(),"").trim();
+        }
+        return str;
+    }
+
+    public static void main(String[] args) {
+        String a = "hashtag #playfi2010_220 url http://soiuoiu.com mention @romoa";
+        System.out.println(removeHashTag(a));
+        System.out.println(removeMemtion(a));
+        System.out.println(removeUrl(a));
+        System.out.println(removeHashTag(removeMemtion(removeUrl(a))));
     }
 }

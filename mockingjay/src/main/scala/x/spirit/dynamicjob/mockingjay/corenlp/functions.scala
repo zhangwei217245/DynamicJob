@@ -10,7 +10,7 @@ import edu.stanford.nlp.pipeline.CoreNLPProtos.Sentiment
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations
 import edu.stanford.nlp.simple.{Document, Sentence}
 import edu.stanford.nlp.util.Quadruple
-import x.spirit.dynamicjob.core.utils.StringUtils
+import x.spirit.dynamicjob.core.utils.StringUtils._
 
 import scala.collection._
 import scala.collection.JavaConverters._
@@ -81,7 +81,7 @@ object functions {
   }
 
   def cleanUrl(document: String):String = {
-    StringUtils.removeUrl(document);
+    removeUrl(document);
   }
 
   def purifyProfileName(name : String):String = {
