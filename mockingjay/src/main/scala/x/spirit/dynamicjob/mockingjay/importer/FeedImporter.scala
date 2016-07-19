@@ -1,19 +1,12 @@
-package x.spirit.dynamicjob.mockingjay
+package x.spirit.dynamicjob.mockingjay.importer
 
-import java.math.{BigDecimal, BigInteger}
-import java.text.SimpleDateFormat
 import java.util.Date
 
-import geotrellis.vector.{MultiPolygon, Point, Polygon}
 import org.apache.hadoop.fs.{FileSystem, Path}
-import org.apache.hadoop.hbase.util.Bytes
-import org.apache.spark.sql.{Row, SQLContext}
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
-import org.json.JSONArray
 import x.spirit.dynamicjob.mockingjay.hbase._
-
-import scala.collection.mutable
-import scala.collection.mutable.WrappedArray
+import x.spirit.dynamicjob.mockingjay.importer.DataTransformer._
 
 
 
@@ -106,127 +99,13 @@ import scala.collection.mutable.WrappedArray
 
 object FeedImporter extends App {
 
-
-  val Red = Set[String]("romney", "@mittromney", "@reppaulryan", "@ronpaul", "@newtgingrich", "@ricksantorum",
-  "#romney", "#mittromney", "#tcot", "#tlot", "#ocra", "#gop", "#gop2012", "#rnc", "#romney2012",
-  "#republicans", "#republican", "#teaparty", "#right", "#sgp", "#hhrs", "#rush", "#secede", "#conservative",
-  "#rep", "#voterep", "#socialism", "socialist", "#icon", "#romneyryan2012");
-
-  val Blue = Set[String]("obama", "@barackobama", "biden", "@joebiden", "@thedemocrats", "#obamacare", "#healthcare", "#ilikeobama",
-  "#obama", "#barackobama", "#barackthevote", "#fourmoreyears", "#dnc2012", "#dnc", "#liberal", "#uniteble",
-  "#democrats", "#democrat", "#left", "#dems", "#dem", "#votedem", "#p2", "#topprog", "#hcr", "#teamobama",
-  "#voteobama", "#4moreyears", "#2terms");
-
-  def createTweetDataFrame(row: Row, prefix: String = "", hasRt: Boolean = false): (String, Map[String, Map[String, Array[Byte]]]) = {
-
-    val twitterDateFormat = new SimpleDateFormat("EEE MMM d kk:mm:ss ZZZZZ yyyy")
-
-    val u_created_at = twitterDateFormat.parse(row.getAs[String](prefix + "u_created_at")).getTime;
-    val created_at = twitterDateFormat.parse(row.getAs[String](prefix + "created_at")).getTime;
-
-    val t_id = Option(row.getAs[Long](prefix + "id"));
-    var text = Option(row.getAs[String](prefix + "text"));
-
-    val place_id = Option(row.getAs[String](prefix + "place_id"))
-    val place_type = Option(row.getAs[String](prefix + "place_type"))
-    val place_full_name = Option(row.getAs[String](prefix + "place_full_name"))
-    val place_bounding_box : Option[WrappedArray[WrappedArray[WrappedArray[Double]]]]
-    = Option(row.getAs[WrappedArray[WrappedArray[WrappedArray[Double]]]](prefix + "place_bounding_box"))
-
-    if (hasRt && "".equals(prefix)) {
-      text = Option(text.getOrElse("").concat("   ") + row.getAs[String]("rt_text"));
-    }
-
-    var point : Point = Point(0.0, 0.0)
-    if (!row.isNullAt(row.fieldIndex(prefix + "coordinates"))) {
-      val coordinates : WrappedArray[Double] = row.getAs[WrappedArray[Double]](prefix + "coordinates")
-      point = Point((coordinates(0), coordinates(1)));
-    } else {
-      val boxes : WrappedArray[WrappedArray[WrappedArray[Double]]] = place_bounding_box.getOrElse(WrappedArray.make(WrappedArray.make(
-        WrappedArray.make(1.0, 0.0), WrappedArray.make(0.0, 1.0), WrappedArray.make(1.0, 1.0), WrappedArray.make(0.0, 1.0))))
-      val multipol : mutable.Buffer[Polygon] = mutable.Buffer[Polygon]()
-      boxes.foreach({pg =>
-        val points : mutable.Buffer[Point] = mutable.Buffer[Point]()
-        pg.foreach({p=>
-          val point = Point(p(0),p(1));
-          points.append(point);
-        })
-        points.append(Point(pg(0)(0), pg(0)(1)));
-        multipol.append(Polygon(points))
-      })
-      var mPolygon = MultiPolygon(multipol)
-      point = mPolygon.centroid.as[Point].getOrElse(Point(0.0, 0.0))
-    }
-
-    val u_id = Option(row.getAs[Long](prefix + "u_id"))
-    val name = Option(row.getAs[String](prefix + "u_name"))
-    val screen_name = Option(row.getAs[String](prefix + "u_screen_name"))
-    val lang = Option(row.getAs[String](prefix + "u_lang"))
-    val time_zone = Option(row.getAs[String](prefix + "u_time_zone"))
-    val verified = Option(row.getAs[Boolean](prefix + "u_verified"))
-    val description = Option(row.getAs[String](prefix + "u_description"))
-    val location = Option(row.getAs[String](prefix + "u_location"))
-    val followers_count = Option(row.getAs[Long](prefix + "u_followers_count"))
-    val friends_count = Option(row.getAs[Long](prefix + "u_friends_count"))
-    val statuses_count = Option(row.getAs[Long](prefix + "u_statuses_count"))
-
-    val t_time = new JSONArray(){
-      put(created_at)
-    }
-    val t_content = new JSONArray(){
-      put(text.getOrElse(""));
-      put(place_id.getOrElse(""));
-      put(place_type.getOrElse(""));
-      put(place_full_name.getOrElse(""));
-    }
-    val t_coord = new JSONArray() {
-      put(point.x);
-      put(point.y);
-    }
-
-    val content = Map(
-      "user" -> Map(
-        "created_at" -> Bytes.toBytes(u_created_at),
-        "name" -> Bytes.toBytes(name.getOrElse("")),
-        "screen_name" -> Bytes.toBytes(screen_name.getOrElse("")),
-        "lang" -> Bytes.toBytes(lang.getOrElse("")),
-        "time_zone" -> Bytes.toBytes(time_zone.getOrElse("")),
-        "verified" -> Bytes.toBytes(verified.getOrElse(false)),
-        "description" -> Bytes.toBytes(description.getOrElse("")),
-        "location" -> Bytes.toBytes(location.getOrElse("")),
-        "followers_count" -> Bytes.toBytes(followers_count.getOrElse(0l)),
-        "friends_count" -> Bytes.toBytes(friends_count.getOrElse(0l)),
-        "statuses_count" -> Bytes.toBytes(statuses_count.getOrElse(0l))
-      ),
-      "tweet" -> Map(
-        /**
-          * JSON ARRAY
-          * 00, created_at,
-          * 10, text,
-          * 11, place_id,
-          * 12, place_type,
-          * 13, place_full_name,
-          * 20, x,
-          * 21, y
-          */
-        t_id.get.toString -> Bytes.toBytes(
-            new JSONArray(){
-              put(t_time);
-              put(t_content);
-              put(t_coord);
-            }.toString
-        )
-      )
-    );
-    u_id.get.toString -> content
-  }
-
-
   override def main(args: Array[String]) {
+    var sentiSuffix = "blue_red_";
     if (args.length < 1) {
       System.err.println("Usage: FeedImporter <file>")
       System.exit(1);
     }
+    sentiSuffix += args(0);
     val sparkConf = new SparkConf().setAppName("FileImporter")
     val sc = new SparkContext(sparkConf)
     val sqlContext = new SQLContext(sc)
@@ -251,7 +130,8 @@ object FeedImporter extends App {
 
     val admin = Admin()
     val table = "twitterUser";
-    val families = Set("user", "tweet");//"location", "sentiment", "residential", "political", "race", "age", "gender"
+    val sentable = "senti_"+sentiSuffix;
+    val families = Set("user", "tweet"); //"location", "sentiment", "residential", "political", "race", "age", "gender"
     if (!admin.tableExists(table, families)) {
       admin.createTable(table, families)
     }
@@ -284,10 +164,6 @@ object FeedImporter extends App {
           "retweeted_status.id as rt_id",
           "retweeted_status.text as rt_text",
           "retweeted_status.coordinates.coordinates as rt_coordinates",
-          "retweeted_status.place.id as rt_place_id",
-          "retweeted_status.place.place_type as rt_place_type",
-          "retweeted_status.place.full_name as rt_place_full_name",
-          "retweeted_status.place.bounding_box.coordinates as rt_place_bounding_box",
           "retweeted_status.user.created_at as rt_u_created_at",
           "retweeted_status.user.description as rt_u_description",
           "retweeted_status.user.id as rt_u_id",
@@ -334,16 +210,19 @@ object FeedImporter extends App {
           // Transfer data frame into RDD, and prepare it for writing to HBase
           var twRdd = dfWithoutRT.selectExpr(fieldsWithoutRT: _*).map({ row => createTweetDataFrame(row, "", false) })
           twRdd.toHBaseBulk(table);
+
+          twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable);
+
         }
         val dfWithRT = sqlContext.read.schema(dfschema).json(txtrdd).filter("user.geo_enabled=true").where("retweeted_status is not null")
 
         if (dfWithRT.count > 0) {
           // Transfer data frame of all retweeted
           var twRdd = dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "", true) })
-
           twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "rt_", true) })
-
           twRdd.toHBaseBulk(table);
+
+          twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable);
         }
 
       } catch {

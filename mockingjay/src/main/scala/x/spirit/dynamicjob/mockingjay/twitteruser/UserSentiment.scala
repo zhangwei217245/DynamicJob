@@ -1,8 +1,4 @@
-package x.spirit.dynamicjob.mockingjay
-
-import org.apache.spark.sql.SQLContext
-import org.apache.spark.{SparkConf, SparkContext}
-import x.spirit.dynamicjob.mockingjay.hbase.HBaseConfig
+package x.spirit.dynamicjob.mockingjay.twitteruser
 
 import x.spirit.dynamicjob.mockingjay.corenlp.functions._
 

@@ -95,8 +95,12 @@ object functions {
     cleanNonAlphabet(cleanUrl(name), true, true, true)
   }
 
-  def purifyTweet(tweet:String):Iterable[String] = {
-    ssplit(cleanNonAlphabet(cleanUrl(tweet)))
+  def purifyTweet(tweet:String):String = {
+    cleanNonAlphabet(cleanUrl(tweet))
+  }
+
+  def purifyTweetAsSentences(tweet:String):Iterable[String] = {
+    ssplit(purifyTweet(tweet).replace(',','.'))
   }
 
   /**
