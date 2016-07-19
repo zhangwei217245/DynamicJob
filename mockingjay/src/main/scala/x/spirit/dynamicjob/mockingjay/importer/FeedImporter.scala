@@ -130,107 +130,52 @@ object FeedImporter extends App {
 
     val admin = Admin()
     val table = "twitterUser";
-    val sentable = "senti_"+sentiSuffix;
+    val sentable = "sent_"+sentiSuffix;
     val families = Set("user", "tweet"); //"location", "sentiment", "residential", "political", "race", "age", "gender"
-    if (!admin.tableExists(table, families)) {
-      admin.createTable(table, families)
+    val sent_families = Set("tsent");
+    if (admin.tableExists(table, families) && admin.tableExists(sentable, sent_families)) {
+      monthlyDirs.toList.sorted.foreach({ case (path) =>
+        try {
+          // This is the SQL selection criteria for JSON DataFrame
+
+          val fileSuffix = "/*.gz";
+
+          val content = sc.textFile(path + fileSuffix)
+          println("Processing file :" + path + " @ " + new Date())
+          val txtrdd = content.filter(line => line.length > 0).map(line => line.split("\\|")(1))
+          val dfWithoutRT = sqlContext.read.schema(dfschema).json(txtrdd).filter("user.geo_enabled=true").where("retweeted_status is null")
+
+          if (dfWithoutRT.count > 0) {
+            // Transfer data frame into RDD, and prepare it for writing to HBase
+            var twRdd = dfWithoutRT.selectExpr(fieldsWithoutRT: _*).map({ row => createTweetDataFrame(row, "", false) })
+            twRdd.toHBaseBulk(table);
+
+            twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable);
+
+          }
+          val dfWithRT = sqlContext.read.schema(dfschema).json(txtrdd).filter("user.geo_enabled=true").where("retweeted_status is not null")
+
+          if (dfWithRT.count > 0) {
+            // Transfer data frame of all retweeted
+            var twRdd = dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "", true) })
+            twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "rt_", true) })
+            twRdd.toHBaseBulk(table);
+
+            twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable);
+          }
+
+        } catch {
+          case e: Throwable =>
+            println("Failed to import file : " + path + " due to the following error:" + e.getMessage)
+            e.printStackTrace(System.err)
+        }
+      })
+
+    } else {
+      System.out.println("Table '%s' with column families '%s' and table '%s' with column families '%s' must be created."
+        .format(table, families.toString(), sentable, sent_families.toString()))
     }
 
-    monthlyDirs.toList.sorted.foreach({ case (path) =>
-      try {
-        // This is the SQL selection criteria for JSON DataFrame
-        val fieldsWithRT = Array[String](
-          "user.created_at as u_created_at",
-          "user.description as u_description",
-          "user.id as u_id",
-          "user.lang as u_lang",
-          "user.location as u_location",
-          "user.name as u_name",
-          "user.screen_name as u_screen_name",
-          "user.time_zone as u_time_zone",
-          "user.verified as u_verified",
-          "user.followers_count as u_followers_count",
-          "user.friends_count as u_friends_count",
-          "user.statuses_count as u_statuses_count",
-          "created_at",
-          "id",
-          "text",
-          "coordinates.coordinates",
-          "place.id as place_id",
-          "place.place_type as place_type",
-          "place.full_name as place_full_name",
-          "place.bounding_box.coordinates as place_bounding_box",
-          "retweeted_status.created_at as rt_created_at",
-          "retweeted_status.id as rt_id",
-          "retweeted_status.text as rt_text",
-          "retweeted_status.coordinates.coordinates as rt_coordinates",
-          "retweeted_status.user.created_at as rt_u_created_at",
-          "retweeted_status.user.description as rt_u_description",
-          "retweeted_status.user.id as rt_u_id",
-          "retweeted_status.user.lang as rt_u_lang",
-          "retweeted_status.user.location as rt_u_location",
-          "retweeted_status.user.name as rt_u_name",
-          "retweeted_status.user.screen_name as rt_u_screen_name",
-          "retweeted_status.user.time_zone as rt_u_time_zone",
-          "retweeted_status.user.verified as rt_u_verified",
-          "retweeted_status.user.followers_count as rt_u_followers_count",
-          "retweeted_status.user.friends_count as rt_u_friends_count",
-          "retweeted_status.user.statuses_count as rt_u_statuses_count")
-
-        val fieldsWithoutRT = Array[String](
-          "user.created_at as u_created_at",
-          "user.description as u_description",
-          "user.id as u_id",
-          "user.lang as u_lang",
-          "user.location as u_location",
-          "user.name as u_name",
-          "user.screen_name as u_screen_name",
-          "user.time_zone as u_time_zone",
-          "user.verified as u_verified",
-          "user.followers_count as u_followers_count",
-          "user.friends_count as u_friends_count",
-          "user.statuses_count as u_statuses_count",
-          "created_at",
-          "id",
-          "text",
-          "coordinates.coordinates",
-          "place.id as place_id",
-          "place.place_type as place_type",
-          "place.full_name as place_full_name",
-          "place.bounding_box.coordinates as place_bounding_box")
-
-        val fileSuffix = "/*.gz";
-
-        val content = sc.textFile(path + fileSuffix)
-        println("Processing file :" + path + " @ " + new Date())
-        val txtrdd = content.filter(line => line.length > 0).map(line => line.split("\\|")(1))
-        val dfWithoutRT = sqlContext.read.schema(dfschema).json(txtrdd).filter("user.geo_enabled=true").where("retweeted_status is null")
-
-        if (dfWithoutRT.count > 0) {
-          // Transfer data frame into RDD, and prepare it for writing to HBase
-          var twRdd = dfWithoutRT.selectExpr(fieldsWithoutRT: _*).map({ row => createTweetDataFrame(row, "", false) })
-          twRdd.toHBaseBulk(table);
-
-          twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable);
-
-        }
-        val dfWithRT = sqlContext.read.schema(dfschema).json(txtrdd).filter("user.geo_enabled=true").where("retweeted_status is not null")
-
-        if (dfWithRT.count > 0) {
-          // Transfer data frame of all retweeted
-          var twRdd = dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "", true) })
-          twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "rt_", true) })
-          twRdd.toHBaseBulk(table);
-
-          twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable);
-        }
-
-      } catch {
-        case e: Throwable =>
-          println("Failed to import file : " + path + " due to the following error:" + e.getMessage)
-          e.printStackTrace(System.err)
-      }
-    })
     admin.close
   }
 }
