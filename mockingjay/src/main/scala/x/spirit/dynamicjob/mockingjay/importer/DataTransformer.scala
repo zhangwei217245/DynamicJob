@@ -4,8 +4,6 @@ import java.text.SimpleDateFormat
 
 import geotrellis.vector.{MultiPolygon, Point, Polygon}
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.spark.SparkContext
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Row
 import org.json.JSONArray
 import x.spirit.dynamicjob.core.utils.StringUtils._
@@ -215,15 +213,15 @@ object DataTransformer {
       .map({ tweet => // Iterate each tweet,
       val jarr = new JSONArray(Bytes.toString(tweet._2));
       val text = jarr.getJSONArray(1).getString(0);
-      //val overall = sentiment(purifyTweet(removeMemtion(removeHashTag(text))))
+
       // calculate the overall sentiment score for the entire content.
       val blue_red = ParArray.fromTraversables(purifyTweetAsSentences(text)).map({ sentence =>
         var hasBlue = false;
         var hasRed = false;
-        tokenize(sentence).foreach({ word =>
+        for (word <- tokenize(sentence)) {
           if (Blue.contains(word)) hasBlue = true;
           if (Red.contains(word)) hasRed = true;
-        }) // determine whether this sentence ever talked about either RED or BLUE
+        } // determine whether this sentence ever talked about either RED or BLUE
       val sentimentScore = sentiment(removeMemtion(removeHashTag(sentence)));
         val blueScore = if (hasBlue) {
           sentimentScore
@@ -235,13 +233,17 @@ object DataTransformer {
         } else {
           0
         } // calculate red score
-        (blueScore, redScore, 1) // make a triple like bluescore , redscore, sentence count
+        (sentimentScore, blueScore, redScore, 1) // make a triple like bluescore , redscore, sentence count
       })
-    val jsonArr = new JSONArray() {
-        //put(overall); // The overall sentiment score
-        put(blue_red.map(_._1).sum); // The blue sentiment score.
-        put(blue_red.map(_._2).sum); // The red sentiment score.
-        put(blue_red.map(_._3).sum); // The number of sentences that this tweet has.
+      val sumSentiment = blue_red.map(_._1).sum
+      val sumBlueSenti = blue_red.map(_._2).sum
+      val sumRedSenti = blue_red.map(_._3).sum
+      val numSentences = blue_red.map(_._4).sum
+      val jsonArr = new JSONArray() {
+        put(Math.round(sumSentiment.toDouble / numSentences.toDouble)); // The overall sentiment score
+        put(Math.round(sumBlueSenti.toDouble / numSentences.toDouble)); // The blue sentiment score.
+        put(Math.round(sumRedSenti.toDouble / numSentences.toDouble)); // The red sentiment score.
+        put(numSentences); // The number of sentences that this tweet has.
       }
       tweet._1 -> Bytes.toBytes(jsonArr.toString)
     })
