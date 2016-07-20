@@ -238,12 +238,13 @@ object DataTransformer {
       val sumSentiment = blue_red.map(_._1).sum
       val sumBlueSenti = blue_red.map(_._2).sum
       val sumRedSenti = blue_red.map(_._3).sum
-      val numSentences = blue_red.map(_._4).sum
+      var numSentences = blue_red.map(_._4).sum
+      if (numSentences == 0) numSentences = 1
       val jsonArr = new JSONArray() {
-        put(Math.round(sumSentiment.toDouble / numSentences.toDouble)); // The overall sentiment score
-        put(Math.round(sumBlueSenti.toDouble / numSentences.toDouble)); // The blue sentiment score.
-        put(Math.round(sumRedSenti.toDouble / numSentences.toDouble)); // The red sentiment score.
-        put(numSentences); // The number of sentences that this tweet has.
+        put(Math.round(sumSentiment.toDouble / numSentences.toDouble).toInt); // The overall sentiment score
+        put(Math.round(sumBlueSenti.toDouble / numSentences.toDouble).toInt); // The blue sentiment score.
+        put(Math.round(sumRedSenti.toDouble / numSentences.toDouble).toInt); // The red sentiment score.
+        put(blue_red.map(_._4).sum); // The number of sentences that this tweet has.
       }
       tweet._1 -> Bytes.toBytes(jsonArr.toString)
     })
