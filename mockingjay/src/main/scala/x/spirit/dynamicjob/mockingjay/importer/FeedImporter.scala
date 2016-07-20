@@ -146,7 +146,7 @@ object FeedImporter extends App {
           if (dfWithoutRT.count > 0) {
             // Transfer data frame into RDD, and prepare it for writing to HBase
             var twRdd = dfWithoutRT.selectExpr(fieldsWithoutRT: _*).map({ row => createTweetDataFrame(row, "", false) })
-            twRdd.toHBaseBulk(table)
+            //twRdd.toHBaseBulk(table)
             if (args.length >= 1 && admin.tableExists(sentable, sent_families)) {
               twRdd.map(toSentimentRDD(sc, _)).toHBaseBulk(sentable)
             }
@@ -157,7 +157,7 @@ object FeedImporter extends App {
             // Transfer data frame of all retweeted
             var twRdd = dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "", true) })
             twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "rt_", true) })
-            twRdd.toHBaseBulk(table)
+            //twRdd.toHBaseBulk(table)
             if (args.length >= 1 && admin.tableExists(sentable, sent_families)) {
               twRdd.map(toSentimentRDD(sc, _)).toHBaseBulk(sentable)
             }
