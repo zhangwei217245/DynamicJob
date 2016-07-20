@@ -208,7 +208,7 @@ object DataTransformer {
     u_id.get.toString -> content
   }
 
-  def toSentimentRDD(sc: SparkContext, rddRow: (String, Map[String, Map[String, Array[Byte]]])): (String, Map[String, Map[String, Array[Byte]]]) = {
+  def toSentimentRDD(rddRow: (String, Map[String, Map[String, Array[Byte]]])): (String, Map[String, Map[String, Array[Byte]]]) = {
     val tweetSenti = rddRow._2
       .get("tweet").getOrElse(Map[String, Array[Byte]]()) // Get column family "tweet"
       .map({ tweet => // Iterate each tweet,
@@ -216,7 +216,7 @@ object DataTransformer {
       val text = jarr.getJSONArray(1).getString(0);
       //val overall = sentiment(purifyTweet(removeMemtion(removeHashTag(text))))
       // calculate the overall sentiment score for the entire content.
-      val blue_red = sc.parallelize(purifyTweetAsSentences(text).toList).map({ sentence =>
+      val blue_red = purifyTweetAsSentences(text).asParIterable.map({ sentence =>
         var hasBlue = false;
         var hasRed = false;
         tokenize(sentence).foreach({ word =>

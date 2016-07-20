@@ -94,7 +94,8 @@ object functions {
   }
 
   def purifyTweetAsSentences(tweet:String):Iterable[String] = {
-    ssplit(purifyTweet(tweet).replace(',','.'))
+    //ssplit(purifyTweet(tweet).replace(',','.'))
+    ssplit(purifyTweet(tweet))
   }
 
   /**

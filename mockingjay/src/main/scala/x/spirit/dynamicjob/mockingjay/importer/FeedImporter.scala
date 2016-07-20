@@ -158,7 +158,8 @@ object FeedImporter extends App {
 
           twRdd.toHBaseBulk(table)
           System.out.println("'%s' table saved!".format(table))
-          twRdd.map(toSentimentRDD(sc, _)).toHBaseBulk(sentable)
+
+          twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable)
           System.out.println("'%s' table saved!".format(sentable))
 
         } catch {
