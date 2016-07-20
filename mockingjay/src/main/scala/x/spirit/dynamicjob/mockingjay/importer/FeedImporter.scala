@@ -147,9 +147,9 @@ object FeedImporter extends App {
             // Transfer data frame into RDD, and prepare it for writing to HBase
             var twRdd = dfWithoutRT.selectExpr(fieldsWithoutRT: _*).map({ row => createTweetDataFrame(row, "", false) })
             //twRdd.toHBaseBulk(table)
-            if (args.length >= 1 && admin.tableExists(sentable, sent_families)) {
+            //if (args.length >= 1 && admin.tableExists(sentable, sent_families)) {
               twRdd.map(toSentimentRDD(sc, _)).toHBaseBulk(sentable)
-            }
+            //}
           }
           val dfWithRT = sqlContext.read.schema(dfschema).json(txtrdd).filter("user.geo_enabled=true").where("retweeted_status is not null")
 
@@ -158,9 +158,9 @@ object FeedImporter extends App {
             var twRdd = dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "", true) })
             twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "rt_", true) })
             //twRdd.toHBaseBulk(table)
-            if (args.length >= 1 && admin.tableExists(sentable, sent_families)) {
+            //if (args.length >= 1 && admin.tableExists(sentable, sent_families)) {
               twRdd.map(toSentimentRDD(sc, _)).toHBaseBulk(sentable)
-            }
+            //}
           }
 
         } catch {
