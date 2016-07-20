@@ -9,6 +9,7 @@ import edu.stanford.nlp.pipeline.CoreNLPProtos.Sentiment
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations
 import edu.stanford.nlp.simple.{Document, Sentence}
 import edu.stanford.nlp.util.Quadruple
+import org.apache.spark.rdd.RDD
 import x.spirit.dynamicjob.core.utils.StringUtils._
 
 import scala.collection._

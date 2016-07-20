@@ -148,7 +148,7 @@ object FeedImporter extends App {
             var twRdd = dfWithoutRT.selectExpr(fieldsWithoutRT: _*).map({ row => createTweetDataFrame(row, "", false) })
             twRdd.toHBaseBulk(table)
             if (args.length >= 1 && admin.tableExists(sentable, sent_families)) {
-              twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable)
+              twRdd.map(toSentimentRDD(sc, _)).toHBaseBulk(sentable)
             }
           }
           val dfWithRT = sqlContext.read.schema(dfschema).json(txtrdd).filter("user.geo_enabled=true").where("retweeted_status is not null")
@@ -159,7 +159,7 @@ object FeedImporter extends App {
             twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "rt_", true) })
             twRdd.toHBaseBulk(table)
             if (args.length >= 1 && admin.tableExists(sentable, sent_families)) {
-              twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable)
+              twRdd.map(toSentimentRDD(sc, _)).toHBaseBulk(sentable)
             }
           }
 
