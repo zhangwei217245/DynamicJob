@@ -14,6 +14,7 @@ import x.spirit.dynamicjob.mockingjay.corenlp.functions._
 
 import scala.collection.mutable
 import scala.collection.mutable.WrappedArray
+import scala.collection.parallel.mutable.ParArray
 
 /**
   * Created by zhangwei on 7/19/16.
@@ -216,7 +217,7 @@ object DataTransformer {
       val text = jarr.getJSONArray(1).getString(0);
       //val overall = sentiment(purifyTweet(removeMemtion(removeHashTag(text))))
       // calculate the overall sentiment score for the entire content.
-      val blue_red = purifyTweetAsSentences(text).asParIterable.map({ sentence =>
+      val blue_red = ParArray.fromTraversables(purifyTweetAsSentences(text)).map({ sentence =>
         var hasBlue = false;
         var hasRed = false;
         tokenize(sentence).foreach({ word =>
