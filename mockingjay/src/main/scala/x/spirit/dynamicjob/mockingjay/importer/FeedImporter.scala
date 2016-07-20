@@ -3,6 +3,7 @@ package x.spirit.dynamicjob.mockingjay.importer
 import java.util.Date
 
 import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
 import x.spirit.dynamicjob.mockingjay.hbase._
@@ -142,26 +143,23 @@ object FeedImporter extends App {
           println("Processing file :" + path + " @ " + new Date())
           val txtrdd = content.filter(line => line.length > 0).map(line => line.split("\\|")(1))
           val dfWithoutRT = sqlContext.read.schema(dfschema).json(txtrdd).filter("user.geo_enabled=true").where("retweeted_status is null")
-
+          var twRdd = sc.parallelize(Seq[(String, Map[String, Map[String, Array[Byte]]])]())
           if (dfWithoutRT.count > 0) {
             // Transfer data frame into RDD, and prepare it for writing to HBase
-            var twRdd = dfWithoutRT.selectExpr(fieldsWithoutRT: _*).map({ row => createTweetDataFrame(row, "", false) })
-            //twRdd.toHBaseBulk(table)
-            //if (args.length >= 1 && admin.tableExists(sentable, sent_families)) {
-              twRdd.map(toSentimentRDD(sc, _)).toHBaseBulk(sentable)
-            //}
+            twRdd = twRdd ++ dfWithoutRT.selectExpr(fieldsWithoutRT: _*).map({ row => createTweetDataFrame(row, "", false) })
           }
           val dfWithRT = sqlContext.read.schema(dfschema).json(txtrdd).filter("user.geo_enabled=true").where("retweeted_status is not null")
 
           if (dfWithRT.count > 0) {
             // Transfer data frame of all retweeted
-            var twRdd = dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "", true) })
+            twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "", true) })
             twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "rt_", true) })
-            //twRdd.toHBaseBulk(table)
-            //if (args.length >= 1 && admin.tableExists(sentable, sent_families)) {
-              twRdd.map(toSentimentRDD(sc, _)).toHBaseBulk(sentable)
-            //}
           }
+
+          twRdd.toHBaseBulk(table)
+          System.out.println("'%s' table saved!".format(table))
+          twRdd.map(toSentimentRDD(sc, _)).toHBaseBulk(sentable)
+          System.out.println("'%s' table saved!".format(sentable))
 
         } catch {
           case e: Throwable =>
