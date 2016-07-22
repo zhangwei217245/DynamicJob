@@ -65,7 +65,7 @@ object functions {
 
   def cleanNonAlphabet(document : String,removeDash:Boolean=false, removeComma:Boolean=false,
                        removePeriod:Boolean=false):String ={
-    var rst = document.replaceAll("[^a-zA-Z\\s\\.,_-@#]", "").replace('_',' ');
+    var rst = document.replaceAll("[^a-zA-Z\\s\\.,_-\\@#]", "").replace('_',' ');
     if (removeDash) {rst = rst.replace('-',' ')}
     if (removePeriod) {rst = rst.replace('.',' ')}
     if (removeComma) {rst = rst.replace(',',' ')}
@@ -74,7 +74,7 @@ object functions {
 
   def cleanNonAscii(document: String, removeDash:Boolean=false, removeComma:Boolean=false,
                     removePeriod:Boolean=false):String = {
-    var rst = document.replaceAll("[^\\x00-\\x7F\\s\\.,_-@#]", "").replace('_',' ');
+    var rst = document.replaceAll("[^\\x00-\\x7F\\s\\.,_-\\@#]", "").replace('_',' ');
     if (removeDash) {rst = rst.replace('-',' ')}
     if (removePeriod) {rst = rst.replace('.',' ')}
     if (removeComma) {rst = rst.replace(',',' ')}
