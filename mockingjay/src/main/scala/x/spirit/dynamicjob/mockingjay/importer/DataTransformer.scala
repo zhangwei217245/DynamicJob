@@ -230,12 +230,12 @@ object DataTransformer {
         val blueScore = if (hasBlue) {
           sentimentScore
         } else {
-          0
+          -10000
         } // calculate blue score
       val redScore = if (hasRed) {
           sentimentScore
         } else {
-          0
+          -10000
         } // calculate red score
         (sentimentScore, blueScore, redScore, 1) // make a triple like bluescore , redscore, sentence count
       })
@@ -245,9 +245,9 @@ object DataTransformer {
       var numSentences = blue_red.map(_._4).sum
       if (numSentences == 0) numSentences = 1
       val jsonArr = new JSONArray() {
-        put(sumSentiment); // The overall sentiment score
-        put(sumBlueSenti); // The blue sentiment score.
-        put(sumRedSenti); // The red sentiment score.
+        put(Math.round(sumSentiment.toDouble/numSentences.toDouble).toInt); // The overall sentiment score
+        put(Math.round(sumBlueSenti.toDouble/numSentences.toDouble).toInt); // The blue sentiment score.
+        put(Math.round(sumRedSenti.toDouble/numSentences.toDouble).toInt); // The red sentiment score.
         put(blue_red.map(_._4).sum); // The number of sentences that this tweet has.
       }
       tweet._1 -> Bytes.toBytes(jsonArr.toString)
