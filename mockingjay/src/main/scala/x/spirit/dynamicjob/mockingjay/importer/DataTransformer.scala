@@ -222,7 +222,11 @@ object DataTransformer {
           if (Blue.contains(word)) hasBlue = true;
           if (Red.contains(word)) hasRed = true;
         } // determine whether this sentence ever talked about either RED or BLUE
-      val sentimentScore = sentiment(removeMemtion(removeHashTag(sentence)));
+      var sentimentScore = -10000;
+        if (hasBlue || hasRed) {
+          sentimentScore = sentiment(removeMemtion(removeHashTag(sentence)));
+        }
+
         val blueScore = if (hasBlue) {
           sentimentScore
         } else {
@@ -241,9 +245,9 @@ object DataTransformer {
       var numSentences = blue_red.map(_._4).sum
       if (numSentences == 0) numSentences = 1
       val jsonArr = new JSONArray() {
-        put(Math.round(sumSentiment.toDouble / numSentences.toDouble).toInt); // The overall sentiment score
-        put(Math.round(sumBlueSenti.toDouble / numSentences.toDouble).toInt); // The blue sentiment score.
-        put(Math.round(sumRedSenti.toDouble / numSentences.toDouble).toInt); // The red sentiment score.
+        put(sumSentiment); // The overall sentiment score
+        put(sumBlueSenti); // The blue sentiment score.
+        put(sumRedSenti); // The red sentiment score.
         put(blue_red.map(_._4).sum); // The number of sentences that this tweet has.
       }
       tweet._1 -> Bytes.toBytes(jsonArr.toString)
