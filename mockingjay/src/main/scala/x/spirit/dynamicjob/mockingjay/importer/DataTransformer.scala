@@ -3,6 +3,7 @@ package x.spirit.dynamicjob.mockingjay.importer
 import java.text.SimpleDateFormat
 
 import geotrellis.vector.{MultiPolygon, Point, Polygon}
+import org.apache.commons.lang.StringUtils
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.sql.Row
 import org.json.JSONArray
@@ -213,7 +214,17 @@ object DataTransformer {
       .map({ tweet => // Iterate each tweet,
       val jarr = new JSONArray(Bytes.toString(tweet._2));
       val text = jarr.getJSONArray(1).getString(0);
+      val noSenti = -10000;
 
+      if (StringUtils.isBlank(text)){
+        val arr = new JSONArray() {
+          put(noSenti); // The overall sentiment score
+          put(noSenti); // The blue sentiment score.
+          put(noSenti); // The red sentiment score.
+          put(0); // The number of sentences that this tweet has.
+        }
+        tweet._1 -> Bytes.toBytes(arr.toString())
+      }else {
       // calculate the overall sentiment score for the entire content.
       val blue_red = ParArray.fromTraversables(purifyTweetAsSentences(text)).map({ sentence =>
         var hasBlue = false;
@@ -222,7 +233,7 @@ object DataTransformer {
           if (Blue.contains(word)) hasBlue = true;
           if (Red.contains(word)) hasRed = true;
         } // determine whether this sentence ever talked about either RED or BLUE
-      var sentimentScore = -10000;
+      var sentimentScore = noSenti;
         if (hasBlue || hasRed) {
           sentimentScore = sentiment(removeMemtion(removeHashTag(sentence)));
         }
@@ -230,15 +241,15 @@ object DataTransformer {
         val blueScore = if (hasBlue) {
           sentimentScore
         } else {
-          -10000
+          noSenti
         } // calculate blue score
       val redScore = if (hasRed) {
           sentimentScore
         } else {
-          -10000
+          noSenti
         } // calculate red score
         (sentimentScore, blueScore, redScore, 1) // make a triple like bluescore , redscore, sentence count
-      })
+      }).filter(_._1 >= -2)
       val sumSentiment = blue_red.map(_._1).sum
       val sumBlueSenti = blue_red.map(_._2).sum
       val sumRedSenti = blue_red.map(_._3).sum
@@ -251,6 +262,7 @@ object DataTransformer {
         put(blue_red.map(_._4).sum); // The number of sentences that this tweet has.
       }
       tweet._1 -> Bytes.toBytes(jsonArr.toString)
+      }
     })
     val content = Map(
       "tsent" -> tweetSenti
