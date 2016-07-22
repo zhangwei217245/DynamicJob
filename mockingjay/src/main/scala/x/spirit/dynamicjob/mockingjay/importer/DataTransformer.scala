@@ -226,7 +226,7 @@ object DataTransformer {
         tweet._1 -> Bytes.toBytes(arr.toString())
       }else {
       // calculate the overall sentiment score for the entire content.
-      val blue_red = ParArray.fromTraversables(purifyTweetAsSentences(text)).map({ sentence =>
+      val blue_red = ParArray.fromTraversables(purifyTweetAsSentences(text.toLowerCase())).map({ sentence =>
         var hasBlue = false;
         var hasRed = false;
         for (word <- tokenize(sentence)) {
@@ -237,7 +237,6 @@ object DataTransformer {
         if (hasBlue || hasRed) {
           sentimentScore = sentiment(removeMemtion(removeHashTag(sentence)));
         }
-
         val blueScore = if (hasBlue) {
           sentimentScore
         } else {
