@@ -9,7 +9,6 @@ import edu.stanford.nlp.pipeline.CoreNLPProtos.Sentiment
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations
 import edu.stanford.nlp.simple.{Document, Sentence}
 import edu.stanford.nlp.util.Quadruple
-import org.apache.spark.rdd.RDD
 import x.spirit.dynamicjob.core.utils.StringUtils._
 
 import scala.collection._
@@ -65,7 +64,7 @@ object functions {
 
   def cleanNonAlphabet(document : String,removeDash:Boolean=false, removeComma:Boolean=false,
                        removePeriod:Boolean=false):String ={
-    var rst = document.replaceAll("[^a-zA-Z\\s\\.,_-\\@#]", "").replace('_',' ');
+    var rst = document.replaceAll("[^a-zA-Z\\s\\.,\\-_#@]", "").replace('_',' ');
     if (removeDash) {rst = rst.replace('-',' ')}
     if (removePeriod) {rst = rst.replace('.',' ')}
     if (removeComma) {rst = rst.replace(',',' ')}
@@ -74,7 +73,7 @@ object functions {
 
   def cleanNonAscii(document: String, removeDash:Boolean=false, removeComma:Boolean=false,
                     removePeriod:Boolean=false):String = {
-    var rst = document.replaceAll("[^\\x00-\\x7F\\s\\.,_-\\@#]", "").replace('_',' ');
+    var rst = document.replaceAll("[^\\x00-\\x7F\\s\\.,\\-_#@]", "").replace('_',' ');
     if (removeDash) {rst = rst.replace('-',' ')}
     if (removePeriod) {rst = rst.replace('.',' ')}
     if (removeComma) {rst = rst.replace(',',' ')}

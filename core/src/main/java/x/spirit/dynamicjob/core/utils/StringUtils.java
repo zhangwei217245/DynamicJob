@@ -41,11 +41,16 @@ public class StringUtils {
         return str;
     }
 
+    public static String removeNonAlphabet(String str) {
+        return str.replaceAll("([^a-zA-Z\\d\\s\\.,\\-_#@])","");
+    }
+
     public static void main(String[] args) {
-        String a = "hashtag #playfi2010_220 url http://soiuoiu.com mention @romoa";
+        String a = "hash-tag #playfi2010_220 url,. http://soiuoiu.com mention @romoa [_] {}中文";
         System.out.println(removeHashTag(a));
         System.out.println(removeMemtion(a));
         System.out.println(removeUrl(a));
         System.out.println(removeHashTag(removeMemtion(removeUrl(a))));
+        System.out.println(removeNonAlphabet(a));
     }
 }
