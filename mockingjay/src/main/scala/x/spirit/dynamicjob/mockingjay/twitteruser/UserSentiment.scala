@@ -6,7 +6,6 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.{SparkConf, SparkContext}
 import org.json.JSONArray
 import x.spirit.dynamicjob.mockingjay.hbase.{HBaseConfig, _}
-import PoliticalPreference
 
 /**
   * Created by zhangwei on 7/7/16.
