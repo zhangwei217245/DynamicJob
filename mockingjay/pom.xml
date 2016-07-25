@@ -54,18 +54,10 @@
                 <version>2.15.2</version>
                 <executions>
                     <execution>
-                        <id>scala-compile-first</id>
-                        <phase>process-resources</phase>
+                        <phase>compile</phase>
                         <goals>
                             <goal>add-source</goal>
                             <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>scala-test-compile</id>
-                        <phase>process-test-resources</phase>
-                        <goals>
-                            <goal>testCompile</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -76,18 +68,20 @@
                 <version>3.5.1</version>
                 <executions>
                     <execution>
-                        <phase>compile</phase>
+                        <id>java-compile-first</id>
+                        <phase>process-resources</phase>
                         <goals>
                             <goal>compile</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>java-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
                 </executions>
-                <configuration>
-                    <includes>
-                        <include>**/*.java</include>
-                        <include>**/*.scala</include>
-                    </includes>
-                </configuration>
             </plugin>
 
             <plugin>
