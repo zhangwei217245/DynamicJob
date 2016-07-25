@@ -6,6 +6,7 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.{SparkConf, SparkContext}
 import org.json.JSONArray
 import x.spirit.dynamicjob.mockingjay.hbase.{HBaseConfig, _}
+import x.spirit.dynamicjob.mockingjay.twitteruser.PoliticalPreference._
 
 /**
   * Created by zhangwei on 7/7/16.
@@ -41,17 +42,17 @@ object UserSentiment extends App {
           })
           val sumBlue = blue_red.map(_._1).sum
           val sumRed = blue_red.map(_._2).sum
-          var decision = PoliticalPreference.None;
+          var decision = None;
           if (sumBlue.equals(sumRed)) {
-            decision = PoliticalPreference.Neutral;
+            decision = Neutral;
           } else if (sumBlue > sumRed) {
-            decision = PoliticalPreference.Blue;
+            decision = Blue;
           } else {
-            decision = PoliticalPreference.Red;
+            decision = Red;
           }
           uid -> Map({
             "political" -> Map(
-              "type" -> Bytes.toBytes(decision.getValue),
+              "type" -> Bytes.toBytes(decision.id),
               "sumblue" -> Bytes.toBytes(sumBlue),
               "sumred" -> Bytes.toBytes(sumRed)
             )
