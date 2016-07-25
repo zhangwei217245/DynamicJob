@@ -12,10 +12,10 @@ import x.spirit.dynamicjob.mockingjay.hbase.{HBaseConfig, _}
   */
 object UserSentiment extends App {
 
-  lazy val sparkConf = new SparkConf().setAppName("UserSentimentCalculator")
-  lazy val sc = new SparkContext(sparkConf)
+  val sparkConf = new SparkConf().setAppName("UserSentimentCalculator")
+  val sc = new SparkContext(sparkConf)
 
-  implicit val config = HBaseConfig(
+  val config = HBaseConfig(
     hbaseXmlConfigFile = "hbase-site.xml"
   )
 
