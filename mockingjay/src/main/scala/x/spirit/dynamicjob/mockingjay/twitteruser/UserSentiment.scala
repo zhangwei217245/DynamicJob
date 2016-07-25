@@ -12,14 +12,14 @@ import x.spirit.dynamicjob.mockingjay.hbase.{HBaseConfig, _}
   */
 object UserSentiment extends App {
 
-  val sparkConf = new SparkConf().setAppName("UserSentimentCalculator")
-  val sc = new SparkContext(sparkConf)
-
-  implicit val config = HBaseConfig(
-    hbaseXmlConfigFile = "hbase-site.xml"
-  )
-
   override def main(args: Array[String]) {
+    val sparkConf = new SparkConf().setAppName("UserSentimentCalculator")
+    val sc = new SparkContext(sparkConf)
+
+    implicit val config = HBaseConfig(
+      hbaseXmlConfigFile = "hbase-site.xml"
+    )
+
     /**
       * For all hbase filters, refer to :
       * https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/filter/package-summary.html
