@@ -89,6 +89,7 @@ final class HBaseSC(@transient sc: SparkContext) extends Serializable {
   def hbase[A](table: String, data: Map[String, Set[String]])(implicit config: HBaseConfig, reader: Reads[A]): RDD[(String, Map[String, Map[String, A]])] =
     hbase(table, data, new Scan)
 
+
   /**
     * Provides an RDD of HBase rows. Here `data` is a map whose
     * keys represent the column families and whose values are
