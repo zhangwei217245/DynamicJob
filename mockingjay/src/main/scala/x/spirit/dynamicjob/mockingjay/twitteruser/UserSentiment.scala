@@ -15,7 +15,7 @@ object UserSentiment extends App {
   val sparkConf = new SparkConf().setAppName("UserSentimentCalculator")
   val sc = new SparkContext(sparkConf)
 
-  val config = HBaseConfig(
+  implicit val config = HBaseConfig(
     hbaseXmlConfigFile = "hbase-site.xml"
   )
 
