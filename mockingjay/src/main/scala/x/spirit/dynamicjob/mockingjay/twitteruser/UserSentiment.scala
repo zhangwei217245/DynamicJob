@@ -30,10 +30,13 @@ object UserSentiment extends App {
     var startRow = 0L;
     while (notfinished) {
       System.out.println("Start row = %d".format(startRow))
-      val scan = new Scan(Bytes.toBytes(startRow.toString), new PageFilter(100l))
-      val scanRst = sc.hbase[String]("sent_blue_red_2012", Set("tsent"), scan)
+      //val scan = new Scan(Bytes.toBytes(startRow.toString), new PageFilter(100l))
+      val scanRst = sc.hbase[String]("sent_blue_red_2012", Set("tsent"))
       val rstCount = scanRst.count();
       if (rstCount > 0) {
+        //val uids = scanRst.map(_._1).collect();
+
+
         scanRst.map({ case (k, v) =>
           val uid = k;
           val tsent = v("tsent")
@@ -62,6 +65,7 @@ object UserSentiment extends App {
           })
         }).toHBase("machineLearn2012")
         startRow = scanRst.collect().last._1.toLong + 1L
+        notfinished = false;
       } else {
         notfinished = false;
       }
