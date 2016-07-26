@@ -27,10 +27,12 @@ object UserSentiment extends App {
       * Here, it's better to use PageFilter and
       */
     var notfinished = true;
+    var startRow = 0L;
     while (notfinished) {
-      val scan = new Scan(Bytes.toBytes("0"), new PageFilter(100l))
+      val scan = new Scan(Bytes.toBytes(startRow.toString), new PageFilter(100l))
       val scanRst = sc.hbase[String]("sent_blue_red_2012", Set("tsent"), scan)
-      if (scanRst.count() > 0) {
+      val rstCount = scanRst.count();
+      if (rstCount > 0) {
         scanRst.map({ case (k, v) =>
           val uid = k;
           val tsent = v("tsent")
@@ -58,6 +60,7 @@ object UserSentiment extends App {
             )
           })
         }).toHBase("machineLearn2012")
+        startRow = scanRst.collect().last._1.toLong + 1L
       } else {
         notfinished = false;
       }
