@@ -1,7 +1,7 @@
 package x.spirit.dynamicjob.mockingjay.twitteruser
 
 import org.apache.hadoop.hbase.client.Scan
-import org.apache.hadoop.hbase.filter.PageFilter
+import org.apache.hadoop.hbase.filter.{PageFilter, PrefixFilter}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.{SparkConf, SparkContext}
 import org.json.JSONArray
@@ -27,16 +27,13 @@ object UserSentiment extends App {
       * Here, it's better to use PageFilter and
       */
     var notfinished = true;
-    var startRow = 0L;
+    var startRowPrefix = 10000L;
     while (notfinished) {
-      System.out.println("Start row = %d".format(startRow))
-      //val scan = new Scan(Bytes.toBytes(startRow.toString), new PageFilter(100l))
-      val scanRst = sc.hbase[String]("sent_blue_red_2012", Set("tsent")/*,scan*/)
+      System.out.println("Start row prefix = %d".format(startRowPrefix))
+      val scanRst = sc.hbase[String]("sent_blue_red_2012", Set("tsent"),
+        new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
       val rstCount = scanRst.count();
       if (rstCount > 0) {
-        //val uids = scanRst.map(_._1).collect();
-
-
         scanRst.map({ case (k, v) =>
           val uid = k;
           val tsent = v("tsent")
@@ -64,8 +61,7 @@ object UserSentiment extends App {
             )
           })
         }).toHBase("machineLearn2012")
-        //startRow = scanRst.collect().last._1.toLong + 1L
-        notfinished = false;
+        startRowPrefix += 1;
       } else {
         notfinished = false;
       }
