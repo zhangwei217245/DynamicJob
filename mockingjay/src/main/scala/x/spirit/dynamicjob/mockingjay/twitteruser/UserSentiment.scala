@@ -27,7 +27,7 @@ object UserSentiment extends App {
       * Here, it's better to use PageFilter and
       */
     var notfinished = true;
-    var startRowPrefix = 10000L;
+    var startRowPrefix = 0;
     while (notfinished) {
       System.out.println("Start row prefix = %d".format(startRowPrefix))
       val scanRst = sc.hbase[String]("sent_blue_red_2012", Set("tsent"),
