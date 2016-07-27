@@ -32,8 +32,7 @@ object UserSentiment extends App {
       System.out.println("Start row prefix = %d".format(startRowPrefix))
       val scanRst = sc.hbase[String]("sent_blue_red_2012", Set("tsent"),
         new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
-      val rstCount = scanRst.count();
-      if (rstCount > 0) {
+      if (!scanRst.isEmpty()) {
         scanRst.map({ case (k, v) =>
           val uid = k;
           val tsent = v("tsent")
