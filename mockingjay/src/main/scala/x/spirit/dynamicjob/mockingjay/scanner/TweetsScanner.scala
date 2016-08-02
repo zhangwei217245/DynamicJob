@@ -47,7 +47,7 @@ object TweetsScanner extends App {
           val jsonArr = new JSONArray(Bytes.toString(jsonBytes));
           val blueScore = jsonArr.getInt(1)
           val redScore = jsonArr.getInt(2)
-          (blueScore, redScore, 1)
+          (blueScore, redScore, 1L)
         })
 
         val tweetCount = blue_red.map(_._3).sum
