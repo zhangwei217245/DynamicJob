@@ -25,7 +25,7 @@ object TweetsScanner extends App {
       * https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/filter/package-summary.html
       * Here, it's better to use PageFilter and
       */
-    var startRowPrefix = 1;
+    var startRowPrefix = 100;
     var overallTweet = 0.0D;
     var overallBlueTweet = 0.0D;
     var overallRedTweet = 0.0D;
@@ -33,7 +33,7 @@ object TweetsScanner extends App {
     var blueUser = 0L;
     var redUser = 0L;
     var neutralUser = 0L;
-    while (startRowPrefix <= 9) {
+    while (startRowPrefix <= 999) {
       System.out.println("Start row prefix = %d".format(startRowPrefix))
       val scanRst = sc.hbase[String]("sent_blue_red_2012", Set("tsent"),
         new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)));
