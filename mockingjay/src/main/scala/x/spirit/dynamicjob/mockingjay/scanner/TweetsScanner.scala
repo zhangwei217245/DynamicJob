@@ -20,6 +20,8 @@ object TweetsScanner extends App {
       hbaseXmlConfigFile = "hbase-site.xml"
     )
 
+    config.get.set("hbase.rpc.timeout", "1800000");
+
     /**
       * For all hbase filters, refer to :
       * https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/filter/package-summary.html
