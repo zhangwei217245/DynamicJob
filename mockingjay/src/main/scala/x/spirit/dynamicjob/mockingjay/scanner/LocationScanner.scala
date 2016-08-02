@@ -15,7 +15,7 @@ import scala.collection.mutable
 object LocationScanner extends App{
 
   override def main(args: Array[String]) {
-    val sparkConf = new SparkConf().setAppName("UserSentimentCalculator")
+    val sparkConf = new SparkConf().setAppName(this.getClass.getName)
     val sc = new SparkContext(sparkConf)
 
     implicit val config = HBaseConfig(
