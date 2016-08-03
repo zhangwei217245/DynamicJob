@@ -67,15 +67,15 @@ object TweetsScanner extends App {
 
         (tweetCount, blueTweetCount, redTweetCount, decision.id)
 
-      })
-      overallTweet+=intermediateResult.map(_._1).sum()
-      overallBlueTweet+=intermediateResult.map(_._2).sum()
-      overallRedTweet+=intermediateResult.map(_._3).sum()
+      }).collect()
+      overallTweet+=intermediateResult.map(_._1).sum
+      overallBlueTweet+=intermediateResult.map(_._2).sum
+      overallRedTweet+=intermediateResult.map(_._3).sum
 
-      overallUser+=intermediateResult.count;
-      blueUser+=intermediateResult.filter(_._4 == Blue.id).count;
-      redUser+=intermediateResult.filter(_._4 == Red.id).count;
-      neutralUser+=intermediateResult.filter(_._4 == Neutral.id).count;
+      overallUser+=intermediateResult.size;
+      blueUser+=intermediateResult.filter(_._4 == Blue.id).size;
+      redUser+=intermediateResult.filter(_._4 == Red.id).size;
+      neutralUser+=intermediateResult.filter(_._4 == Neutral.id).size;
 
       startRowPrefix += 1;
     }
