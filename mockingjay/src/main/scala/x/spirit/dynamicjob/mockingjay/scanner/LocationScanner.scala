@@ -50,6 +50,8 @@ object LocationScanner extends App{
       allRst = allRst.union(typeMap);
       startRowPrefix += 1;
     }
-    System.out.println(allRst.groupBy(_._1).map({case(k,v)=>(k,v.map(_._2).sum)}).toString())
+    allRst.groupBy(_._1).map({case(k,v)=>(k,v.map(_._2).sum)}).foreach({case(k,v)=>
+      System.out.println("%s -> %s ".format(k, v))
+    })
   }
 }
