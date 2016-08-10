@@ -156,11 +156,11 @@ object FeedImporter extends App {
             twRdd = twRdd ++ dfWithRT.selectExpr(fieldsWithRT: _*).map({ row => createTweetDataFrame(row, "rt_", true) })
           }
 
-          //twRdd.toHBaseBulk(table)
-          //System.out.println("'%s' table saved!".format(table))
+          twRdd.toHBaseBulk(table)
+          System.out.println("'%s' table saved!".format(table))
 
-          twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable)
-          System.out.println("'%s' table saved!".format(sentable))
+          //twRdd.map(toSentimentRDD(_)).toHBaseBulk(sentable)
+          //System.out.println("'%s' table saved!".format(sentable))
 
         } catch {
           case e: Throwable =>
