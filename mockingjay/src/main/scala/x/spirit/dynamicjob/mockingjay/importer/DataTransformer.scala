@@ -102,11 +102,15 @@ object DataTransformer {
     } else {
       null
     })
-    val place_type = Option(if (!forRt) {
-      row.getAs[String](prefix + "place_type")
-    } else {
-      null
-    })
+    val place_type = Option(
+      if (!row.isNullAt(row.fieldIndex(prefix + "coordinates"))) {
+        "exact"
+      } else if (!forRt) {
+        row.getAs[String](prefix + "place_type")
+      } else {
+        null
+      }
+    )
     val place_full_name = Option(if (!forRt) {
       row.getAs[String](prefix + "place_full_name")
     } else {
