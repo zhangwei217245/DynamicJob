@@ -173,6 +173,10 @@
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.scalanlp</groupId>
+            <artifactId>nak</artifactId>
+        </dependency>
         <!--<dependency>-->
             <!--<groupId>eu.unicredit</groupId>-->
             <!--<artifactId>hbase-rdd</artifactId>-->
