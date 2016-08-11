@@ -115,15 +115,11 @@ object ResidencyLocator extends App {
               coord = clusterPoints.sortBy(_.size).last(0);
             }
             // if not, take the most precise coordinate and
-            k -> coord
+            k -> Bytes.toBytes(new JSONArray(coord).toString)
         })
-
-
-      })
+        uid -> Map("location" -> locationsAtDifferentLevel)
+      }).toHBase("machineLearn2012")
       startRowPrefix += 1;
     }
-    allRst.groupBy(_._1).map({ case (k, v) => (k, v.map(_._2).sum) }).foreach({ case (k, v) =>
-      System.out.println("%s -> %s ".format(k, v))
-    })
   }
 }
