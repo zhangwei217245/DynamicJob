@@ -157,4 +157,8 @@ object TimeZoneMapping {
     "Chatham Is." -> "Pacific/Chatham",
     "Samoa" -> "Pacific/Apia")
 
+  def getTimeZoneId(str: String): String = {
+    return mapping.getOrElse(str, "Etc/UTC")
+  }
+
 }

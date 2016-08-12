@@ -10,6 +10,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.json.JSONArray
 import x.spirit.dynamicjob.mockingjay.cluster.{DBSCAN, GDBSCAN}
 import x.spirit.dynamicjob.mockingjay.hbase.{HBaseConfig, _}
+import x.spirit.dynamicjob.mockingjay.utils.TimeZoneMapping
 
 /**
   * Created by zhangwei on 8/10/16.
@@ -53,7 +54,7 @@ object ResidencyLocator extends App {
         val uid = k
         //FIXME: The default timezone has to be decided.
         val user_time_zone_str = v("user").getOrElse("time_zone", "Central Time (US & Canada)");
-        val user_time_zone = ZoneId.of(user_time_zone_str);
+        val user_time_zone = ZoneId.of(TimeZoneMapping.getTimeZoneId(user_time_zone_str));
         val tweet = v("tweet")
         val addr = tweet.map({ case (tid, jsonBytes) =>
           val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
@@ -99,20 +100,20 @@ object ResidencyLocator extends App {
               case (placeType, x, y, timestamp) => Seq[Double](x, y)
             })
 
-            if (nightLocations.size > 0) {
+            if (nightLocations.nonEmpty) {
               matrixData = nightLocations.map({
                 case (placeType, x, y, timestamp) => Seq[Double](x, y)
               })
             }
 
-            if (matrixData.size > 0) {
+            if (matrixData.nonEmpty) {
               // determine whether it contains precise location
               val dmatrix = new DenseMatrix(
                 matrixData.size, 2, matrixData.flatten.toArray
               )
-              val clusterPoints = dbscan(dmatrix);
+              val clusterPoints = dbscan(dmatrix)
               // TODO: currently, we take the cluster where the users posted the largest number of tweets
-              coord = clusterPoints.sortBy(_.size).last(0);
+              coord = clusterPoints.sortBy(_.size).last.head
             }
             // if not, take the most precise coordinate and
             k -> Bytes.toBytes(new JSONArray(coord).toString)
