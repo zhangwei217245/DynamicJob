@@ -113,7 +113,7 @@ object ResidencyLocator extends App {
               )
               val clusterPoints = dbscan(dmatrix)
               // TODO: currently, we take the cluster where the users posted the largest number of tweets
-              coord = clusterPoints.sortBy(_.size).last.head
+              coord = clusterPoints.sortBy(_.size).lastOption.getOrElse(Seq(matrixData.head.toArray)).head
             }
             // if not, take the most precise coordinate and
             k -> Bytes.toBytes(new JSONArray(coord).toString)
