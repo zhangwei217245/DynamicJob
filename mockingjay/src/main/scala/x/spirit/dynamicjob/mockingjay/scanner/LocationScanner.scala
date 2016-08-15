@@ -47,14 +47,15 @@ object LocationScanner extends App{
         })
         types
       }).flatMap({map=>map}).groupBy(_._1).map({case(k,v)=>(k,v.map(_._2).sum)}).collect
+      println("typeMap = " + typeMap)
       allRst = Array.concat(allRst, typeMap);
       allRst.groupBy(_._1).map({case(k,v)=>(k,v.map(_._2).sum)}).foreach({case(k,v)=>
-        System.out.println("%s -> %s ".format(k, v))
+        println("%s -> %s ".format(k, v))
       })
       startRowPrefix += 1;
     }
     allRst.groupBy(_._1).map({case(k,v)=>(k,v.map(_._2).sum)}).foreach({case(k,v)=>
-      System.out.println("%s -> %s ".format(k, v))
+      println("%s -> %s ".format(k, v))
     })
   }
 }

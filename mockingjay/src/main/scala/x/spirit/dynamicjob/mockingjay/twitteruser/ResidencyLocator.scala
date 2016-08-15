@@ -25,7 +25,8 @@ object ResidencyLocator extends App {
       DBSCAN.isCorePoint(minPoints = 3)
     )
     val cluster = gdbscan cluster v
-    val clusterPoints = cluster.map(_.points.map(_.value.toArray))
+    val clusterPoints = cluster.map(_.points.map(_.value.toArray)).sortBy(_.size)
+    println("clusterPoints = "+clusterPoints)
     clusterPoints
   }
 
