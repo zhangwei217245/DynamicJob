@@ -111,7 +111,7 @@ object ResidencyLocator extends App {
             if (matrixData.nonEmpty) {
               // determine whether it contains precise location
               val dmatrix = new DenseMatrix(
-                matrixData.size, 2, matrixData.flatten.toArray
+                matrixData.size, 2, matrixData.flatMap(seq => seq).toArray
               )
               val clusterPoints = dbscan(dmatrix)
               // TODO: currently, we take the cluster where the users posted the largest number of tweets
