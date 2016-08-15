@@ -27,6 +27,7 @@ object ResidencyLocator extends App {
     val cluster = gdbscan cluster v
     val clusterPoints = cluster.map(_.points.map(_.value.toArray)).sortBy(_.size)
     println("clusterPoints = "+clusterPoints)
+    clusterPoints.foreach({item => println(item); item.foreach({arritem=> println(arritem);arritem.foreach(println(_))})})
     clusterPoints
   }
 
@@ -114,7 +115,7 @@ object ResidencyLocator extends App {
               )
               val clusterPoints = dbscan(dmatrix)
               // TODO: currently, we take the cluster where the users posted the largest number of tweets
-              coord = clusterPoints.sortBy(_.size).lastOption.getOrElse(Seq(matrixData.head.toArray)).head
+              coord = clusterPoints.lastOption.getOrElse(List(matrixData.head.toArray)).head
             }
             // if not, take the most precise coordinate and
             k -> Bytes.toBytes(new JSONArray(coord).toString)
