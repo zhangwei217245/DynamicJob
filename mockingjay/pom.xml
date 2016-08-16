@@ -177,6 +177,10 @@
             <groupId>org.scalanlp</groupId>
             <artifactId>nak</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.irvingc.spark</groupId>
+            <artifactId>dbscan_2.10</artifactId>
+        </dependency>
         <!--<dependency>-->
             <!--<groupId>eu.unicredit</groupId>-->
             <!--<artifactId>hbase-rdd</artifactId>-->

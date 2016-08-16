@@ -99,12 +99,12 @@ object ResidencyLocator extends App {
             })
 
             var matrixData = v.map({
-              case (placeType, x, y, timestamp) => Seq[Double](x, y)
+              case (placeType, x, y, timestamp) => Seq[Double](y, x)
             })
 
             if (nightLocations.nonEmpty) {
               matrixData = nightLocations.map({
-                case (placeType, x, y, timestamp) => Seq[Double](x, y)
+                case (placeType, x, y, timestamp) => Seq[Double](y, x)
               })
             }
 
