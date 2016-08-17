@@ -26,8 +26,6 @@ object ResidencyLocator extends App {
     )
     val cluster = gdbscan cluster v
     val clusterPoints = cluster.map(_.points.map(_.value.toArray)).sortBy(_.size)
-    println("clusterPoints = "+clusterPoints)
-    clusterPoints.foreach({item => println(item); item.foreach({arritem=> println(arritem);arritem.foreach(println(_))})})
     clusterPoints
   }
 
