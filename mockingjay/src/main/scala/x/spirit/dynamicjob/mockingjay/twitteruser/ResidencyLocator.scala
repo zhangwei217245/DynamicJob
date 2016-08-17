@@ -52,7 +52,7 @@ object ResidencyLocator extends App {
       println("Start row prefix = %d".format(startRowPrefix))
       val scan = new Scan()
       scan.setCaching(1000)
-      scan.setCacheBlocks(true)
+      scan.setCacheBlocks(false)
       scan.setAttribute(Scan.HINT_LOOKAHEAD, Bytes.toBytes(2))
       scan.setFilter(new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
       val scanRst = sc.hbase[String]("twitterUser", Set("tweet", "user"), scan)
