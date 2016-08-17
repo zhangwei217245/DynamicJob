@@ -45,9 +45,9 @@ object ResidencyLocator extends App {
       * https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/filter/package-summary.html
       * Here, it's better to use PageFilter and
       */
-    var startRowPrefix = 10000;
+    var startRowPrefix = 1000;
     var allRst: Array[(String, Int)] = Array();
-    while (startRowPrefix <= 99999) {
+    while (startRowPrefix <= 9999) {
       println("Start row prefix = %d".format(startRowPrefix))
       val scanRst = sc.hbase[String]("twitterUser", Set("tweet", "user"),
         new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
