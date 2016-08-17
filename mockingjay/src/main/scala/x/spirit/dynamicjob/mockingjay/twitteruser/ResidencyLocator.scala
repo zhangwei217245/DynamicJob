@@ -36,6 +36,7 @@ object ResidencyLocator extends App {
     implicit val config = HBaseConfig(
       hbaseXmlConfigFile = "hbase-site.xml"
     )
+    config.get.set("hbase.rpc.timeout", "18000000");
 
     val validPlaceType = Set("exact", "poi", "neighborhood", "city", "admin", "country")
     val precisePlaceType = Set("exact", "poi", "neighborhood")
@@ -47,7 +48,7 @@ object ResidencyLocator extends App {
     var startRowPrefix = 100;
     var allRst: Array[(String, Int)] = Array();
     while (startRowPrefix <= 999) {
-      System.out.println("Start row prefix = %d".format(startRowPrefix))
+      println("Start row prefix = %d".format(startRowPrefix))
       val scanRst = sc.hbase[String]("twitterUser", Set("tweet", "user"),
         new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
       scanRst.map({ case (k, v) =>
