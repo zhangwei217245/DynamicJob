@@ -51,7 +51,7 @@ object ResidencyLocator extends App {
     while (startRowPrefix <= 999) {
       println("Start row prefix = %d".format(startRowPrefix))
       val scan = new Scan()
-      scan.setCaching(1000)
+      scan.setCaching(200)
       scan.setCacheBlocks(true)
       scan.setAttribute(Scan.HINT_LOOKAHEAD, Bytes.toBytes(2))
       scan.setFilter(new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
