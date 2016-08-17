@@ -4,6 +4,7 @@ import java.time.{Instant, ZoneId, ZonedDateTime}
 
 import breeze.linalg.DenseMatrix
 import nak.cluster.Kmeans
+import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.filter.PrefixFilter
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.{SparkConf, SparkContext}
@@ -36,7 +37,7 @@ object ResidencyLocator extends App {
     implicit val config = HBaseConfig(
       hbaseXmlConfigFile = "hbase-site.xml"
     )
-    config.get.set("hbase.rpc.timeout", "18000000");
+    config.get.set("hbase.rpc.timeout", "18000000")
 
     val validPlaceType = Set("exact", "poi", "neighborhood", "city", "admin", "country")
     val precisePlaceType = Set("exact", "poi", "neighborhood")
@@ -45,17 +46,21 @@ object ResidencyLocator extends App {
       * https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/filter/package-summary.html
       * Here, it's better to use PageFilter and
       */
-    var startRowPrefix = 1000;
-    var allRst: Array[(String, Int)] = Array();
+    var startRowPrefix = 1000
+    var allRst: Array[(String, Int)] = Array()
     while (startRowPrefix <= 9999) {
       println("Start row prefix = %d".format(startRowPrefix))
-      val scanRst = sc.hbase[String]("twitterUser", Set("tweet", "user"),
-        new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
+      val scan = new Scan()
+      scan.setCaching(1000)
+      scan.setCacheBlocks(true)
+      scan.setAttribute(Scan.HINT_LOOKAHEAD, Bytes.toBytes(2))
+      scan.setFilter(new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
+      val scanRst = sc.hbase[String]("twitterUser", Set("tweet", "user"), scan)
       scanRst.map({ case (k, v) =>
         val uid = k
         //FIXME: The default timezone has to be decided.
-        val user_time_zone_str = v("user").getOrElse("time_zone", "Central Time (US & Canada)");
-        val user_time_zone = ZoneId.of(TimeZoneMapping.getTimeZoneId(user_time_zone_str));
+        val user_time_zone_str = v("user").getOrElse("time_zone", "Central Time (US & Canada)")
+        val user_time_zone = ZoneId.of(TimeZoneMapping.getTimeZoneId(user_time_zone_str))
         val tweet = v("tweet")
         val addr = tweet.map({ case (tid, jsonBytes) =>
           val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
