@@ -1,6 +1,6 @@
 package x.spirit.dynamicjob.mockingjay.twitteruser
 
-import java.time.{Instant, ZoneId, ZonedDateTime}
+import java.time.{Duration, Instant, ZoneId, ZonedDateTime}
 
 import breeze.linalg.DenseMatrix
 import nak.cluster.Kmeans
@@ -21,12 +21,15 @@ object ResidencyLocator extends App {
   // Please refer to this link: https://www.oreilly.com/ideas/clustering-geolocated-data-using-spark-and-dbscan
   // Since DBSCAN is not provided in nak V1.3, we fall back to adding in this code.
   def dbscan(v: breeze.linalg.DenseMatrix[Double]) = {
+    val dbscan_called = Instant.now
     val gdbscan = new GDBSCAN(
       DBSCAN.getNeighbours(epsilon = 0.001, distance = Kmeans.euclideanDistance),
       DBSCAN.isCorePoint(minPoints = 3)
     )
     val cluster = gdbscan cluster v
     val clusterPoints = cluster.map(_.points.map(_.value.toArray)).sortBy(_.size)
+    val dbscan_end = Instant.now
+    println("[DBSCAN DURATION] = " + Duration.between(dbscan_called, dbscan_end).toMillis)
     clusterPoints
   }
 
@@ -65,6 +68,7 @@ object ResidencyLocator extends App {
         val user_time_zone = ZoneId.of(TimeZoneMapping.getTimeZoneId(user_time_zone_str))
         val tweet = v("tweet")
         println(s"uid=$uid and num_tweets = ${tweet.size}")
+        val tweet_start = Instant.now
         val addr = tweet.map({ case (tid, jsonBytes) =>
           val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
 
@@ -77,7 +81,8 @@ object ResidencyLocator extends App {
 
           (placeType, coord_x, coord_y, zonedHour)
         })
-
+        val filter_start = Instant.now
+        println("[TIME LOADING TWEET] = " + Duration.between(tweet_start, filter_start).toMillis)
         val adminLocations = addr.filter({
           case (placeType, x, y, zonedHour) => "admin".equalsIgnoreCase(placeType.trim)
         })
@@ -91,6 +96,9 @@ object ResidencyLocator extends App {
         val preciseLocations = addr.filter({
           case (placeType, x, y, zonedHour) => precisePlaceType.contains(placeType.trim)
         })
+
+        val mapping_start = Instant.now
+        println("[TIME FILTER TWEET] = " + Duration.between(filter_start, mapping_start).toMillis)
 
         val locationsAtDifferentLevel = Map(
           "precise" -> preciseLocations,
@@ -114,6 +122,7 @@ object ResidencyLocator extends App {
                 case (placeType, x, y, timestamp) => Seq[Double](x, y)
               })
             }
+
 
             if (matrixData.nonEmpty) {
               // determine whether it contains precise location
