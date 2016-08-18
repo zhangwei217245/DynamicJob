@@ -46,9 +46,9 @@ object ResidencyLocator extends App {
       * https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/filter/package-summary.html
       * Here, it's better to use PageFilter and
       */
-    var startRowPrefix = 10000
+    var startRowPrefix = 100
     var allRst: Array[(String, Int)] = Array()
-    while (startRowPrefix <= 99999) {
+    while (startRowPrefix <= 999) {
       println("Start row prefix = %d".format(startRowPrefix))
       val scan = new Scan()
       scan.setCaching(100)
@@ -62,6 +62,7 @@ object ResidencyLocator extends App {
         val user_time_zone_str = v("user").getOrElse("time_zone", "Central Time (US & Canada)")
         val user_time_zone = ZoneId.of(TimeZoneMapping.getTimeZoneId(user_time_zone_str))
         val tweet = v("tweet")
+        println(s"uid=$uid and num_tweets = ${tweet.size}")
         val addr = tweet.map({ case (tid, jsonBytes) =>
           val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
 
