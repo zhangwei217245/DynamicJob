@@ -39,6 +39,8 @@ object ResidencyLocator extends App {
     )
     config.get.set("hbase.rpc.timeout", "18000000")
 
+    val max_dbscan_samples = 5000
+
     val validPlaceType = Set("exact", "poi", "neighborhood", "city", "admin", "country")
     val precisePlaceType = Set("exact", "poi", "neighborhood")
     /**
@@ -115,8 +117,18 @@ object ResidencyLocator extends App {
 
             if (matrixData.nonEmpty) {
               // determine whether it contains precise location
+
+              //FIXME: For now, due to the limitation of memory capacity, all we can do is to reduce number of samples that DBSCAN needs.
+              val num_col = 2
+              var num_row = matrixData.size
+              var majorStride = num_col * 1
+              if (matrixData.size >= max_dbscan_samples) {
+                num_row = max_dbscan_samples
+                majorStride = num_col * Math.floorDiv(matrixData.size, max_dbscan_samples)
+              }
+
               val dmatrix = new DenseMatrix(
-                matrixData.size, 2, matrixData.flatten.toArray, 0, 2, true
+                num_row, num_col, matrixData.flatten.toArray, 0, majorStride, true
               )
               val clusterPoints = dbscan(dmatrix)
               // TODO: currently, we take the cluster where the users posted the largest number of tweets
