@@ -42,7 +42,7 @@ object ResidencyLocator extends App {
     )
     config.get.set("hbase.rpc.timeout", "18000000")
 
-    val max_dbscan_samples = 5000
+    val max_dbscan_samples = 1000
 
     val validPlaceType = Set("exact", "poi", "neighborhood", "city", "admin", "country")
     val precisePlaceType = Set("exact", "poi", "neighborhood")
@@ -51,9 +51,9 @@ object ResidencyLocator extends App {
       * https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/filter/package-summary.html
       * Here, it's better to use PageFilter and
       */
-    var startRowPrefix = 100
+    var startRowPrefix = 10
     var allRst: Array[(String, Int)] = Array()
-    while (startRowPrefix <= 999) {
+    while (startRowPrefix <= 99) {
       println("Start row prefix = %d".format(startRowPrefix))
       val scan = new Scan()
       scan.setCaching(100)
