@@ -23,7 +23,7 @@ object ResidencyLocator extends App {
   def dbscan(v: breeze.linalg.DenseMatrix[Double]) = {
     val dbscan_called = Instant.now
     val gdbscan = new GDBSCAN(
-      DBSCAN.getNeighbours(epsilon = 0.001, distance = Kmeans.euclideanDistance),
+      DBSCAN.getNeighbours(epsilon = 0.01, distance = Kmeans.euclideanDistance),
       DBSCAN.isCorePoint(minPoints = 3)
     )
     val cluster = gdbscan cluster v
@@ -42,7 +42,7 @@ object ResidencyLocator extends App {
     )
     config.get.set("hbase.rpc.timeout", "18000000")
 
-    val max_dbscan_samples = 1000
+    val max_dbscan_samples = 0
 
     val validPlaceType = Set("exact", "poi", "neighborhood", "city", "admin", "country")
     val precisePlaceType = Set("exact", "poi", "neighborhood")
@@ -131,7 +131,7 @@ object ResidencyLocator extends App {
               val num_col = 2
               var num_row = matrixData.size
               var majorStride = num_col * 1
-              if (matrixData.size >= max_dbscan_samples) {
+              if (max_dbscan_samples > 0 && matrixData.size >= max_dbscan_samples) {
                 num_row = max_dbscan_samples
                 majorStride = num_col * Math.floorDiv(matrixData.size, max_dbscan_samples)
               }
