@@ -3,9 +3,7 @@ package x.spirit.dynamicjob.mockingjay.scanner
 import org.apache.hadoop.hbase.filter.PrefixFilter
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.{SparkConf, SparkContext}
-import org.json.JSONArray
 import x.spirit.dynamicjob.mockingjay.hbase.{HBaseConfig, _}
-import x.spirit.dynamicjob.mockingjay.twitteruser.PoliticalPreference._
 
 /**
   * Created by zhangwei on 8/29/16.
