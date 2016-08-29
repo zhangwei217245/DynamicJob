@@ -24,15 +24,15 @@ object TwitterCountScanner extends App{
       * https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/filter/package-summary.html
       * Here, it's better to use PageFilter and
       */
-    var startRowPrefix = 10;
+    var startRowPrefix = 1;
     var allRst:Array[(String, Int)] = Array();
-    while (startRowPrefix <= 99) {
+    while (startRowPrefix <= 9) {
       System.out.println("Start row prefix = %d".format(startRowPrefix))
-      val scanRst = sc.hbase[String]("twitterUser", Set("tweet"),
-        new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
+      val scanRst = sc.hbase[String]("sent_blue_red_2012", Set("tsent"),
+        new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)));
       val sizeMap = scanRst.map({ case (k, v) =>
         val uid = k;
-        val tweet = v("tweet")
+        val tweet = v("tsent")
         val tweetSize = tweet.size
         var sizeType = "0 - 1000"
         if (tweetSize >= 1000 && tweetSize < 2000) {
