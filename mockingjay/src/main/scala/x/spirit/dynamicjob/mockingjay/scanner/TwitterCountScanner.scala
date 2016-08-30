@@ -59,7 +59,7 @@ object TwitterCountScanner extends App{
       allRst = allRst.groupBy(_._1).map({case(k,v)=>(k,v.map(_._2).sum)}).toArray
       startRowPrefix += 1;
     }
-    allRst.foreach({case(k,v)=>
+    allRst.sortBy(_._1).foreach({case(k,v)=>
       println("%s -> %s ".format(k, v))
     })
   }

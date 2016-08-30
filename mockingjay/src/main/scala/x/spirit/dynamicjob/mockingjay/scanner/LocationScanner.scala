@@ -28,9 +28,9 @@ object LocationScanner extends App{
       * https://hbase.apache.org/apidocs/org/apache/hadoop/hbase/filter/package-summary.html
       * Here, it's better to use PageFilter and
       */
-    var startRowPrefix = 10;
+    var startRowPrefix = 1;
     var allRst:Array[(String, Int)] = Array();
-    while (startRowPrefix <= 99) {
+    while (startRowPrefix <= 9) {
       System.out.println("Start row prefix = %d".format(startRowPrefix))
       val scanRst = sc.hbase[String]("twitterUser", Set("tweet"),
         new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
@@ -47,12 +47,11 @@ object LocationScanner extends App{
         })
         types
       }).flatMap({map=>map}).groupBy(_._1).map({case(k,v)=>(k,v.map(_._2).sum)}).collect
-      println("typeMap = " + typeMap)
       allRst = Array.concat(allRst, typeMap);
       allRst = allRst.groupBy(_._1).map({case(k,v)=>(k,v.map(_._2).sum)}).toArray
       startRowPrefix += 1;
     }
-    allRst.groupBy(_._1).map({case(k,v)=>(k,v.map(_._2).sum)}).foreach({case(k,v)=>
+    allRst.foreach({case(k,v)=>
       println("%s -> %s ".format(k, v))
     })
   }
