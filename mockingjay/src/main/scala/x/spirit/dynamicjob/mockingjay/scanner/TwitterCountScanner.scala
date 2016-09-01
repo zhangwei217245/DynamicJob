@@ -3,6 +3,7 @@ package x.spirit.dynamicjob.mockingjay.scanner
 import org.apache.hadoop.hbase.filter.PrefixFilter
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.{SparkConf, SparkContext}
+import org.json.JSONArray
 import x.spirit.dynamicjob.mockingjay.hbase.{HBaseConfig, _}
 
 /**
@@ -28,29 +29,36 @@ object TwitterCountScanner extends App{
     var allRst:Array[(String, Int)] = Array();
     while (startRowPrefix <= 9) {
       System.out.println("Start row prefix = %d".format(startRowPrefix))
-      val scanRst = sc.hbase[String]("sent_blue_red_2012", Set("tsent"),
+      val scanRst = sc.hbase[String]("twitterUser", Set("tweet"),
         new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)));
       val sizeMap = scanRst.map({ case (k, v) =>
         val uid = k;
-        val tweet = v("tsent")
+        val tweet = v("tweet")
         val tweetSize = tweet.size
         var sizeType = "0 - 1000"
         if (tweetSize >= 1000 && tweetSize < 2000) {
           sizeType = "1000 - 2000"
-        } else if (tweetSize >= 2000 && tweetSize < 3000) {
-          sizeType = "2000 - 3000"
-        } else if (tweetSize >= 3000 && tweetSize < 4000) {
-          sizeType = "3000 - 4000"
-        } else if (tweetSize >= 4000 && tweetSize < 5000) {
-          sizeType = "4000 - 5000"
-        } else if (tweetSize >= 5000 && tweetSize < 10000) {
-          sizeType = "5000 - 10000"
-        } else if (tweetSize >= 10000 && tweetSize < 15000){
-          sizeType = "10000 - 15000"
-        } else if (tweetSize >= 15000 && tweetSize < 20000){
-          sizeType = "15000 - 20000"
-        } else if (tweetSize >= 20000) {
-          sizeType = "20000 - ~"
+        } else {
+          tweet.foreach({ case (tid, jsonBytes) =>
+            val jsonArr = new JSONArray(Bytes.toString(jsonBytes));
+            val content = jsonArr.getJSONArray(1).get(0);
+            println(tweetSize + " | " + uid + " : " +content)
+          })
+          if (tweetSize >= 2000 && tweetSize < 3000) {
+            sizeType = "2000 - 3000"
+          } else if (tweetSize >= 3000 && tweetSize < 4000) {
+            sizeType = "3000 - 4000"
+          } else if (tweetSize >= 4000 && tweetSize < 5000) {
+            sizeType = "4000 - 5000"
+          } else if (tweetSize >= 5000 && tweetSize < 10000) {
+            sizeType = "5000 - 10000"
+          } else if (tweetSize >= 10000 && tweetSize < 15000){
+            sizeType = "10000 - 15000"
+          } else if (tweetSize >= 15000 && tweetSize < 20000){
+            sizeType = "15000 - 20000"
+          } else if (tweetSize >= 20000) {
+            sizeType = "20000 - ~"
+          }
         }
         (sizeType, 1)
       }).groupBy(_._1).map({case(k,v)=>(k,v.map(_._2).sum)}).collect
