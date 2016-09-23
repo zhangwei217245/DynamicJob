@@ -16,7 +16,10 @@
 # Boot Arguments:
 
 * For running data aggregator:
-```node --max_old_space_size=2048 index.js conf=default```
+     * Initiating the master instance.
+     ```node --max_old_space_size=4096 index.js -c default -s 0.5 -t UserCountExtractor -d /home/wesley/Data```
+     * Initiating the slave instances.
+     ```node --max_old_space_size=4096 index.js -p false -c default -s 0.5 -t UserCountExtractor -d /home/wesley/Data```
 
 * For running image generator:
 ```node --max_old_space_size=2048 GTiffGen.js conf=default```
