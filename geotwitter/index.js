@@ -33,7 +33,7 @@ const walk=require('walk');
 const config = require('node-yaml-config');
 const path = require('path');
 const S=require('string');
-const sync = require('sync');
+
 
 var conf = config.load('./config/geotwitter.yaml', options.config);
 
