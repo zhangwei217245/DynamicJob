@@ -24,7 +24,7 @@
     "readline-stream": "1.0.1",
     "config": "1.19.0",
     "node-yaml-config": "0.0.4",
-    "kerberos": "0.0.19",
+    "kerberos": "0.0.21",
     "walk" : "2.3.9",
     "json-path": "0.1.3",
     "string" : "3.3.1",
