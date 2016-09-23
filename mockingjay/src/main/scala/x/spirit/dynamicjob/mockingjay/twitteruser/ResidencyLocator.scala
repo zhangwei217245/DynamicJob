@@ -42,7 +42,7 @@ object ResidencyLocator extends App {
     )
     config.get.set("hbase.rpc.timeout", "18000000")
 
-    val max_dbscan_samples = 0
+    val max_dbscan_samples = 1000
 
     val validPlaceType = Set("exact", "poi", "neighborhood", "city", "admin", "country")
     val precisePlaceType = Set("exact", "poi", "neighborhood")
@@ -63,7 +63,7 @@ object ResidencyLocator extends App {
       val scanRst = sc.hbase[String]("twitterUser", Set("tweet", "user"), scan)
       scanRst.map({ case (k, v) =>
         val uid = k
-        //FIXME: The default timezone has to be decided.
+        //The default timezone has to be decided.
         val user_time_zone_str = v("user").getOrElse("time_zone", "Central Time (US & Canada)")
         val user_time_zone = ZoneId.of(TimeZoneMapping.getTimeZoneId(user_time_zone_str))
         val tweet = v("tweet")
@@ -89,7 +89,7 @@ object ResidencyLocator extends App {
         val cityLocations = addr.filter({
           case (placeType, x, y, zonedHour) => "city".equalsIgnoreCase(placeType.trim)
         })
-        // TODO: Currently we don't need a coordinate for the country.
+        // Currently we don't need a coordinate for the country.
         //        val countryLocation = addr.filter({
         //          case (placeType, x, y, zonedHour) => "country".equalsIgnoreCase(placeType.trim)
         //        })
@@ -127,7 +127,7 @@ object ResidencyLocator extends App {
             if (matrixData.nonEmpty) {
               // determine whether it contains precise location
 
-              //FIXME: For now, due to the limitation of memory capacity, all we can do is to reduce number of samples that DBSCAN needs.
+              //For now, due to the limitation of memory capacity, all we can do is to reduce number of samples that DBSCAN needs.
               val num_col = 2
               var num_row = matrixData.size
               var majorStride = num_col * 1
@@ -140,7 +140,7 @@ object ResidencyLocator extends App {
                 num_row, num_col, matrixData.flatten.toArray, 0, majorStride, true
               )
               val clusterPoints = dbscan(dmatrix)
-              // TODO: currently, we take the cluster where the users posted the largest number of tweets
+              //currently, we take the cluster where the users posted the largest number of tweets
               coord = clusterPoints.lastOption.getOrElse(List(matrixData.head.toArray)).head
             }
             // if not, take the most precise coordinate and

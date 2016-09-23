@@ -163,6 +163,10 @@
         </dependency>
         <dependency>
             <groupId>com.azavea.geotrellis</groupId>
+            <artifactId>geotrellis-shapefile_2.10</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.azavea.geotrellis</groupId>
             <artifactId>geotrellis-s3_2.10</artifactId>
         </dependency>
         <dependency>

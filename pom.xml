@@ -226,8 +226,18 @@
             </dependency>
             <dependency>
                 <groupId>com.azavea.geotrellis</groupId>
+                <artifactId>geotrellis-shapefile_2.10</artifactId>
+                <version>${geotrellis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.azavea.geotrellis</groupId>
                 <artifactId>geotrellis-s3_2.10</artifactId>
                 <version>${geotrellis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.geotools</groupId>
+                <artifactId>gt-cql</artifactId>
+                <version>13.2</version>
             </dependency>
             <dependency>
                 <groupId>databricks</groupId>
@@ -297,6 +307,14 @@
             <name>Spark Packages Repo</name>
             <url>https://dl.bintray.com/spark-packages/maven/</url>
             <layout>default</layout>
+        </repository>
+        <repository>
+            <id>geosolutions</id>
+            <url>http://maven.geo-solutions.it/</url>
+        </repository>
+        <repository>
+            <id>osgeo</id>
+            <url>http://download.osgeo.org/webdav/geotools/</url>
         </repository>
         <repository>
             <id>maven2-repository.dev.java.net</id>
