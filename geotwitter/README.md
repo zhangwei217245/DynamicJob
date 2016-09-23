@@ -29,4 +29,6 @@
      ```
 
 * For running image generator:
-```node --max_old_space_size=2048 GTiffGen.js conf=default```
+```
+node --max_old_space_size=4096 GTiffGen.js -o pic.tif -c default -t UserCountExtractor
+```
