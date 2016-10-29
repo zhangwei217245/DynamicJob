@@ -47,7 +47,7 @@ object RaceProbability extends App{
   }
 
   override def main(args: Array[String]){
-    val sparkConf = new SparkConf().setAppName("ResidencyLocator")
+    val sparkConf = new SparkConf().setAppName(this.getClass.getSimpleName)
     val sc = new SparkContext(sparkConf)
 
     implicit val config = HBaseConfig(
@@ -55,11 +55,6 @@ object RaceProbability extends App{
     )
     config.get.set("hbase.rpc.timeout", "18000000")
 
-    val attrNames: Array[String] = new Array[String](19)
-    for (n <- 1 to 19) {
-      val base: Int = 80000 + n
-      attrNames(n - 1) = "DP00" + base
-    }
 
     val shapeFileRootDir = "/home/hadoopuser/shapefiles";
     val shapeFileAddrTemplate = "%s/%s/%s.shp"

@@ -34,7 +34,7 @@ object ResidencyLocator extends App {
   }
 
   override def main(args: Array[String]) {
-    val sparkConf = new SparkConf().setAppName("ResidencyLocator")
+    val sparkConf = new SparkConf().setAppName(this.getClass.getSimpleName)
     val sc = new SparkContext(sparkConf)
 
     implicit val config = HBaseConfig(
