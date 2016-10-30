@@ -45,7 +45,7 @@ object NameExtractor extends App{
         val uid = k
         val userData = v("user")
         val name = userData.getOrElse("name", "");
-        val nameArray = name.split("\\W+");
+        val nameArray = name.trim.replaceAll("\\W+", "_").split("_");
         var firstName = "";
         var lastName = "";
         if (nameArray.length == 1) {
