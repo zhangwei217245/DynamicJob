@@ -44,20 +44,20 @@ object LocationFillInBlank extends App {
         var admin: Array[Double] = null;
 
         locationsAtDifferentLevel.foreach({ case (precision, jsonBytes) =>
-
           val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
-          val x = jsonArr.getDouble(0)
-          val y = jsonArr.getDouble(1)
-
-          if (precision.equals("precise")) {
-            precise = Array[Double](x, y);
-            city = Array[Double](x, y);
-            admin = Array[Double](x, y);
-          } else if (precision.equals("city")) {
-            city = Array[Double](x, y);
-            admin = Array[Double](x, y);
-          } else if (precision.equals("admin")) {
-            admin = Array[Double](x, y);
+          if (jsonArr != null && jsonArr.length() >= 2) {
+            val x = jsonArr.getDouble(0)
+            val y = jsonArr.getDouble(1)
+            if (precision.equals("precise")) {
+              precise = Array[Double](x, y);
+              city = Array[Double](x, y);
+              admin = Array[Double](x, y);
+            } else if (precision.equals("city")) {
+              city = Array[Double](x, y);
+              admin = Array[Double](x, y);
+            } else if (precision.equals("admin")) {
+              admin = Array[Double](x, y);
+            }
           }
         })
         val record = Map(
@@ -65,7 +65,11 @@ object LocationFillInBlank extends App {
           "city" -> city,
           "admin" -> admin
         ).map({ case (field, data) =>
-          field -> Bytes.toBytes(new JSONArray(data).toString)
+          var arrStr = "[]";
+          if (data != null) {
+              arrStr = new JSONArray(data).toString
+          }
+          field -> Bytes.toBytes(arrStr);
         })
         uid -> Map("location" -> record)
       }).toHBase("machineLearn2012")
