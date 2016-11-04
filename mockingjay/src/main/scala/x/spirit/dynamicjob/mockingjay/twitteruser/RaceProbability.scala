@@ -12,6 +12,8 @@ import org.json.JSONArray
 import org.opengis.filter.Filter
 import x.spirit.dynamicjob.core.utils.ShapeFileUtils
 import x.spirit.dynamicjob.mockingjay.hbase.{HBaseConfig, _}
+import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.types._
 
 import scala.collection.mutable
 
@@ -32,6 +34,23 @@ object RaceProbability extends App{
     ("pct2prace", "DP0110017")
   )
 
+  def getSurnameProbability(df: DataFrame, surname: String): Map[String, Double] ={
+      val rowRst = df.where("name='%'".format(surname))
+        .select("pcthispanic", "pctwhite", "pctblack", "pctaian", "pctapi", "pct2prace");
+      if (rowRst.count > 0){
+        return rowRst.first()
+          .getValuesMap[Double](Seq("pcthispanic", "pctwhite", "pctblack", "pctaian", "pctapi", "pct2prace"))
+          .map({e=> var v = e._2; if(v==0.0d){v = 0.0d}; (e._1, v)})
+      }
+      return Map[String, Double](
+        ("pcthispanic", 0.0d),
+        ("pctwhite", 0.0d),
+        ("pctblack", 0.0d),
+        ("pctaian", 0.0d),
+        ("pctapi", 0.0d),
+        ("pct2prace", 0.0d)
+      );
+  }
 
   def getRaceProbability(dataStore: ShapefileDataStore, x_coord: Double, y_coord: Double,
                          featureTypeName: String, attrNames: Array[String]): Map[String, Double] = {
@@ -43,7 +62,8 @@ object RaceProbability extends App{
       val raceProbability = ((Int.unbox(attrValues.get(i)) * 100).toDouble / totalPopulation)
       result+=((raceNames(i)._1, raceProbability))
     }
-    result.toMap
+    result+=(("pctapi", (result.getOrElse("pctapi1", 0.0d)+result.getOrElse("pctapi2", 0.0d))))
+    return result.filterKeys({k=> (!(k.equalsIgnoreCase("pctapi1")||k.equalsIgnoreCase("pctapi2")))}).toMap
   }
 
   override def main(args: Array[String]){
@@ -54,6 +74,25 @@ object RaceProbability extends App{
       hbaseXmlConfigFile = "hbase-site.xml"
     )
     config.get.set("hbase.rpc.timeout", "18000000")
+
+    val surnamePath = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/surname.csv"
+
+    val sqlContext = new SQLContext(sc)
+    val customSchema = StructType(Array(
+      StructField("name", StringType, true),
+      StructField("rank", IntegerType, true),
+      StructField("count", IntegerType, true),
+      StructField("prop100k", DoubleType, true),
+      StructField("cum_prop100k", DoubleType, true),
+      StructField("pctwhite", DoubleType, true),
+      StructField("pctblack", DoubleType, true),
+      StructField("pctapi", DoubleType, true),
+      StructField("pctaian", DoubleType, true),
+      StructField("pct2prace", DoubleType, true),
+      StructField("pcthispanic", DoubleType, true)
+      ))
+
+    val df = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").schema(customSchema).load(surnamePath)
 
 
     val shapeFileRootDir = "/home/hadoopuser/shapefiles";
@@ -80,10 +119,13 @@ object RaceProbability extends App{
       scan.setCacheBlocks(true)
       scan.setAttribute(Scan.HINT_LOOKAHEAD, Bytes.toBytes(2))
       scan.setFilter(new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
-      val scanRst = sc.hbase[String]("machineLearn2012", Set("location"), scan)
+      val scanRst = sc.hbase[String]("machineLearn2012", Set("location", "username"), scan)
       scanRst.map({ case (k, v) =>
           val uid = k;
           val locationsAtDifferentLevel = v("location")
+          val username = v("username").map({case(col, nameBytes) =>
+            (col, Bytes.toString(nameBytes).toUpperCase)
+          })
 
           val record = locationsAtDifferentLevel.map({ case (precision, jsonBytes) =>
 
@@ -108,8 +150,33 @@ object RaceProbability extends App{
               featureName = stateFeature
             }
 
-            key -> getRaceProbability(shapeDataStore, x, y, featureName, raceNames.map(_._2)).map({case(fieldname, percentage) =>
-              fieldname -> Bytes.toBytes(percentage)
+            val raceProbMap = getRaceProbability(shapeDataStore, x, y, featureName, raceNames.map(_._2))
+            val snProbMap = getSurnameProbability(df, username.getOrElse("lastName", ""))
+
+            val finalProbMap = raceProbMap.map({case(k,v)=>
+                var snProb = snProbMap.getOrElse(k, 0.0d)
+                if (snProb == 0.0d){
+                    snProb = 0.01d
+                }
+
+                var racProb = v;
+                if (racProb == 0.0d) {
+                  racProb = 0.01d
+                }
+
+                val compoundProb = racProb * snProb;
+                (k, compoundProb)
+            })
+
+            val denominator = finalProbMap.map(_._2).sum
+
+            key -> finalProbMap
+              .map({case(fieldname, numerator) =>
+                var prob = numerator;
+                if (denominator != 0.0d){
+                   prob = numerator/denominator
+                }
+              fieldname -> Bytes.toBytes(prob)
             })
           })
           uid -> record
