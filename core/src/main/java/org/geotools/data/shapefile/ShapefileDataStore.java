@@ -73,7 +73,32 @@ public class ShapefileDataStore extends ContentDataStore implements FileDataStor
     protected static final Boolean TRACE_ENABLED = "true".equalsIgnoreCase(System
             .getProperty("gt2.shapefile.trace"));
 
+    public ShpFiles getShpFiles() {
+        return shpFiles;
+    }
+
+    public void setShpFiles(ShpFiles shpFiles) {
+        this.shpFiles = shpFiles;
+    }
+
+    public IndexManager getIndexManager() {
+        return indexManager;
+    }
+
+    public void setIndexManager(IndexManager indexManager) {
+        this.indexManager = indexManager;
+    }
+
+    public ShapefileSetManager getShpManager() {
+        return shpManager;
+    }
+
+    public void setShpManager(ShapefileSetManager shpManager) {
+        this.shpManager = shpManager;
+    }
+
     /**
+
      * The stack trace used to track code that grabs the data store without disposing it
      */
     Exception trace;
