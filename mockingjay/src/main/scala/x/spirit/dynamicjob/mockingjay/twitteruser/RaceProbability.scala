@@ -98,23 +98,7 @@ object RaceProbability extends App{
     val df = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").schema(customSchema).load(surnamePath)
 
 
-    val shapeFileRootDir = "/home/hadoopuser/shapefiles";
-    val shapeFileAddrTemplate = "%s/%s/%s.shp"
 
-    val tractFeature = "Tract_2010Census_DP1"
-    val countyFeature = "County_2010Census_DP1"
-    val stateFeature = "State_2010Census_DP1"
-
-    val tractFileName = shapeFileAddrTemplate.format(shapeFileRootDir, tractFeature, tractFeature)
-    val countyFileName = shapeFileAddrTemplate.format(shapeFileRootDir, countyFeature, countyFeature)
-    val stateFileName = shapeFileAddrTemplate.format(shapeFileRootDir, stateFeature, stateFeature)
-
-    val tractDataStore: SerializableShapeFileStore = new SerializableShapeFileStore()
-    tractDataStore.init(new File(tractFileName).toURI.toURL)
-    val countyDataStore: SerializableShapeFileStore = new SerializableShapeFileStore()
-    countyDataStore.init(new File(countyFileName).toURI.toURL)
-    val stateDataStore: SerializableShapeFileStore = new SerializableShapeFileStore()
-    stateDataStore.init(new File(stateFileName).toURI.toURL)
 
     var startRowPrefix = 10
 
@@ -138,6 +122,24 @@ object RaceProbability extends App{
             val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
             val x = jsonArr.getDouble(0)
             val y = jsonArr.getDouble(1)
+
+            val shapeFileRootDir = "/home/hadoopuser/shapefiles";
+            val shapeFileAddrTemplate = "%s/%s/%s.shp"
+
+            val tractFeature = "Tract_2010Census_DP1"
+            val countyFeature = "County_2010Census_DP1"
+            val stateFeature = "State_2010Census_DP1"
+
+            val tractFileName = shapeFileAddrTemplate.format(shapeFileRootDir, tractFeature, tractFeature)
+            val countyFileName = shapeFileAddrTemplate.format(shapeFileRootDir, countyFeature, countyFeature)
+            val stateFileName = shapeFileAddrTemplate.format(shapeFileRootDir, stateFeature, stateFeature)
+
+            val tractDataStore: SerializableShapeFileStore = new SerializableShapeFileStore()
+            tractDataStore.init(new File(tractFileName).toURI.toURL)
+            val countyDataStore: SerializableShapeFileStore = new SerializableShapeFileStore()
+            countyDataStore.init(new File(countyFileName).toURI.toURL)
+            val stateDataStore: SerializableShapeFileStore = new SerializableShapeFileStore()
+            stateDataStore.init(new File(stateFileName).toURI.toURL)
 
             var key = "Race_State"
             var shapeDataStore:SerializableShapeFileStore = stateDataStore
