@@ -109,9 +109,12 @@ object RaceProbability extends App{
     val countyFileName = shapeFileAddrTemplate.format(shapeFileRootDir, countyFeature, countyFeature)
     val stateFileName = shapeFileAddrTemplate.format(shapeFileRootDir, stateFeature, stateFeature)
 
-    val tractDataStore: SerializableShapeFileStore = new SerializableShapeFileStore(new File(tractFileName).toURI.toURL)
-    val countyDataStore: SerializableShapeFileStore = new SerializableShapeFileStore(new File(countyFileName).toURI.toURL)
-    val stateDataStore: SerializableShapeFileStore = new SerializableShapeFileStore(new File(stateFileName).toURI.toURL)
+    val tractDataStore: SerializableShapeFileStore = new SerializableShapeFileStore()
+    tractDataStore.init(new File(tractFileName).toURI.toURL)
+    val countyDataStore: SerializableShapeFileStore = new SerializableShapeFileStore()
+    countyDataStore.init(new File(countyFileName).toURI.toURL)
+    val stateDataStore: SerializableShapeFileStore = new SerializableShapeFileStore()
+    stateDataStore.init(new File(stateFileName).toURI.toURL)
 
     var startRowPrefix = 10
 
