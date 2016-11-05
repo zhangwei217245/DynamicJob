@@ -27,7 +27,7 @@ object RaceProbability extends App{
 
 
   def getSurnameProbability(df: DataFrame, surname: String): Map[String, Double] ={
-      val rowRst = df.where("name='%'".format(surname))
+      val rowRst = df.where("name='%s'".format(surname))
         .select("pcthispanic", "pctwhite", "pctblack", "pctaian", "pctapi", "pct2prace");
       if (rowRst.count > 0){
         return rowRst.first()
