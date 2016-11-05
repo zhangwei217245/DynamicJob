@@ -5,11 +5,11 @@ import java.io.File
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.filter.PrefixFilter
 import org.apache.hadoop.hbase.util.Bytes
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.geotools.filter.text.cql2.CQL
-import org.json.JSONArray
+import org.json.{JSONArray, JSONException}
 import org.opengis.filter.Filter
 import x.spirit.dynamicjob.core.utils.ShapeFileUtils
 import x.spirit.dynamicjob.mockingjay.hbase.{HBaseConfig, _}
@@ -24,14 +24,14 @@ object RaceProbability extends App {
 
 
   def getSurnameProbability(data: collection.Map[String, Array[Double]], surname: String): Map[String, Double] = {
-    val pctRst:Array[Double] = data.getOrElse(surname.toUpperCase, Array(0.0d,0.0d,0.0d,0.0d,0.0d,0.0d))
+    val pctRst: Array[Double] = data.getOrElse(surname.toUpperCase, Array(0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d))
     return Map[String, Double](
       ("pctwhite" -> pctRst(0)),
-      ("pctblack"-> pctRst(1)),
-      ("pctapi"-> pctRst(2)),
-      ("pctaian"-> pctRst(3)),
-      ("pcthispanic"-> pctRst(4)),
-      ("pct2prace"-> pctRst(5))
+      ("pctblack" -> pctRst(1)),
+      ("pctapi" -> pctRst(2)),
+      ("pctaian" -> pctRst(3)),
+      ("pcthispanic" -> pctRst(4)),
+      ("pct2prace" -> pctRst(5))
     )
   }
 
@@ -81,7 +81,7 @@ object RaceProbability extends App {
     val surnameDF = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").schema(customSchema).load(surnamePath)
 
 
-    val surnameMap = surnameDF.map({case row =>
+    val surnameMap = surnameDF.map({ case row =>
       val name = row.getAs[String]("name").toString
       val pctwhite = row.getAs[Double]("pctwhite")
       val pctblack = row.getAs[Double]("pctblack")
@@ -123,9 +123,9 @@ object RaceProbability extends App {
 
         val record = locationsAtDifferentLevel.map({ case (precision, jsonBytes) =>
 
-          val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
-          val x = jsonArr.getDouble(0)
-          val y = jsonArr.getDouble(1)
+          val snProbMap = getSurnameProbability(surnameMap, username.getOrElse("lastName", ""))
+
+          var finalProbMap = snProbMap;
 
           val shapeFileRootDir = "/home/hadoopuser/shapefiles";
           val shapeFileAddrTemplate = "%s/%s/%s.shp"
@@ -162,25 +162,35 @@ object RaceProbability extends App {
             featureName = stateFeature
           }
 
+          try {
+            val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
 
+            val x = jsonArr.getDouble(0)
+            val y = jsonArr.getDouble(1)
 
-          val raceProbMap = getRaceProbability(shapeDataStore, x, y, featureName, raceNames)
-          val snProbMap = getSurnameProbability(surnameMap, username.getOrElse("lastName", ""))
+            val raceProbMap = getRaceProbability(shapeDataStore, x, y, featureName, raceNames)
 
-          val finalProbMap = raceProbMap.map({ case (k, v) =>
-            var snProb = snProbMap.getOrElse(k, 0.0d)
-            if (snProb == 0.0d) {
-              snProb = 0.01d
+            finalProbMap = raceProbMap.map({ case (k, v) =>
+              var snProb = snProbMap.getOrElse(k, 0.0d)
+              if (snProb == 0.0d) {
+                snProb = 0.01d
+              }
+
+              var racProb = v;
+              if (racProb == 0.0d) {
+                racProb = 0.01d
+              }
+
+              val compoundProb = racProb * snProb;
+              (k, compoundProb)
+            })
+
+          } catch {
+            case jsone: JSONException => {
+                System.out.println("uid : %s , coord: %s"
+                  .format(uid, Bytes.toString(jsonBytes)));
             }
-
-            var racProb = v;
-            if (racProb == 0.0d) {
-              racProb = 0.01d
-            }
-
-            val compoundProb = racProb * snProb;
-            (k, compoundProb)
-          })
+          }
 
           val denominator = finalProbMap.map(_._2).sum
 
@@ -192,11 +202,12 @@ object RaceProbability extends App {
               }
               fieldname -> Bytes.toBytes(prob)
             })
+
           //key-> raceProbMap
+
         })
         uid -> record
       }).toHBase("machineLearn2012")
-
       startRowPrefix += 1;
     }
   }
