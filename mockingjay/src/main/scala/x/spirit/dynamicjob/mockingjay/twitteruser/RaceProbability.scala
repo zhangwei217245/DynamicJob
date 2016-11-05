@@ -69,15 +69,6 @@ object RaceProbability extends App {
     )
     config.get.set("hbase.rpc.timeout", "18000000")
 
-    val surnamePath = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/surname.csv"
-
-    val sqlContext = new SQLContext(sc)
-
-
-
-
-
-
 
     var startRowPrefix = 10
 
@@ -90,7 +81,10 @@ object RaceProbability extends App {
       scan.setFilter(new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
       val scanRst = sc.hbase[String]("machineLearn2012", Set("location", "username"), scan)
       scanRst.map({ case (k, v) =>
+        val surnamePath = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/surname.csv"
 
+        val sqlContext = new SQLContext(sc)
+        
         val raceNames = Array(
           ("total", "DP0110001"),
           ("pcthispanic", "DP0110002"),
