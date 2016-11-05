@@ -135,7 +135,7 @@ object RaceProbability extends App{
             val y = jsonArr.getDouble(1)
 
             var key = "Race_State"
-            var shapeDataStore:ShapefileDataStore = stateDataStore
+            var shapeDataStore:SerializableShapeFileStore = stateDataStore
             var featureName = stateFeature
             if (precision.equals("precise")) {
               key = "Race_Tract"
