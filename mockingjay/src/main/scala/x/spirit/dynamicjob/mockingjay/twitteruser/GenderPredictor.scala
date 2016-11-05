@@ -65,74 +65,74 @@ object GenderPredictor extends App{
     var startRowPrefix = 10
 
     while (startRowPrefix <= 99) {
-      println("Start row prefix = %d".format(startRowPrefix))
-      val scan = new Scan()
-      scan.setCaching(100)
-      scan.setCacheBlocks(true)
-      scan.setAttribute(Scan.HINT_LOOKAHEAD, Bytes.toBytes(2))
-      scan.setFilter(new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
-      val scanRst = sc.hbase[String]("machineLearn2012", Set("location", "username"), scan)
-      scanRst.map({ case (k, v) =>
-        val uid = k;
-        val locationsAtDifferentLevel = v("location")
-        val username = v("username").map({case(col, nameBytes) =>
-          (col, Bytes.toString(nameBytes).toUpperCase)
-        })
-
-//        val record = locationsAtDifferentLevel.map({ case (precision, jsonBytes) =>
-//
-//          val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
-//          val x = jsonArr.getDouble(0)
-//          val y = jsonArr.getDouble(1)
-//
-//          var key = "Race_State"
-//          var shapeDataStore:ShapefileDataStore = stateDataStore
-//          var featureName = stateFeature
-//          if (precision.equals("precise")) {
-//            key = "Race_Tract"
-//            shapeDataStore = tractDataStore
-//            featureName = tractFeature
-//          } else if (precision. equals("city")){
-//            key = "Race_County"
-//            shapeDataStore = countyDataStore
-//            featureName = countyFeature
-//          } else if (precision.equals("admin")){
-//            key = "Race_State"
-//            shapeDataStore = stateDataStore
-//            featureName = stateFeature
-//          }
-//
-//          val raceProbMap = getRaceProbability(shapeDataStore, x, y, featureName, raceNames.map(_._2))
-//          val snProbMap = getSurnameProbability(df, username.getOrElse("lastName", ""))
-//
-//          val finalProbMap = raceProbMap.map({case(k,v)=>
-//            var snProb = snProbMap.getOrElse(k, 0.0d)
-//            if (snProb == 0.0d){
-//              snProb = 0.01d
-//            }
-//
-//            var racProb = v;
-//            if (racProb == 0.0d) {
-//              racProb = 0.01d
-//            }
-//
-//            val compoundProb = racProb * snProb;
-//            (k, compoundProb)
-//          })
-//
-//          val denominator = finalProbMap.map(_._2).sum
-//
-//          key -> finalProbMap
-//            .map({case(fieldname, numerator) =>
-//              var prob = numerator;
-//              if (denominator != 0.0d){
-//                prob = numerator/denominator
-//              }
-//              fieldname -> Bytes.toBytes(prob)
-//            })
+//      println("Start row prefix = %d".format(startRowPrefix))
+//      val scan = new Scan()
+//      scan.setCaching(100)
+//      scan.setCacheBlocks(true)
+//      scan.setAttribute(Scan.HINT_LOOKAHEAD, Bytes.toBytes(2))
+//      scan.setFilter(new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
+//      val scanRst = sc.hbase[String]("machineLearn2012", Set("location", "username"), scan)
+//      scanRst.map({ case (k, v) =>
+//        val uid = k;
+//        val locationsAtDifferentLevel = v("location")
+//        val username = v("username").map({case(col, nameBytes) =>
+//          (col, Bytes.toString(nameBytes).toUpperCase)
 //        })
-//        uid -> record
-      }).toHBase("machineLearn2012")
+//
+////        val record = locationsAtDifferentLevel.map({ case (precision, jsonBytes) =>
+////
+////          val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
+////          val x = jsonArr.getDouble(0)
+////          val y = jsonArr.getDouble(1)
+////
+////          var key = "Race_State"
+////          var shapeDataStore:ShapefileDataStore = stateDataStore
+////          var featureName = stateFeature
+////          if (precision.equals("precise")) {
+////            key = "Race_Tract"
+////            shapeDataStore = tractDataStore
+////            featureName = tractFeature
+////          } else if (precision. equals("city")){
+////            key = "Race_County"
+////            shapeDataStore = countyDataStore
+////            featureName = countyFeature
+////          } else if (precision.equals("admin")){
+////            key = "Race_State"
+////            shapeDataStore = stateDataStore
+////            featureName = stateFeature
+////          }
+////
+////          val raceProbMap = getRaceProbability(shapeDataStore, x, y, featureName, raceNames.map(_._2))
+////          val snProbMap = getSurnameProbability(df, username.getOrElse("lastName", ""))
+////
+////          val finalProbMap = raceProbMap.map({case(k,v)=>
+////            var snProb = snProbMap.getOrElse(k, 0.0d)
+////            if (snProb == 0.0d){
+////              snProb = 0.01d
+////            }
+////
+////            var racProb = v;
+////            if (racProb == 0.0d) {
+////              racProb = 0.01d
+////            }
+////
+////            val compoundProb = racProb * snProb;
+////            (k, compoundProb)
+////          })
+////
+////          val denominator = finalProbMap.map(_._2).sum
+////
+////          key -> finalProbMap
+////            .map({case(fieldname, numerator) =>
+////              var prob = numerator;
+////              if (denominator != 0.0d){
+////                prob = numerator/denominator
+////              }
+////              fieldname -> Bytes.toBytes(prob)
+////            })
+////        })
+////        uid -> record
+//      }).toHBase("machineLearn2012")
       startRowPrefix += 1;
     }
   }
