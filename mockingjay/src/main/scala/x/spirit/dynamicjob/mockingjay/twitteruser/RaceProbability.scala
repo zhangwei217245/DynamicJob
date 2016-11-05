@@ -38,7 +38,9 @@ object RaceProbability extends App {
   def getRaceProbability(dataStore: SerializableShapeFileStore, x_coord: Double, y_coord: Double,
                          featureTypeName: String, attrNames: Array[(String, String)]): Map[String, Double] = {
     val gisFilter: Filter = CQL.toFilter("CONTAINS(the_geom, POINT(%1$.10f %2$.10f))".format(x_coord, y_coord))
+    println("func: getRaceProbability -> attrNames.length = "+ attrNames.map(_._2).length)
     val attrValues = ShapeFileUtils.getAttribute(dataStore, gisFilter, featureTypeName, attrNames.map(_._2))
+
     val totalPopulation = Int.unbox(attrValues.get(0)).toDouble;
     val result: scala.collection.mutable.Map[String, Double] = mutable.Map()
     for (i <- 1 until attrValues.size()) {
@@ -104,17 +106,6 @@ object RaceProbability extends App {
       val scanRst = sc.hbase[String]("machineLearn2012", Set("location", "username"), scan)
       scanRst.map({ case (k, v) =>
 
-        val raceNames = Array(
-          ("total", "DP0110001"),
-          ("pcthispanic", "DP0110002"),
-          ("pctwhite", "DP0110011"),
-          ("pctblack", "DP0110012"),
-          ("pctaian", "DP0110013"),
-          ("pctapi1", "DP0110014"),
-          ("pctapi2", "DP0110015"),
-          ("pct2prace", "DP0110017")
-        )
-
         val uid = k;
         val locationsAtDifferentLevel = v("location")
         val username = v("username").map({ case (col, nameBytes) =>
@@ -168,6 +159,17 @@ object RaceProbability extends App {
             val x = jsonArr.getDouble(0)
             val y = jsonArr.getDouble(1)
 
+            val raceNames = Array(
+              ("total", "DP0110001"),
+              ("pcthispanic", "DP0110002"),
+              ("pctwhite", "DP0110011"),
+              ("pctblack", "DP0110012"),
+              ("pctaian", "DP0110013"),
+              ("pctapi1", "DP0110014"),
+              ("pctapi2", "DP0110015"),
+              ("pct2prace", "DP0110017")
+            )
+
             val raceProbMap = getRaceProbability(shapeDataStore, x, y, featureName, raceNames)
 
             finalProbMap = raceProbMap.map({ case (k, v) =>
@@ -187,7 +189,7 @@ object RaceProbability extends App {
 
           } catch {
             case jsone: JSONException => {
-                System.out.println("uid : %s , coord: %s"
+                println("uid : %s , coord: %s"
                   .format(uid, Bytes.toString(jsonBytes)));
             }
           }
