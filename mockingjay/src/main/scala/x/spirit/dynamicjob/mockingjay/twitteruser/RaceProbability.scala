@@ -23,25 +23,16 @@ import scala.collection.mutable
 object RaceProbability extends App {
 
 
-  def getSurnameProbability(df: DataFrame, surname: String): Map[String, Double] = {
-    val rowRst = df.where("name='%s'".format(surname.toUpperCase))
-      .select("pcthispanic", "pctwhite", "pctblack", "pctaian", "pctapi", "pct2prace");
-    if (rowRst.count > 0) {
-      return rowRst.first()
-        .getValuesMap[Double](Seq("pcthispanic", "pctwhite", "pctblack", "pctaian", "pctapi", "pct2prace"))
-        .map({ e => var v = e._2; if (v == 0.0d) {
-          v = 0.0d
-        }; (e._1, v)
-        })
-    }
+  def getSurnameProbability(data: collection.Map[String, Array[Double]], surname: String): Map[String, Double] = {
+    val pctRst:Array[Double] = data.getOrElse(surname.toUpperCase, Array(0.0d,0.0d,0.0d,0.0d,0.0d,0.0d))
     return Map[String, Double](
-      ("pcthispanic", 0.0d),
-      ("pctwhite", 0.0d),
-      ("pctblack", 0.0d),
-      ("pctaian", 0.0d),
-      ("pctapi", 0.0d),
-      ("pct2prace", 0.0d)
-    );
+      ("pctwhite" -> pctRst(0)),
+      ("pctblack"-> pctRst(1)),
+      ("pctapi"-> pctRst(2)),
+      ("pctaian"-> pctRst(3)),
+      ("pcthispanic"-> pctRst(4)),
+      ("pct2prace"-> pctRst(5))
+    )
   }
 
   def getRaceProbability(dataStore: SerializableShapeFileStore, x_coord: Double, y_coord: Double,
@@ -69,6 +60,37 @@ object RaceProbability extends App {
     )
     config.get.set("hbase.rpc.timeout", "18000000")
 
+    val surnamePath = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/surname.csv"
+
+    val sqlContext = new SQLContext(sc)
+
+    val customSchema = StructType(Array(
+      StructField("name", StringType, true),
+      StructField("rank", IntegerType, true),
+      StructField("count", IntegerType, true),
+      StructField("prop100k", DoubleType, true),
+      StructField("cum_prop100k", DoubleType, true),
+      StructField("pctwhite", DoubleType, true),
+      StructField("pctblack", DoubleType, true),
+      StructField("pctapi", DoubleType, true),
+      StructField("pctaian", DoubleType, true),
+      StructField("pct2prace", DoubleType, true),
+      StructField("pcthispanic", DoubleType, true)
+    ))
+
+    val surnameDF = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").schema(customSchema).load(surnamePath)
+
+
+    val surnameMap = surnameDF.map({case row =>
+      val name = row.getAs[String]("name").toString
+      val pctwhite = row.getAs[Double]("pctwhite")
+      val pctblack = row.getAs[Double]("pctblack")
+      val pctapi = row.getAs[Double]("pctapi")
+      val pctaian = row.getAs[Double]("pctaian")
+      val pct2prace = row.getAs[Double]("pct2prace")
+      val pcthispanic = row.getAs[Double]("pcthispanic")
+      (name -> Array(pctwhite, pctblack, pctapi, pctaian, pcthispanic, pct2prace))
+    }).collectAsMap();
 
     var startRowPrefix = 10
 
@@ -81,10 +103,7 @@ object RaceProbability extends App {
       scan.setFilter(new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
       val scanRst = sc.hbase[String]("machineLearn2012", Set("location", "username"), scan)
       scanRst.map({ case (k, v) =>
-        val surnamePath = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/surname.csv"
 
-        val sqlContext = new SQLContext(sc)
-        
         val raceNames = Array(
           ("total", "DP0110001"),
           ("pcthispanic", "DP0110002"),
@@ -95,20 +114,6 @@ object RaceProbability extends App {
           ("pctapi2", "DP0110015"),
           ("pct2prace", "DP0110017")
         )
-
-        val customSchema = StructType(Array(
-          StructField("name", StringType, true),
-          StructField("rank", IntegerType, true),
-          StructField("count", IntegerType, true),
-          StructField("prop100k", DoubleType, true),
-          StructField("cum_prop100k", DoubleType, true),
-          StructField("pctwhite", DoubleType, true),
-          StructField("pctblack", DoubleType, true),
-          StructField("pctapi", DoubleType, true),
-          StructField("pctaian", DoubleType, true),
-          StructField("pct2prace", DoubleType, true),
-          StructField("pcthispanic", DoubleType, true)
-        ))
 
         val uid = k;
         val locationsAtDifferentLevel = v("location")
@@ -157,10 +162,10 @@ object RaceProbability extends App {
             featureName = stateFeature
           }
 
-          val df = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").schema(customSchema).load(surnamePath)
+
 
           val raceProbMap = getRaceProbability(shapeDataStore, x, y, featureName, raceNames)
-          val snProbMap = getSurnameProbability(df, username.getOrElse("lastName", ""))
+          val snProbMap = getSurnameProbability(surnameMap, username.getOrElse("lastName", ""))
 
           val finalProbMap = raceProbMap.map({ case (k, v) =>
             var snProb = snProbMap.getOrElse(k, 0.0d)
@@ -187,9 +192,11 @@ object RaceProbability extends App {
               }
               fieldname -> Bytes.toBytes(prob)
             })
+          //key-> raceProbMap
         })
         uid -> record
       }).toHBase("machineLearn2012")
+
       startRowPrefix += 1;
     }
   }
