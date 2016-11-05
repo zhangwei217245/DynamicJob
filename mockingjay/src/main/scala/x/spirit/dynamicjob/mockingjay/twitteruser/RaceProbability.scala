@@ -40,9 +40,12 @@ object RaceProbability extends App {
     val gisFilter: Filter = CQL.toFilter("CONTAINS(the_geom, POINT(%1$.10f %2$.10f))".format(x_coord, y_coord))
     println("func: getRaceProbability -> attrNames.length = "+ attrNames.map(_._2).length)
     val attrValues = ShapeFileUtils.getAttribute(dataStore, gisFilter, featureTypeName, attrNames.map(_._2))
-
-    val totalPopulation = Int.unbox(attrValues.get(0)).toDouble;
     val result: scala.collection.mutable.Map[String, Double] = mutable.Map()
+    if (attrValues.isEmpty){
+        return result.toMap
+    }
+    val totalPopulation = Int.unbox(attrValues.get(0)).toDouble;
+
     for (i <- 1 until attrValues.size()) {
       val raceProbability = ((Int.unbox(attrValues.get(i)) * 100).toDouble / totalPopulation)
       result += ((attrNames(i)._1, raceProbability))
@@ -172,21 +175,22 @@ object RaceProbability extends App {
 
             val raceProbMap = getRaceProbability(shapeDataStore, x, y, featureName, raceNames)
 
-            finalProbMap = raceProbMap.map({ case (k, v) =>
-              var snProb = snProbMap.getOrElse(k, 0.0d)
-              if (snProb == 0.0d) {
-                snProb = 0.01d
-              }
+            if (!raceProbMap.isEmpty) {
+              finalProbMap = raceProbMap.map({ case (k, v) =>
+                var snProb = snProbMap.getOrElse(k, 0.0d)
+                if (snProb == 0.0d) {
+                  snProb = 0.01d
+                }
 
-              var racProb = v;
-              if (racProb == 0.0d) {
-                racProb = 0.01d
-              }
+                var racProb = v;
+                if (racProb == 0.0d) {
+                  racProb = 0.01d
+                }
 
-              val compoundProb = racProb * snProb;
-              (k, compoundProb)
-            })
-
+                val compoundProb = racProb * snProb;
+                (k, compoundProb)
+              })
+            }
           } catch {
             case jsone: JSONException => {
                 println("uid : %s , coord: %s"
