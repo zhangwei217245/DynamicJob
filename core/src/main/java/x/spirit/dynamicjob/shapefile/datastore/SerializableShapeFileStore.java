@@ -12,6 +12,10 @@ public class SerializableShapeFileStore extends ShapefileDataStore implements Se
 
     private static final long serialVersionUID = 1105635686534305786L;
 
+    public SerializableShapeFileStore(){
+
+    }
+
     public SerializableShapeFileStore(URL url) {
         super(url);
     }
