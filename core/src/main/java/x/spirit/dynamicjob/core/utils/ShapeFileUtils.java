@@ -1,6 +1,5 @@
 package x.spirit.dynamicjob.core.utils;
 
-import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
@@ -8,6 +7,7 @@ import org.geotools.filter.text.cql2.CQL;
 import org.geotools.filter.text.cql2.CQLException;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.filter.Filter;
+import x.spirit.dynamicjob.shapefile.datastore.SerializableShapeFileStore;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,13 +21,13 @@ import java.util.List;
 public class ShapeFileUtils {
 
 
-    public static List<Object> getAttribute(ShapefileDataStore dataStore, double x, double y, String typeName,
+    public static List<Object> getAttribute(SerializableShapeFileStore dataStore, double x, double y, String typeName,
                                             String[] names) throws IOException, CQLException {
         Filter gisFilter = CQL.toFilter(String.format("CONTAINS(the_geom, POINT(%1$.10f %2$.10f))", x, y));
         return getAttribute(dataStore, gisFilter, typeName, names);
     }
 
-    public static List<Object> getAttribute(ShapefileDataStore dataStore, Filter gisFilter, String typeName,
+    public static List<Object> getAttribute(SerializableShapeFileStore dataStore, Filter gisFilter, String typeName,
                                             String[] names) throws IOException {
         List<Object> result = new ArrayList();
         SimpleFeatureSource sfs = dataStore.getFeatureSource();
@@ -46,7 +46,7 @@ public class ShapeFileUtils {
 
     public static void main(String[] args) {
         try {
-            ShapefileDataStore dataStore = new ShapefileDataStore(
+            SerializableShapeFileStore dataStore = new SerializableShapeFileStore(
                     new File("/Users/zhangwei/Downloads/County_2010Census_DP1/County_2010Census_DP1.shp").toURI().toURL());
 
             System.out.println(String.format("CONTAINS(the_geom, POINT(%1$.10f %2$.10f))", -84.14617687, 33.72176483));

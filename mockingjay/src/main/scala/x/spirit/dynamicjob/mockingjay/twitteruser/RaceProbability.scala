@@ -14,6 +14,7 @@ import x.spirit.dynamicjob.core.utils.ShapeFileUtils
 import x.spirit.dynamicjob.mockingjay.hbase.{HBaseConfig, _}
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.types._
+import x.spirit.dynamicjob.shapefile.datastore.SerializableShapeFileStore
 
 import scala.collection.mutable
 
@@ -52,7 +53,7 @@ object RaceProbability extends App{
       );
   }
 
-  def getRaceProbability(dataStore: ShapefileDataStore, x_coord: Double, y_coord: Double,
+  def getRaceProbability(dataStore: SerializableShapeFileStore, x_coord: Double, y_coord: Double,
                          featureTypeName: String, attrNames: Array[String]): Map[String, Double] = {
     val gisFilter: Filter = CQL.toFilter("CONTAINS(the_geom, POINT(%1$.10f %2$.10f))".format(x_coord, y_coord))
     val attrValues = ShapeFileUtils.getAttribute(dataStore, gisFilter, featureTypeName, attrNames)
@@ -106,9 +107,9 @@ object RaceProbability extends App{
     val countyFileName = shapeFileAddrTemplate.format(shapeFileRootDir, countyFeature, countyFeature)
     val stateFileName = shapeFileAddrTemplate.format(shapeFileRootDir, stateFeature, stateFeature)
 
-    val tractDataStore: ShapefileDataStore = new ShapefileDataStore(new File(tractFileName).toURI.toURL)
-    val countyDataStore: ShapefileDataStore = new ShapefileDataStore(new File(countyFileName).toURI.toURL)
-    val stateDataStore: ShapefileDataStore = new ShapefileDataStore(new File(stateFileName).toURI.toURL)
+    val tractDataStore: SerializableShapeFileStore = new SerializableShapeFileStore(new File(tractFileName).toURI.toURL)
+    val countyDataStore: SerializableShapeFileStore = new SerializableShapeFileStore(new File(countyFileName).toURI.toURL)
+    val stateDataStore: SerializableShapeFileStore = new SerializableShapeFileStore(new File(stateFileName).toURI.toURL)
 
     var startRowPrefix = 10
 
