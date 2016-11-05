@@ -24,16 +24,7 @@ import scala.collection.mutable
 object RaceProbability extends App{
 
 
-  val raceNames = Array(
-    ("total" , "DP0110001"),
-    ("pcthispanic", "DP0110002"),
-    ("pctwhite", "DP0110011"),
-    ("pctblack", "DP0110012"),
-    ("pctaian", "DP0110013"),
-    ("pctapi1", "DP0110014"),
-    ("pctapi2", "DP0110015"),
-    ("pct2prace", "DP0110017")
-  )
+
 
   def getSurnameProbability(df: DataFrame, surname: String): Map[String, Double] ={
       val rowRst = df.where("name='%'".format(surname))
@@ -54,20 +45,31 @@ object RaceProbability extends App{
   }
 
   def getRaceProbability(dataStore: SerializableShapeFileStore, x_coord: Double, y_coord: Double,
-                         featureTypeName: String, attrNames: Array[String]): Map[String, Double] = {
+                         featureTypeName: String, attrNames: Array[(String,String)]): Map[String, Double] = {
     val gisFilter: Filter = CQL.toFilter("CONTAINS(the_geom, POINT(%1$.10f %2$.10f))".format(x_coord, y_coord))
-    val attrValues = ShapeFileUtils.getAttribute(dataStore, gisFilter, featureTypeName, attrNames)
+    val attrValues = ShapeFileUtils.getAttribute(dataStore, gisFilter, featureTypeName, attrNames.map(_._2))
     val totalPopulation = Int.unbox(attrValues.get(0)).toDouble;
     val result : scala.collection.mutable.Map[String, Double] = mutable.Map()
     for (i <- 1 until attrValues.size()) {
       val raceProbability = ((Int.unbox(attrValues.get(i)) * 100).toDouble / totalPopulation)
-      result+=((raceNames(i)._1, raceProbability))
+      result+=((attrNames(i)._1, raceProbability))
     }
     result+=(("pctapi", (result.getOrElse("pctapi1", 0.0d)+result.getOrElse("pctapi2", 0.0d))))
     return result.filterKeys({k=> (!(k.equalsIgnoreCase("pctapi1")||k.equalsIgnoreCase("pctapi2")))}).toMap
   }
 
   override def main(args: Array[String]){
+    val raceNames = Array(
+      ("total" , "DP0110001"),
+      ("pcthispanic", "DP0110002"),
+      ("pctwhite", "DP0110011"),
+      ("pctblack", "DP0110012"),
+      ("pctaian", "DP0110013"),
+      ("pctapi1", "DP0110014"),
+      ("pctapi2", "DP0110015"),
+      ("pct2prace", "DP0110017")
+    )
+
     val sparkConf = new SparkConf().setAppName(this.getClass.getSimpleName)
     val sc = new SparkContext(sparkConf)
 
@@ -151,7 +153,7 @@ object RaceProbability extends App{
               featureName = stateFeature
             }
 
-            val raceProbMap = getRaceProbability(shapeDataStore, x, y, featureName, raceNames.map(_._2))
+            val raceProbMap = getRaceProbability(shapeDataStore, x, y, featureName, raceNames)
             val snProbMap = getSurnameProbability(df, username.getOrElse("lastName", ""))
 
             val finalProbMap = raceProbMap.map({case(k,v)=>
