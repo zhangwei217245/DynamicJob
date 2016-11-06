@@ -38,7 +38,7 @@ object RaceProbability extends App {
   def getRaceProbability(dataStore: SerializableShapeFileStore, x_coord: Double, y_coord: Double,
                          featureTypeName: String, attrNames: Array[(String, String)]): Map[String, Double] = {
     val gisFilter: Filter = CQL.toFilter("CONTAINS(the_geom, POINT(%1$.10f %2$.10f))".format(x_coord, y_coord))
-    println("func: getRaceProbability -> attrNames.length = "+ attrNames.map(_._2).length)
+    //println("func: getRaceProbability -> attrNames.length = "+ attrNames.map(_._2).length)
     val attrValues = ShapeFileUtils.getAttribute(dataStore, gisFilter, featureTypeName, attrNames.map(_._2))
     val result: scala.collection.mutable.Map[String, Double] = mutable.Map()
     if (attrValues.isEmpty){
