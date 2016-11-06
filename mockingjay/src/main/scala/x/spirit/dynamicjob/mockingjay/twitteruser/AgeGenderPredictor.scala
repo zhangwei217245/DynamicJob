@@ -7,7 +7,7 @@ import org.apache.hadoop.hbase.filter.PrefixFilter
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
+import org.apache.spark.sql.types._
 import org.apache.spark.{SparkConf, SparkContext}
 import x.spirit.dynamicjob.mockingjay.hbase.{HBaseConfig, _}
 
@@ -32,17 +32,20 @@ object AgeGenderPredictor extends App {
     val ageCSVFile = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/1912_2000.txt"
 
     val ageCSVSchema = StructType(Array(
-      StructField("year", IntegerType, true),
+      StructField("year", LongType, true),
       StructField("firstname", StringType, true),
       StructField("gender", StringType, true),
-      StructField("occurance", IntegerType, true)
+      StructField("occurance", LongType, true)
     ))
 
     val ageCSVDF = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").schema(ageCSVSchema).load(ageCSVFile)
 
     val nameMax = ageCSVDF.groupBy("firstname").agg(max("occurance"), sum("occurance"))
-      .map({ row => (row.getAs[String]("firstname") -> (row.getAs[Long]("max(occurance)"),
-        row.getAs[Long]("sum(occurance)")))
+      .map({ row =>
+        row.getAs[String]("firstname") -> (
+          row.getAs[Long]("max(occurance)"),
+          row.getAs[Long]("sum(occurance)")
+          )
       }).collectAsMap
     val nameYearGenderMap = nameMax.map({ case (k, v) =>
       val yearAndGenderRow = ageCSVDF.where("firstname='%s'".format(k)).where("occurance=%d".format(v._1))
@@ -57,9 +60,9 @@ object AgeGenderPredictor extends App {
     val genderCSVFile = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/firstname_list.csv"
     val genderCSVSchema = StructType(Array(
       StructField("firstname", StringType, true),
-      StructField("male_times", IntegerType, true),
-      StructField("female_times", IntegerType, true),
-      StructField("occurrences", IntegerType, true)
+      StructField("male_times", LongType, true),
+      StructField("female_times", LongType, true),
+      StructField("occurrences", LongType, true)
     ))
 
     val genderCSVDF = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").schema(genderCSVSchema).load(genderCSVFile)
