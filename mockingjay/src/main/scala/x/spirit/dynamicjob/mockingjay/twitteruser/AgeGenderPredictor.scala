@@ -13,6 +13,7 @@ import x.spirit.dynamicjob.mockingjay.hbase.{HBaseConfig, _}
 
 /**
   * Created by zhangwei on 11/4/16.
+  *
   */
 object AgeGenderPredictor extends App {
 
@@ -40,13 +41,13 @@ object AgeGenderPredictor extends App {
     val ageCSVDF = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").schema(ageCSVSchema).load(ageCSVFile)
 
     val nameMax = ageCSVDF.groupBy("firstname").agg(max("occurance"), sum("occurance"))
-      .map({ row => (row.getAs[String]("firstname") -> (row.getAs[Int]("max(occurance)"),
-        row.getAs[Int]("sum(occurance)")))
+      .map({ row => (row.getAs[String]("firstname") -> (row.getAs[Long]("max(occurance)"),
+        row.getAs[Long]("sum(occurance)")))
       }).collectAsMap
     val nameYearGenderMap = nameMax.map({ case (k, v) =>
       val yearAndGenderRow = ageCSVDF.where("firstname='%s'".format(k)).where("occurance=%d".format(v._1))
         .select("year", "gender").first
-      val year = yearAndGenderRow.getAs[Int]("year")
+      val year = yearAndGenderRow.getAs[Long]("year")
       val gender = yearAndGenderRow.getAs[String]("gender")
       val pct_probability = 100.0d * (v._1.toDouble) / v._2.toDouble
 
@@ -65,9 +66,9 @@ object AgeGenderPredictor extends App {
 
     val nameGenderMap = genderCSVDF.map({ row =>
       val name = row.getAs[String]("firstname");
-      val total = row.getAs[Int]("occurrences").toDouble;
-      val male_pct = 100.0d * row.getAs[Int]("male_times").toDouble / total;
-      val female_pct = 100.0d * row.getAs[Int]("female_times").toDouble / total;
+      val total = row.getAs[Long]("occurrences").toDouble;
+      val male_pct = 100.0d * row.getAs[Long]("male_times").toDouble / total;
+      val female_pct = 100.0d * row.getAs[Long]("female_times").toDouble / total;
       name.toUpperCase -> (male_pct, female_pct)
     }).collectAsMap()
 
@@ -85,12 +86,13 @@ object AgeGenderPredictor extends App {
         val uid = k;
         val firstName = v("username").getOrElse("firstName", "");
         // decide age
-        val nameYearGender = nameYearGenderMap.getOrElse(firstName, (1912, "F", 0.0d));
-        val age = Year.now().getValue - nameYearGender._1
-        val ageProb = nameYearGender._3;
+        val nameYearGender = nameYearGenderMap.getOrElse(firstName, (1912L, "F", 0.0d));
+//        val age = Year.now().getValue.toLong - nameYearGender._1
+        val year = nameYearGender._1
+        val yearProb = nameYearGender._3;
         // decide gender
         var gender = "X"
-        val genderYearProb = ageProb;
+        val genderYearProb = yearProb;
         gender = nameYearGender._2
 
         var tempGender = "X"
@@ -114,7 +116,7 @@ object AgeGenderPredictor extends App {
         }
 
         val record = Map(
-          "Age" -> Map("age" -> Bytes.toBytes(age), "prob" -> Bytes.toBytes(ageProb)),
+          "Age" -> Map("year" -> Bytes.toBytes(year), "prob" -> Bytes.toBytes(yearProb)),
           "Gender" -> Map(
             "gender" -> Bytes.toBytes(gender),
             "year_prob" -> Bytes.toBytes(genderYearProb),
