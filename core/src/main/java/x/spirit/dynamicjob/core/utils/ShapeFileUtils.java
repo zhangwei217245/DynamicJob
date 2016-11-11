@@ -13,13 +13,24 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by zhangwei on 9/1/16.
  */
 public class ShapeFileUtils {
 
+    public static final ExecutorService pool = Executors.newScheduledThreadPool(16);
+
+    public static final long TIME_OUT = 60; // second
 
     public static List<Object> getAttribute(SerializableShapeFileStore dataStore, double x, double y, String typeName,
                                             String[] names) throws IOException, CQLException {
@@ -29,19 +40,31 @@ public class ShapeFileUtils {
 
     public static List<Object> getAttribute(SerializableShapeFileStore dataStore, Filter gisFilter, String typeName,
                                             String[] names) throws IOException {
-        List<Object> result = new ArrayList();
-        SimpleFeatureSource sfs = dataStore.getFeatureSource();
-        SimpleFeatureCollection featureCollection = sfs.getFeatures(gisFilter);
-        SimpleFeatureIterator simpleFeatureIterator = featureCollection.features();
-        while (simpleFeatureIterator.hasNext()) {
-            SimpleFeature simpleFeature = simpleFeatureIterator.next();
-            if (simpleFeature.getFeatureType().getTypeName().equals(typeName)){
-                for (String name : names) {
-                    result.add(simpleFeature.getAttribute(name));
+        List<Object> rst = Collections.emptyList();
+        Future<List<Object>> future = pool.submit(new Callable<List<Object>>() {
+            @Override
+            public List<Object> call() throws Exception {
+                List<Object> result = new ArrayList();
+                SimpleFeatureSource sfs = dataStore.getFeatureSource();
+                SimpleFeatureCollection featureCollection = sfs.getFeatures(gisFilter);
+                SimpleFeatureIterator simpleFeatureIterator = featureCollection.features();
+                while (simpleFeatureIterator.hasNext()) {
+                    SimpleFeature simpleFeature = simpleFeatureIterator.next();
+                    if (simpleFeature.getFeatureType().getTypeName().equals(typeName)){
+                        for (String name : names) {
+                            result.add(simpleFeature.getAttribute(name));
+                        }
+                    }
                 }
+                return result;
             }
+        });
+        try {
+            rst = future.get(60, TimeUnit.SECONDS);
+        } catch (InterruptedException|ExecutionException|TimeoutException  e) {
+            System.out.println("Timeout");
         }
-        return result;
+        return rst;
     }
 
     public static void main(String[] args) {

@@ -1,6 +1,7 @@
 package x.spirit.dynamicjob.mockingjay.twitteruser
 
 import java.io.File
+import java.time.{Clock, Duration, Instant}
 
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.filter.PrefixFilter
@@ -39,7 +40,11 @@ object RaceProbability extends App {
                          featureTypeName: String, attrNames: Array[(String, String)]): Map[String, Double] = {
     val gisFilter: Filter = CQL.toFilter("CONTAINS(the_geom, POINT(%1$.10f %2$.10f))".format(x_coord, y_coord))
     //println("func: getRaceProbability -> attrNames.length = "+ attrNames.map(_._2).length)
+    val t1 = Instant.now()
     val attrValues = ShapeFileUtils.getAttribute(dataStore, gisFilter, featureTypeName, attrNames.map(_._2))
+    val t2 = Instant.now()
+    println("Get Attribuites from Shapefile after %dms".format(Duration.between(t1, t2).toMillis))
+
     val result: scala.collection.mutable.Map[String, Double] = mutable.Map()
     if (attrValues.isEmpty){
         return result.toMap
