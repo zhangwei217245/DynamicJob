@@ -61,7 +61,10 @@ object RaceProbability extends App {
 
   override def main(args: Array[String]) {
 
-
+    var startRowPrefix = 23
+    if (args.length >= 1) {
+      startRowPrefix = args(0).toInt();
+    }
     val sparkConf = new SparkConf().setAppName(this.getClass.getSimpleName)
     val sc = new SparkContext(sparkConf)
 
@@ -102,7 +105,6 @@ object RaceProbability extends App {
       (name -> Array(pctwhite, pctblack, pctapi, pctaian, pcthispanic, pct2prace))
     }).collectAsMap();
 
-    var startRowPrefix = 23
 
     while (startRowPrefix <= 99) {
       println("Start row prefix = %d".format(startRowPrefix))
