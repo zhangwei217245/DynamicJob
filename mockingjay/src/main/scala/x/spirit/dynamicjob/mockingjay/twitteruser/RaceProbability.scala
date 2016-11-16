@@ -102,7 +102,7 @@ object RaceProbability extends App {
       (name -> Array(pctwhite, pctblack, pctapi, pctaian, pcthispanic, pct2prace))
     }).collectAsMap();
 
-    var startRowPrefix = 20
+    var startRowPrefix = 23
 
     while (startRowPrefix <= 99) {
       println("Start row prefix = %d".format(startRowPrefix))

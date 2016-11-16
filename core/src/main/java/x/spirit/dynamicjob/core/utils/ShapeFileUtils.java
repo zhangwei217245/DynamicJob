@@ -30,7 +30,7 @@ public class ShapeFileUtils {
 
     public static final ExecutorService pool = Executors.newScheduledThreadPool(16);
 
-    public static final long TIME_OUT = 60; // second
+    public static final long TIME_OUT = 5; // second
 
     public static List<Object> getAttribute(SerializableShapeFileStore dataStore, double x, double y, String typeName,
                                             String[] names) throws IOException, CQLException {
@@ -60,10 +60,11 @@ public class ShapeFileUtils {
             }
         });
         try {
-            rst = future.get(60, TimeUnit.SECONDS);
+            rst = future.get(TIME_OUT, TimeUnit.SECONDS);
         } catch (InterruptedException|ExecutionException|TimeoutException  e) {
             System.out.println("Timeout");
         }
+
         return rst;
     }
 
