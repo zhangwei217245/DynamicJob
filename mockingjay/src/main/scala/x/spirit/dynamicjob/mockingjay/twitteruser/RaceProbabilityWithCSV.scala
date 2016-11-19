@@ -57,7 +57,7 @@ object RaceProbabilityWithCSV extends App {
       keySuffix = keySuffix.take(1).toUpperCase+keySuffix.drop(1).toLowerCase
     }
     val sparkConf = new SparkConf().setAppName(this.getClass.getSimpleName)
-        .set("spark.kryoserializer.buffer.max","90000")
+        .set("spark.kryoserializer.buffer.max","2048")
     val sc = new SparkContext(sparkConf)
 
     implicit val config = HBaseConfig(
@@ -237,7 +237,7 @@ object RaceProbabilityWithCSV extends App {
       "DP0110013",
       "DP0110014",
       "DP0110015",
-      "DP0110017").collect().map({row =>
+      "DP0110017").map({row =>
 
       val WKTString = row.getAs[String]("WKT").toString
       val total = row.getAs[Double]("DP0110001")
@@ -256,12 +256,14 @@ object RaceProbabilityWithCSV extends App {
         "pcthispanic" -> pcthispanic,
         "pct2prace" -> pct2prace
       )
-      return new ShapeRecord[Double](geom, dataFields)
-    })
-
-    shapeDataSet.foreach({ sr =>
+      val sr = new ShapeRecord[Double](geom, dataFields)
       quadTree.add(sr)
-    })
+      return sr
+    }).collect()
+
+//    shapeDataSet.foreach({ sr =>
+//      quadTree.add(sr)
+//    })
 
 
     while (startRowPrefix <= 99) {
