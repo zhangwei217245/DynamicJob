@@ -6,11 +6,11 @@ import scala.collection._
   */
 class QuadTreeIndex[A](xmin:Double,xmax:Double,
                                         ymin:Double,ymax:Double, MaxObjs:Int = 100)
-                      (implicit ev$1: A => ShapeRecord[Double]) {
+                      (implicit ev$1: A => ShapeRecord[Double]) extends scala.Serializable{
 
 
   private class Node(cx:Double,cy:Double,sx:Double,sy:Double,
-                     val objects:mutable.Buffer[A],var children:Array[Node]) {
+                     val objects:mutable.Buffer[A],var children:Array[Node]) extends scala.Serializable {
     def whichChild(x:Double, y:Double): Int ={
       (if(x>cx) 1 else 0)+(if(y>cy) 2 else 0)
     }

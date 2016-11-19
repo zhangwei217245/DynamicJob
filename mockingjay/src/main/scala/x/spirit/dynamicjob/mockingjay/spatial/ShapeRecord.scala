@@ -6,7 +6,7 @@ import geotrellis.vector.{Geometry, Point}
 /**
   * Created by zhangwei on 11/18/16.
   */
-class ShapeRecord[T](geometry: Geometry, dataFields: Map[String, T]) {
+class ShapeRecord[T](geometry: Geometry, dataFields: Map[String, T]) extends scala.Serializable {
 
   val centroid = geometry.centroid;
 

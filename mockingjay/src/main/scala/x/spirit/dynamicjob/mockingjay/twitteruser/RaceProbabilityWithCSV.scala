@@ -224,7 +224,7 @@ object RaceProbabilityWithCSV extends App {
       xmin = -179.23108599999995, xmax = 179.85968100000002, ymin=17.83150900000004, ymax = 71.44105900000005
     )
     // Do a for each loop to generate objects and create tree index
-    dataFrame.collect().foreach({ row =>
+    dataFrame.foreach({ row =>
       val WKTString = row.getAs[String]("WKT").toString
       val total = row.getAs[Double]("DP0110001")
       val pcthispanic = 100.0 * row.getAs[Double]("DP0110002")/total
