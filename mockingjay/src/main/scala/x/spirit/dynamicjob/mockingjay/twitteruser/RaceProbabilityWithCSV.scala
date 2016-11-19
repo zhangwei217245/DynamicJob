@@ -237,7 +237,7 @@ object RaceProbabilityWithCSV extends App {
       "DP0110013",
       "DP0110014",
       "DP0110015",
-      "DP0110017").map({row =>
+      "DP0110017").collect.map({row =>
 
       val WKTString = row.getAs[String]("WKT").toString
       val total = row.getAs[Double]("DP0110001")
@@ -259,7 +259,7 @@ object RaceProbabilityWithCSV extends App {
       val sr = new ShapeRecord[Double](geom, dataFields)
       quadTree.add(sr)
       sr
-    }).collect()
+    })
 
 //    shapeDataSet.foreach({ sr =>
 //      quadTree.add(sr)
