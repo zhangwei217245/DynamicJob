@@ -29,7 +29,7 @@ object AgeGenderPredictor extends App {
 
     val sqlContext = new SQLContext(sc)
 
-    val ageCSVFile = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/1912_2000.txt"
+    val ageCSVFile = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitterCSV/1912_2000.txt"
 
     val ageCSVSchema = StructType(Array(
       StructField("year", LongType, true),
@@ -57,7 +57,7 @@ object AgeGenderPredictor extends App {
       k.toUpperCase -> (year, gender, pct_probability)
     })
 
-    val genderCSVFile = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/firstname_list.csv"
+    val genderCSVFile = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitterCSV/firstname_list.csv"
     val genderCSVSchema = StructType(Array(
       StructField("firstname", StringType, true),
       StructField("male_times", LongType, true),

@@ -2,6 +2,7 @@ package x.spirit.dynamicjob.mockingjay.twitteruser
 
 import java.io.File
 import java.time.{Clock, Duration, Instant}
+import java.util.Collections
 
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.filter.PrefixFilter
@@ -36,8 +37,8 @@ object RaceProbability extends App {
     )
   }
 
-  def getRaceProbability(dataStore: SerializableShapeFileStore, x_coord: Double, y_coord: Double,
-                         featureTypeName: String, attrNames: Array[(String, String)]): Map[String, Double] = {
+  def getRaceProbabilityFromShapeFile(dataStore: SerializableShapeFileStore, x_coord: Double, y_coord: Double,
+                                      featureTypeName: String, attrNames: Array[(String, String)]): Map[String, Double] = {
     val gisFilter: Filter = CQL.toFilter("CONTAINS(the_geom, POINT(%1$.10f %2$.10f))".format(x_coord, y_coord))
     //println("func: getRaceProbability -> attrNames.length = "+ attrNames.map(_._2).length)
     val t1 = Instant.now()
@@ -59,6 +60,7 @@ object RaceProbability extends App {
     return result.filterKeys({ k => (!(k.equalsIgnoreCase("pctapi1") || k.equalsIgnoreCase("pctapi2"))) }).toMap
   }
 
+
   override def main(args: Array[String]) {
 
     var startRowPrefix = 23
@@ -73,7 +75,7 @@ object RaceProbability extends App {
     )
     config.get.set("hbase.rpc.timeout", "18000000")
 
-    val surnamePath = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitter/surname.csv"
+    val surnamePath = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitterCSV/surname.csv"
 
     val sqlContext = new SQLContext(sc)
 
@@ -180,7 +182,7 @@ object RaceProbability extends App {
               ("pct2prace", "DP0110017")
             )
 
-            val raceProbMap = getRaceProbability(shapeDataStore, x, y, featureName, raceNames)
+            val raceProbMap = getRaceProbabilityFromShapeFile(shapeDataStore, x, y, featureName, raceNames)
 
             if (!raceProbMap.isEmpty) {
               finalProbMap = raceProbMap.map({ case (k, v) =>
