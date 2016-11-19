@@ -258,7 +258,7 @@ object RaceProbabilityWithCSV extends App {
       )
       val sr = new ShapeRecord[Double](geom, dataFields)
       quadTree.add(sr)
-      return sr
+      sr
     }).collect()
 
 //    shapeDataSet.foreach({ sr =>
