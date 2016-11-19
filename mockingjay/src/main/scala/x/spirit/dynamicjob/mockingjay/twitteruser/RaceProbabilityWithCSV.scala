@@ -1,5 +1,6 @@
 package x.spirit.dynamicjob.mockingjay.twitteruser
 
+import scala.util.control.Breaks._
 import geotrellis.vector.io.wkt.WKT
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.filter.PrefixFilter
@@ -227,7 +228,16 @@ object RaceProbabilityWithCSV extends App {
       xmin = -179.23108599999995, xmax = 179.85968100000002, ymin=17.83150900000004, ymax = 71.44105900000005
     )
     // Do a for each loop to generate objects and create tree index
-    dataFrame.foreach({ row =>
+    val shapeDataSet:Array[ShapeRecord[Double]] = dataFrame.select("WKT",
+      "DP0110001",
+      "DP0110002",
+      "DP0110011",
+      "DP0110012",
+      "DP0110013",
+      "DP0110014",
+      "DP0110015",
+      "DP0110017").collect().map({row =>
+
       val WKTString = row.getAs[String]("WKT").toString
       val total = row.getAs[Double]("DP0110001")
       val pcthispanic = 100.0 * row.getAs[Double]("DP0110002")/total
@@ -245,7 +255,11 @@ object RaceProbabilityWithCSV extends App {
         "pcthispanic" -> pcthispanic,
         "pct2prace" -> pct2prace
       )
-      quadTree.add(new ShapeRecord[Double](geom, dataFields))
+      return new ShapeRecord[Double](geom, dataFields)
+    })
+
+    shapeDataSet.foreach({ sr =>
+      quadTree.add(sr)
     })
 
 
@@ -277,7 +291,19 @@ object RaceProbabilityWithCSV extends App {
             val x = jsonArr.getDouble(0)
             val y = jsonArr.getDouble(1)
 
-            val raceProbMap = getRaceProbabilityFromCSVFile(quadTree, x, y)
+            var raceProbMap = getRaceProbabilityFromCSVFile(quadTree, x, y)
+
+            if (raceProbMap.isEmpty){
+              breakable{
+                for (shpRec <- shapeDataSet) {
+                  if (shpRec.covers(x,y)) {
+                    raceProbMap = shpRec.getDataFields
+                    println("ShapeRecord Found outside of QuadTree for (%f, %f) : %s".format(x, y, raceProbMap))
+                    break
+                  }
+                }
+              }
+            }
 
             if (raceProbMap.nonEmpty) {
               finalProbMap = raceProbMap.map({ case (kk, vv) =>
