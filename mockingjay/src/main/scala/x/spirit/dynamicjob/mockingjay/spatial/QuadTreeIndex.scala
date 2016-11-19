@@ -11,6 +11,11 @@ class QuadTreeIndex[A](xmin:Double,xmax:Double,
 
   private class Node(cx:Double,cy:Double,sx:Double,sy:Double,
                      val objects:mutable.Buffer[A],var children:Array[Node]) extends scala.Serializable {
+    def getCx:Double = cx
+    def getCy:Double = cy
+    def getSx:Double = sx
+    def getSy:Double = sy
+
     def whichChild(x:Double, y:Double): Int ={
       (if(x>cx) 1 else 0)+(if(y>cy) 2 else 0)
     }
@@ -42,6 +47,7 @@ class QuadTreeIndex[A](xmin:Double,xmax:Double,
 
   def searchRecurByCoordinates(x:Double, y:Double, n:Node, ret:mutable.Buffer[A]) : Unit = {
     if (n.children == null){
+      println("record found at Node : (%f, %f) with data: %s".format(n.getCx,n.getCy, n.objects))
       ret ++= n.objects
     } else {
       searchRecurByCoordinates(x, y, n.children(n.whichChild(x,y)), ret)

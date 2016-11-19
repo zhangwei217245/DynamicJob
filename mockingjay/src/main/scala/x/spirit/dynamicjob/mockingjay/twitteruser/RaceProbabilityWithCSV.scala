@@ -38,9 +38,10 @@ object RaceProbabilityWithCSV extends App {
 
     if (shapeRecords!=null && shapeRecords.nonEmpty) {
       val rst = shapeRecords.head.getDataFields
-      println("Map got for (%f,%f) : %s", x_coord, y_coord, rst)
+      println("Map got for (%f,%f) : %s".format(x_coord, y_coord, rst))
       return rst
     }
+    println("Nothing found in the QuadTree")
     Map[String, Double]()
   }
 
