@@ -229,7 +229,7 @@ object RaceProbabilityWithCSV extends App {
       xmin = -179.23108599999995, xmax = 179.85968100000002, ymin=17.83150900000004, ymax = 71.44105900000005
     )
     // Do a for each loop to generate objects and create tree index
-    val shapeDataSet:Array[ShapeRecord[Double]] = dataFrame.select("WKT",
+    val shapeDataSet = dataFrame.select("WKT",
       "DP0110001",
       "DP0110002",
       "DP0110011",
@@ -237,7 +237,7 @@ object RaceProbabilityWithCSV extends App {
       "DP0110013",
       "DP0110014",
       "DP0110015",
-      "DP0110017").collect.map({row =>
+      "DP0110017").map({row =>
 
       val WKTString = row.getAs[String]("WKT").toString
       val total = row.getAs[Double]("DP0110001")
@@ -274,7 +274,7 @@ object RaceProbabilityWithCSV extends App {
       scan.setAttribute(Scan.HINT_LOOKAHEAD, Bytes.toBytes(2))
       scan.setFilter(new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
       val scanRst = sc.hbase[String]("machineLearn2012", Set("location", "username"), scan)
-      scanRst.map({ case (k, v) =>
+      val userProbsArray = scanRst.collect().map({ case (k, v) =>
 
         val uid = k
         val locationsAtDifferentLevel = v("location")
@@ -342,7 +342,10 @@ object RaceProbabilityWithCSV extends App {
             })
         })
         uid -> record
-      }).toHBase("machineLearn2012")
+      })
+
+      sc.parallelize(userProbsArray).toHBase("machineLearn2012")
+
       startRowPrefix += 1
     }
   }
