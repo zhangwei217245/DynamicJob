@@ -37,7 +37,9 @@ object RaceProbabilityWithCSV extends App {
     })
 
     if (shapeRecords!=null && shapeRecords.nonEmpty) {
-      return shapeRecords.head.getDataFields
+      val rst = shapeRecords.head.getDataFields
+      println("Map got for (%f,%f) : %s", x_coord, y_coord, rst)
+      return rst
     }
     Map[String, Double]()
   }
