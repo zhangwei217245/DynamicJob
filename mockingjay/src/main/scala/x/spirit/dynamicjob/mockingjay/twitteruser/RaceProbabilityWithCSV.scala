@@ -297,7 +297,7 @@ object RaceProbabilityWithCSV extends App {
             var raceProbMap = getRaceProbabilityFromCSVFile(quadTree, x, y)
 
             if (raceProbMap.isEmpty){
-              shapeDataSet.filter({shpRec=>shpRec.covers(x, y)}).foreach({shpRec =>
+              shapeDataSet.filter({shpRec=>shpRec.covers(x, y)}).collect().foreach({shpRec =>
                 raceProbMap = shpRec.getDataFields
                 println("ShapeRecord Found outside of QuadTree for (%f, %f) : %s".format(x, y, raceProbMap))
               })
