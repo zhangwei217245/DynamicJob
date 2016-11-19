@@ -4,8 +4,9 @@ import scala.collection._
 /**
   * Created by zhangwei on 11/18/16.
   */
-class QuadTreeIndex[A <% (Int)=>Double](xmin:Double,xmax:Double,
-                                        ymin:Double,ymax:Double, MaxObjs:Int = 100) {
+class QuadTreeIndex[A](xmin:Double,xmax:Double,
+                                        ymin:Double,ymax:Double, MaxObjs:Int = 100)
+                      (implicit ev$1: A => ShapeRecord[Double]) {
 
 
   private class Node(cx:Double,cy:Double,sx:Double,sy:Double,
@@ -77,7 +78,7 @@ class QuadTreeIndex[A <% (Int)=>Double](xmin:Double,xmax:Double,
     if(n.children==null) {
       ret ++= n.objects.filter(o => distance(o,obj)<radius)
     } else {
-      for(child <- n.children; if(!child.overlap(obj,radius)))
+      for(child <- n.children; if !child.overlap(obj,radius))
         searchRecur(obj,radius,child,ret)
     }
   }
