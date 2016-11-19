@@ -57,6 +57,7 @@ object RaceProbabilityWithCSV extends App {
       keySuffix = keySuffix.take(1).toUpperCase+keySuffix.drop(1).toLowerCase
     }
     val sparkConf = new SparkConf().setAppName(this.getClass.getSimpleName)
+        .set("spark.kryoserializer.buffer.max","90000")
     val sc = new SparkContext(sparkConf)
 
     implicit val config = HBaseConfig(
