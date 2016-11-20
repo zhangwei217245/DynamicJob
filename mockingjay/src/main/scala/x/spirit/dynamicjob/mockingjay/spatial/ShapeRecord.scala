@@ -6,20 +6,27 @@ import geotrellis.vector.{Geometry, Point}
 /**
   * Created by zhangwei on 11/18/16.
   */
-class ShapeRecord[T](geometry: Geometry, dataFields: Map[String, T]) extends scala.Serializable {
+class ShapeRecord[T](geometry: Geometry, dataFields: Map[String, T], geoid10:String) extends scala.Serializable {
 
-  val centroid = geometry.centroid;
+  val centroid = geometry.centroid
+
+  def getGeoID10:String = geoid10
 
   def covers(x:Double, y:Double):Boolean = geometry.jtsGeom.covers(Point(x,y).jtsGeom)
 
   def getDataFields:Map[String, T] = dataFields
 
-  def apply(i: Int): Double = {
+  def getCentroidCoordinates:(Double, Double)={
     val cpoint = centroid.as[Point].getOrElse(Point(0.0, 0.0))
+    (cpoint.x,cpoint.y)
+  }
+
+  def apply(i: Int): Double = {
+    val cpoint = getCentroidCoordinates
     if (i == 0) {
-      cpoint.x
+      cpoint._1
     } else {
-      cpoint.y
+      cpoint._2
     }
   }
 

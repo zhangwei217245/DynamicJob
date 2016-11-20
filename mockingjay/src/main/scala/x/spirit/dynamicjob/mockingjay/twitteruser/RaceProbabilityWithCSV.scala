@@ -5,6 +5,7 @@ import geotrellis.vector.io.wkt.WKT
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.filter.PrefixFilter
 import org.apache.hadoop.hbase.util.Bytes
+import org.apache.spark.graphx.Graph
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.types._
 import org.apache.spark.{SparkConf, SparkContext}
@@ -28,22 +29,6 @@ object RaceProbabilityWithCSV extends App {
       "pcthispanic" -> pctRst(4),
       "pct2prace" -> pctRst(5)
     )
-  }
-
-  def getRaceProbabilityFromCSVFile(quadTree:QuadTreeIndex[ShapeRecord[Double]], x_coord: Double, y_coord: Double)
-  :Map[String, Double] = {
-
-    val shapeRecords = quadTree.searchByCoordinates(x_coord, y_coord).filter({shapeRecord=>
-      shapeRecord.covers(x_coord, y_coord)
-    })
-
-    if (shapeRecords!=null && shapeRecords.nonEmpty) {
-      val rst = shapeRecords.head.getDataFields
-      println("Map got for (%f,%f) : %s".format(x_coord, y_coord, rst))
-      return rst
-    }
-    println("Nothing found in the QuadTree")
-    Map[String, Double]()
   }
 
 
@@ -225,11 +210,11 @@ object RaceProbabilityWithCSV extends App {
 
     val dataFrame = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").schema(schema).load(csvPath)
 
-    val quadTree : QuadTreeIndex[ShapeRecord[Double]] = new QuadTreeIndex[ShapeRecord[Double]](
+    val quadTree : QuadTreeIndex[(Double,Double,String)] = new QuadTreeIndex[(Double,Double,String)](
       xmin = -179.23108599999995, xmax = 179.85968100000002, ymin=17.83150900000004, ymax = 71.44105900000005
     )
     // Do a for each loop to generate objects and create tree index
-    val shapeDataSet = dataFrame.select("WKT",
+    val shapeRecordPairRDD = dataFrame.select("WKT","GEOID10",
       "DP0110001",
       "DP0110002",
       "DP0110011",
@@ -240,6 +225,7 @@ object RaceProbabilityWithCSV extends App {
       "DP0110017").map({row =>
 
       val WKTString = row.getAs[String]("WKT").toString
+      val GEOID10 = row.getAs[String]("GEOID10").toString
       val total = row.getAs[Double]("DP0110001")
       val pcthispanic = 100.0 * row.getAs[Double]("DP0110002")/total
       val pctwhite = 100.0 * row.getAs[Double]("DP0110011")/total
@@ -256,15 +242,18 @@ object RaceProbabilityWithCSV extends App {
         "pcthispanic" -> pcthispanic,
         "pct2prace" -> pct2prace
       )
-      val sr = new ShapeRecord[Double](geom, dataFields)
-      quadTree.add(sr)
-      sr
+      val sr = new ShapeRecord[Double](geom, dataFields, GEOID10)
+      GEOID10 -> sr
     })
 
-//    shapeDataSet.foreach({ sr =>
-//      quadTree.add(sr)
-//    })
 
+    shapeRecordPairRDD.map({case (geoID, shapeRecord)=>
+        val centroid = shapeRecord.getCentroidCoordinates
+      (centroid._1,centroid._2,geoID)
+    }).collect().foreach({
+      case tuple =>
+      quadTree.add(tuple)
+    })
 
     while (startRowPrefix <= 99) {
       println("Start row prefix = %d".format(startRowPrefix))
@@ -294,11 +283,17 @@ object RaceProbabilityWithCSV extends App {
             val x = jsonArr.getDouble(0)
             val y = jsonArr.getDouble(1)
 
-            var raceProbMap = getRaceProbabilityFromCSVFile(quadTree, x, y)
+            var raceProbMap : Map[String,Double] = Map[String,Double]()
+            quadTree.searchByCoordinates(x,y).foreach({tuple=>
+              val lookupRst = shapeRecordPairRDD.lookup(tuple._3)
+              if (lookupRst.nonEmpty && raceProbMap == null){
+                raceProbMap = lookupRst.head.getDataFields
+              }
+            })
 
             if (raceProbMap.isEmpty){
-              shapeDataSet.filter({shpRec=>shpRec.covers(x, y)}).collect().foreach({shpRec =>
-                raceProbMap = shpRec.getDataFields
+              shapeRecordPairRDD.filter({pair=>pair._2.covers(x, y)}).collect().foreach({pair =>
+                raceProbMap = pair._2.getDataFields
                 println("ShapeRecord Found outside of QuadTree for (%f, %f) : %s".format(x, y, raceProbMap))
               })
             }

@@ -6,10 +6,10 @@ import scala.collection._
   */
 class QuadTreeIndex[A](xmin:Double,xmax:Double,
                                         ymin:Double,ymax:Double, MaxObjs:Int = 100)
-                      (implicit ev$1: A => ShapeRecord[Double]) extends scala.Serializable{
+                      (implicit ev$1: A => (Double,Double,String)) extends scala.Serializable{
 
 
-  private class Node(cx:Double,cy:Double,sx:Double,sy:Double,
+  class Node(cx:Double,cy:Double,sx:Double,sy:Double,
                      val objects:mutable.Buffer[A],var children:Array[Node]) extends scala.Serializable {
     def getCx:Double = cx
     def getCy:Double = cy
@@ -20,7 +20,7 @@ class QuadTreeIndex[A](xmin:Double,xmax:Double,
       (if(x>cx) 1 else 0)+(if(y>cy) 2 else 0)
     }
     def whichChild(obj:A):Int = {
-      whichChild(obj(0), obj(1))
+      whichChild(obj._1, obj._2)
     }
     def makeChildren() {
       children = Array(
@@ -31,8 +31,8 @@ class QuadTreeIndex[A](xmin:Double,xmax:Double,
       )
     }
     def overlap(obj:A,radius:Double):Boolean = {
-      obj(0)-radius<cx+sx/2 && obj(0)+radius>cx-sx/2 &&
-        obj(1)-radius<cy+sy/2 && obj(1)+radius>cy-sy/2
+      obj._1-radius<cx+sx/2 && obj._1+radius>cx-sx/2 &&
+        obj._2-radius<cy+sy/2 && obj._2+radius>cy-sy/2
     }
   }
 
@@ -90,8 +90,8 @@ class QuadTreeIndex[A](xmin:Double,xmax:Double,
   }
 
   private def distance(a:A,b:A):Double = {
-    val dx = a(0)-b(0)
-    val dy = a(1)-b(1)
+    val dx = a._1-b._1
+    val dy = a._2-b._2
     math.sqrt(dx*dx+dy*dy)
   }
 }
