@@ -244,7 +244,7 @@ object RaceProbabilityWithCSV extends App {
       )
       val sr = new ShapeRecord[Double](geom, dataFields, GEOID10)
       GEOID10 -> sr
-    })
+    }).sortByKey()
 
 
     shapeRecordPairRDD.map({case (geoID, shapeRecord)=>
@@ -285,10 +285,12 @@ object RaceProbabilityWithCSV extends App {
 
             var raceProbMap : Map[String,Double] = Map[String,Double]()
             quadTree.searchByCoordinates(x,y).foreach({tuple=>
-              val lookupRst = shapeRecordPairRDD.lookup(tuple._3)
-              if (lookupRst.nonEmpty && raceProbMap.isEmpty){
-                raceProbMap = lookupRst.head.getDataFields
-                println("ShapeRecord found in the QuadTree for (%f, %f) : %s".format(tuple._1,tuple._2,raceProbMap))
+              if (raceProbMap.isEmpty) {
+                val lookupRst = shapeRecordPairRDD.lookup(tuple._3)
+                if (lookupRst.nonEmpty){
+                  raceProbMap = lookupRst.head.getDataFields
+                  println("ShapeRecord found in the QuadTree for (%f, %f) : %s".format(tuple._1,tuple._2,raceProbMap))
+                }
               }
             })
 
