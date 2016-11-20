@@ -288,6 +288,7 @@ object RaceProbabilityWithCSV extends App {
               val lookupRst = shapeRecordPairRDD.lookup(tuple._3)
               if (lookupRst.nonEmpty && raceProbMap == null){
                 raceProbMap = lookupRst.head.getDataFields
+                println("ShapeRecord found in the QuadTree for (%f, %f) : %s".format(tuple._1,tuple._2,raceProbMap))
               }
             })
 
