@@ -5,7 +5,7 @@ import scala.collection._
   * Created by zhangwei on 11/18/16.
   */
 class QuadTreeIndex[A](xmin:Double,xmax:Double,
-                                        ymin:Double,ymax:Double, MaxObjs:Int = 100)
+                                        ymin:Double,ymax:Double, MaxObjs:Int = 10)
                       (implicit ev$1: A => (Double,Double,String)) extends scala.Serializable{
 
 
