@@ -289,7 +289,16 @@ object RaceProbabilityWithCSV extends App {
           }).head
           uid -> (lastName, coordinatesAtPrecision)
       }).collect().map({case (uid, (lastName, coord))=>
-          (uid, lastName, quadTree.searchByCoordinates(coord._1, coord._2).head._3, coord)
+          var geoid10 = "notfound"
+          if (coord._1!=0.0 && coord._2!=0.0) {
+            val shapeRecBuffer = quadTree.searchByCoordinates(coord._1, coord._2)
+            if (shapeRecBuffer.nonEmpty) {
+              geoid10 = shapeRecBuffer.head._3
+            } else {
+              geoid10 = shapeRecordPairRDD.filter({pair=>pair._2.covers(coord._1, coord._2)}).first()._1
+            }
+          }
+          (uid, lastName, geoid10, coord)
       }).groupBy(_._3)
 
       shapeRecordPairRDD.map({case (geoid10, shpRecord)=>
