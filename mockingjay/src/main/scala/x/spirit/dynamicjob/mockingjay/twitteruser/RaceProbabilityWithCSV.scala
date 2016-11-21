@@ -267,7 +267,7 @@ object RaceProbabilityWithCSV extends App {
       val scanRst = sc.hbase[String]("machineLearn2012", Set("location", "username"), scan)
 
 
-      val userLocalRegionMap = scanRst.map({ case (uid, values) =>
+      val userLocalMap = scanRst.map({ case (uid, values) =>
           val lastName = values("username").filter(_._1.equalsIgnoreCase("lastName")).map({ case (col, nameBytes) =>
             Bytes.toString(nameBytes).toUpperCase
           }).head
@@ -288,57 +288,48 @@ object RaceProbabilityWithCSV extends App {
               (x, y)
           }).head
           uid -> (lastName, coordinatesAtPrecision)
-      }).collect().map({case (uid, (lastName, coord))=>
-          var geoid10 = "notfound"
-          if (coord._1!=0.0 && coord._2!=0.0) {
-            val shapeRecBuffer = quadTree.searchByCoordinates(coord._1, coord._2)
-            if (shapeRecBuffer.nonEmpty) {
-              geoid10 = shapeRecBuffer.head._3
-            } else {
-              geoid10 = shapeRecordPairRDD.filter({pair=>pair._2.covers(coord._1, coord._2)}).first()._1
-            }
-          }
-          (uid, lastName, geoid10, coord)
-      }).groupBy(_._3)
+      }).collect()
 
       shapeRecordPairRDD.map({case (geoid10, shpRecord)=>
-          val usersRegions = userLocalRegionMap.getOrElse(geoid10, Array.empty[(String, String, String,(Double, Double))])
+          val values = userLocalMap.filter({rec =>
+            val x = rec._2._2._1
+            val y = rec._2._2._2
+            shpRecord.covers(x,y)
+          }).map({ rec =>
 
-          val values = usersRegions.map({case row =>
-              val uid = row._1
-              val lastName = row._2
-              var finalProbMap:Map[String,Double] = getSurnameProbability(surnameMap, lastName)
-              var raceProbMap : Map[String,Double] = shpRecord.getDataFields
-              if (raceProbMap.nonEmpty) {
-                finalProbMap = raceProbMap.map({ case (kk, vv) =>
-                  var snProb = finalProbMap.getOrElse(kk, 0.0d)
-                  if (snProb == 0.0d) {
-                    snProb = 0.01d
+            val uid = rec._1
+            val lastName = rec._2._1
+            var finalProbMap:Map[String,Double] = getSurnameProbability(surnameMap, lastName)
+            var raceProbMap : Map[String,Double] = shpRecord.getDataFields
+            if (raceProbMap.nonEmpty) {
+              finalProbMap = raceProbMap.map({ case (kk, vv) =>
+                var snProb = finalProbMap.getOrElse(kk, 0.0d)
+                if (snProb == 0.0d) {
+                  snProb = 0.01d
+                }
+                var racProb = vv
+                if (racProb == 0.0d) {
+                  racProb = 0.01d
+                }
+
+                val compoundProb = racProb * snProb
+                (kk, compoundProb)
+              })
+            }
+            val denominator = finalProbMap.values.sum
+            val locationProb = Map[String, Map[String, Array[Byte]]](
+              key -> finalProbMap
+                .map({ case (fieldname, numerator) =>
+                  var prob = numerator
+                  if (denominator != 0.0d) {
+                    prob = numerator / denominator
                   }
-
-                  var racProb = vv
-                  if (racProb == 0.0d) {
-                    racProb = 0.01d
-                  }
-
-                  val compoundProb = racProb * snProb
-                  (kk, compoundProb)
+                  fieldname -> Bytes.toBytes(prob)
                 })
-              }
-              val denominator = finalProbMap.values.sum
-              val location = Map[String, Map[String, Array[Byte]]](
-                key -> finalProbMap
-                  .map({ case (fieldname, numerator) =>
-                    var prob = numerator
-                    if (denominator != 0.0d) {
-                      prob = numerator / denominator
-                    }
-                    fieldname -> Bytes.toBytes(prob)
-                  })
-              )
-              uid -> location
+            )
+            uid -> locationProb
           })
-          geoid10->values
+          geoid10 -> values
       }).flatMap({x=> x._2}).toHBase("machineLearn2012")
 
 
