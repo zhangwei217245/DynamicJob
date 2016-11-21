@@ -208,10 +208,12 @@ object RaceProbabilityWithCSV extends App {
     }
 
 
-    val dataFrame = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").schema(schema).load(csvPath)
+    val dataFrame = sqlContext.read.format("com.databricks.spark.csv").option("header", "true")
+      .schema(schema).load(csvPath)
 
     val quadTree : QuadTreeIndex[(Double,Double,String)] = new QuadTreeIndex[(Double,Double,String)](
-      xmin = -179.23108599999995, xmax = 179.85968100000002, ymin=17.83150900000004, ymax = 71.44105900000005
+      xmin = -179.23108599999995, xmax = 179.85968100000002, ymin=17.83150900000004, ymax = 71.44105900000005,
+      MaxObjs = 1
     )
     // Do a for each loop to generate objects and create tree index
     val shapeRecordPairRDD = dataFrame.select("WKT","GEOID10",
@@ -256,88 +258,157 @@ object RaceProbabilityWithCSV extends App {
     })
 
     while (startRowPrefix <= 99) {
-      println("Start row prefix = %d".format(startRowPrefix))
+      System.out.println("Start row prefix = %d".format(startRowPrefix))
       val scan = new Scan()
       scan.setCaching(100)
       scan.setCacheBlocks(true)
       scan.setAttribute(Scan.HINT_LOOKAHEAD, Bytes.toBytes(2))
       scan.setFilter(new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
       val scanRst = sc.hbase[String]("machineLearn2012", Set("location", "username"), scan)
-      val userProbsArray = scanRst.collect().map({ case (k, v) =>
 
-        val uid = k
-        val locationsAtDifferentLevel = v("location")
-        val username = v("username").map({ case (col, nameBytes) =>
-          (col, Bytes.toString(nameBytes).toUpperCase)
-        })
 
-        val record = locationsAtDifferentLevel.filter(_._1.equalsIgnoreCase(precisionStr)).map({ case (precision, jsonBytes) =>
+      val userLocalRegionMap = scanRst.map({ case (uid, values) =>
+          val lastName = values("username").filter(_._1.equalsIgnoreCase("lastName")).map({ case (col, nameBytes) =>
+            Bytes.toString(nameBytes).toUpperCase
+          }).head
 
-          val snProbMap = getSurnameProbability(surnameMap, username.getOrElse("lastName", ""))
-
-          var finalProbMap = snProbMap
-
-          try {
-            val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
-
-            val x = jsonArr.getDouble(0)
-            val y = jsonArr.getDouble(1)
-
-            var raceProbMap : Map[String,Double] = Map[String,Double]()
-            quadTree.searchByCoordinates(x,y).foreach({tuple=>
-              if (raceProbMap.isEmpty) {
-                val lookupRst = shapeRecordPairRDD.lookup(tuple._3)
-                if (lookupRst.nonEmpty){
-                  raceProbMap = lookupRst.head.getDataFields
-                  println("ShapeRecord found in the QuadTree for (%f, %f) : %s".format(tuple._1,tuple._2,raceProbMap))
-                }
+          val coordinatesAtPrecision = values("location").filter(_._1.equalsIgnoreCase(precisionStr)).map({
+            case (precision, jsonBytes) =>
+              var x:Double = 0.0
+              var y:Double = 0.0
+              try {
+                val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
+                x = jsonArr.getDouble(0)
+                y = jsonArr.getDouble(1)
+              } catch {
+                case jsone: JSONException =>
+                  println("uid : %s , coord: %s"
+                    .format(uid, Bytes.toString(jsonBytes)))
               }
-            })
+              (x, y)
+          }).head
+          uid -> (lastName, coordinatesAtPrecision)
+      }).collect().map({case (uid, (lastName, coord))=>
+          (uid, lastName, quadTree.searchByCoordinates(coord._1, coord._2).head._3, coord)
+      }).groupBy(_._3)
 
-            if (raceProbMap.isEmpty){
-              shapeRecordPairRDD.filter({pair=>pair._2.covers(x, y)}).collect().foreach({pair =>
-                raceProbMap = pair._2.getDataFields
-                println("ShapeRecord Found outside of QuadTree for (%f, %f) : %s".format(x, y, raceProbMap))
-              })
-            }
+      shapeRecordPairRDD.map({case (geoid10, shpRecord)=>
+          val usersRegions = userLocalRegionMap.getOrElse(geoid10, Array.empty[(String, String, String,(Double, Double))])
 
-            if (raceProbMap.nonEmpty) {
-              finalProbMap = raceProbMap.map({ case (kk, vv) =>
-                var snProb = snProbMap.getOrElse(kk, 0.0d)
-                if (snProb == 0.0d) {
-                  snProb = 0.01d
-                }
+          val values = usersRegions.map({case row =>
+              val uid = row._1
+              val lastName = row._2
+              var finalProbMap:Map[String,Double] = getSurnameProbability(surnameMap, lastName)
+              var raceProbMap : Map[String,Double] = shpRecord.getDataFields
+              if (raceProbMap.nonEmpty) {
+                finalProbMap = raceProbMap.map({ case (kk, vv) =>
+                  var snProb = finalProbMap.getOrElse(kk, 0.0d)
+                  if (snProb == 0.0d) {
+                    snProb = 0.01d
+                  }
 
-                var racProb = vv
-                if (racProb == 0.0d) {
-                  racProb = 0.01d
-                }
+                  var racProb = vv
+                  if (racProb == 0.0d) {
+                    racProb = 0.01d
+                  }
 
-                val compoundProb = racProb * snProb
-                (kk, compoundProb)
-              })
-            }
-          } catch {
-            case jsone: JSONException =>
-              println("uid : %s , coord: %s"
-                .format(uid, Bytes.toString(jsonBytes)))
-          }
-
-          val denominator = finalProbMap.values.sum
-
-          key -> finalProbMap
-            .map({ case (fieldname, numerator) =>
-              var prob = numerator
-              if (denominator != 0.0d) {
-                prob = numerator / denominator
+                  val compoundProb = racProb * snProb
+                  (kk, compoundProb)
+                })
               }
-              fieldname -> Bytes.toBytes(prob)
-            })
-        })
-        uid -> record
-      })
+              val denominator = finalProbMap.values.sum
+              val location = Map[String, Map[String, Array[Byte]]](
+                key -> finalProbMap
+                  .map({ case (fieldname, numerator) =>
+                    var prob = numerator
+                    if (denominator != 0.0d) {
+                      prob = numerator / denominator
+                    }
+                    fieldname -> Bytes.toBytes(prob)
+                  })
+              )
+              uid -> location
+          })
+          geoid10->values
+      }).flatMap({x=> x._2}).toHBase("machineLearn2012")
 
-      sc.parallelize(userProbsArray).toHBase("machineLearn2012")
+
+//      val userProbsArray = scanRst.collect.map({ case (k, v) =>
+//
+//        val uid = k
+//        val locationsAtDifferentLevel = v("location")
+//        val username = v("username").map({ case (col, nameBytes) =>
+//          (col, Bytes.toString(nameBytes).toUpperCase)
+//        })
+//
+//        val record = locationsAtDifferentLevel.filter(_._1.equalsIgnoreCase(precisionStr))
+//          .map({case (precision, jsonBytes) =>
+//
+//          val snProbMap = getSurnameProbability(surnameMap, username.getOrElse("lastName", ""))
+//
+//          var finalProbMap = snProbMap
+//
+//          try {
+//            val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
+//
+//            val x = jsonArr.getDouble(0)
+//            val y = jsonArr.getDouble(1)
+//
+//            var raceProbMap : Map[String,Double] = Map[String,Double]()
+//            quadTree.searchByCoordinates(x,y).foreach({tuple=>
+//              if (raceProbMap.isEmpty) {
+//                val lookupRst = shapeRecordPairRDD.lookup(tuple._3)
+//                if (lookupRst.nonEmpty){
+//                  raceProbMap = lookupRst.head.getDataFields
+//                  println("ShapeRecord found in the QuadTree for (%f, %f) : %s".format(tuple._1,tuple._2,raceProbMap))
+//                }
+//              }
+//            })
+//
+//            if (raceProbMap.isEmpty){
+//              shapeRecordPairRDD.filter({pair=>pair._2.covers(x, y)}).collect().foreach({pair =>
+//                raceProbMap = pair._2.getDataFields
+//                println("ShapeRecord Found outside of QuadTree for (%f, %f) : %s".format(x, y, raceProbMap))
+//              })
+//            }
+//
+//            if (raceProbMap.nonEmpty) {
+//              finalProbMap = raceProbMap.map({ case (kk, vv) =>
+//                var snProb = finalProbMap.getOrElse(kk, 0.0d)
+//                if (snProb == 0.0d) {
+//                  snProb = 0.01d
+//                }
+//
+//                var racProb = vv
+//                if (racProb == 0.0d) {
+//                  racProb = 0.01d
+//                }
+//
+//                val compoundProb = racProb * snProb
+//                (kk, compoundProb)
+//              })
+//            }
+//          } catch {
+//            case jsone: JSONException =>
+//              println("uid : %s , coord: %s"
+//                .format(uid, Bytes.toString(jsonBytes)))
+//          }
+//
+//          val denominator = finalProbMap.values.sum
+//
+//          key -> finalProbMap
+//            .map({ case (fieldname, numerator) =>
+//              var prob = numerator
+//              if (denominator != 0.0d) {
+//                prob = numerator / denominator
+//              }
+//              fieldname -> Bytes.toBytes(prob)
+//            })
+//        })
+//        uid -> record
+//      })
+//
+//      sc.parallelize(userProbsArray).toHBase("machineLearn2012")
 
       startRowPrefix += 1
     }
