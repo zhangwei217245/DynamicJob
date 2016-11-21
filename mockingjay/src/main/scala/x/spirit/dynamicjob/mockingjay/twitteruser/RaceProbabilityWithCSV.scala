@@ -211,10 +211,6 @@ object RaceProbabilityWithCSV extends App {
     val dataFrame = sqlContext.read.format("com.databricks.spark.csv").option("header", "true")
       .schema(schema).load(csvPath)
 
-    val quadTree : QuadTreeIndex[(Double,Double,String)] = new QuadTreeIndex[(Double,Double,String)](
-      xmin = -179.23108599999995, xmax = 179.85968100000002, ymin=17.83150900000004, ymax = 71.44105900000005,
-      MaxObjs = 1
-    )
     // Do a for each loop to generate objects and create tree index
     val shapeRecordPairRDD = dataFrame.select("WKT","GEOID10",
       "DP0110001",
@@ -248,14 +244,17 @@ object RaceProbabilityWithCSV extends App {
       GEOID10 -> sr
     }).sortByKey()
 
-
-    shapeRecordPairRDD.map({case (geoID, shapeRecord)=>
-        val centroid = shapeRecord.getCentroidCoordinates
-      (centroid._1,centroid._2,geoID)
-    }).collect().foreach({
-      case tuple =>
-      quadTree.add(tuple)
-    })
+//    val quadTree : QuadTreeIndex[(Double,Double,String)] = new QuadTreeIndex[(Double,Double,String)](
+//      xmin = -179.23108599999995, xmax = 179.85968100000002, ymin=17.83150900000004, ymax = 71.44105900000005,
+//      MaxObjs = 1
+//    )
+//    shapeRecordPairRDD.map({case (geoID, shapeRecord)=>
+//        val centroid = shapeRecord.getCentroidCoordinates
+//      (centroid._1,centroid._2,geoID)
+//    }).collect().foreach({
+//      case tuple =>
+//      quadTree.add(tuple)
+//    })
 
     while (startRowPrefix <= 99) {
       System.out.println("Start row prefix = %d".format(startRowPrefix))
