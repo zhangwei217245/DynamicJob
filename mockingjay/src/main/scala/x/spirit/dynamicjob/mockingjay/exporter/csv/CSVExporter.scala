@@ -29,6 +29,59 @@ object CSVExporter extends App{
     val sqlContext = new SQLContext(sc)
 
 
+    val headers = Array(
+      "uid",
+      "username:firstName",
+      "username:lastName",
+      "Gender:gender",
+      "Gender:female_prob",
+      "Gender:male_prob",
+      "Gender:year_prob",
+      "Age:prob",
+      "Age:year",
+      "political:sumblue",
+      "political:sumred",
+      "political:type",
+      "location:State_geoid",
+      "location:State_name",
+      "location:state",
+      "Coord:state_WKT",
+      "Coord:state_x",
+      "Coord:state_y",
+      "location:County_geoid",
+      "location:County_name",
+      "location:county",
+      "Coord:county_WKT",
+      "Coord:county_x",
+      "Coord:county_y",
+      "location:Tract_geoid",
+      "location:Tract_name",
+      "location:tract",
+      "Coord:tract_WKT",
+      "Coord:tract_x",
+      "Coord:tract_y",
+      "Race_State:pct2prace",
+      "Race_State:pctaian",
+      "Race_State:pctapi",
+      "Race_State:pctblack",
+      "Race_State:pcthispanic",
+      "Race_State:pctwhite",
+      "Race_County:pct2prace",
+      "Race_County:pctaian",
+      "Race_County:pctapi",
+      "Race_County:pctblack",
+      "Race_County:pcthispanic",
+      "Race_County:pctwhite",
+      "Race_Tract:pct2prace",
+      "Race_Tract:pctaian",
+      "Race_Tract:pctapi",
+      "Race_Tract:pctblack",
+      "Race_Tract:pcthispanic",
+      "Race_Tract:pctwhite"
+    )
+
+    val headerStr = headers.map({row=> "\"%s\"".format(row)}).mkString(",")
+
     // READ state.csv
     val statePath = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitterCSV/state.csv"
 
@@ -90,8 +143,6 @@ object CSVExporter extends App{
         "username"
       )
       val scanRst = sc.hbase[Array[Byte]]("machineLearn2012", columnFamilies , scan)
-
-      var headerStr = ""
 
       val dfBaseRdd = scanRst.map({bigRow=>
         val uid = bigRow._1
@@ -177,9 +228,8 @@ object CSVExporter extends App{
           "Coord:county_y" -> "%1$.10f".format(y_county),
           "uid" -> uid
         )
-        headerStr = tmpMap.toList.sortBy(_._1).map({row=> "\"%s\"".format(row._1)}).mkString(",")
-        println(headerStr)
-        tmpMap.toList.sortBy(_._1).map(_._2).mkString(",")
+
+        headers.map({row => tmpMap.getOrElse("row","")}).mkString(",")
       })
 
       val headerRDD = sc.makeRDD(Seq[String](headerStr))
