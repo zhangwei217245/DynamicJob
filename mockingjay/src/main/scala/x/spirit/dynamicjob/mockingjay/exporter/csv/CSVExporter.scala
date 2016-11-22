@@ -177,7 +177,8 @@ object CSVExporter extends App{
           "Coord:county_y" -> "%1$.10f".format(y_county),
           "uid" -> uid
         )
-        headerStr = tmpMap.toList.sortBy(_._1).map({row=> "\"%s\"".format(row._2)}).mkString(",")
+        headerStr = tmpMap.toList.sortBy(_._1).map({row=> "\"%s\"".format(row._1)}).mkString(",")
+        println(headerStr)
         tmpMap.toList.sortBy(_._1).map(_._2).mkString(",")
       })
 
