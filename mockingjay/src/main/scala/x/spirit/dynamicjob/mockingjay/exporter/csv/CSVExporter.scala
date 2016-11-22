@@ -228,8 +228,7 @@ object CSVExporter extends App{
           "Coord:county_y" -> "%1$.10f".format(y_county),
           "uid" -> uid
         )
-
-        headers.map({row => tmpMap.getOrElse("row","")}).mkString(",")
+        headers.map({row => tmpMap.getOrElse(row,"")}).mkString(",")
       })
 
       val headerRDD = sc.makeRDD(Seq[String](headerStr))
