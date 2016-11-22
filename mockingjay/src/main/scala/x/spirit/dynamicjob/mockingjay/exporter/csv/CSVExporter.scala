@@ -91,6 +91,8 @@ object CSVExporter extends App{
       )
       val scanRst = sc.hbase[Array[Byte]]("machineLearn2012", columnFamilies , scan)
 
+      var headerStr = ""
+
       val dfBaseRdd = scanRst.map({bigRow=>
         val uid = bigRow._1
 
@@ -102,8 +104,6 @@ object CSVExporter extends App{
 
         var x_tract:Double = 0.0d
         var y_tract:Double = 0.0d
-
-
 
         val cfMap = bigRow._2 .map({cfPair =>
           val cfName = cfPair._1
@@ -158,28 +158,33 @@ object CSVExporter extends App{
                 }
                 colName = "location:tract"
               }
+              value = "\"%s\"".format(value.replace("\"","\"\""))
             }
             colName -> value
           })
           cfName -> colMap
         })
 
-        uid -> (cfMap.flatMap(_._2) ++ Map[String, String](
-          "Coord:tract_WKT" -> "POINT(%1$.10f %2$.10f)".format(x_tract, y_tract),
+        val tmpMap = cfMap.flatMap(_._2) ++ Map[String, String](
+          "Coord:tract_WKT" -> "\"POINT(%1$.10f %2$.10f)\"".format(x_tract, y_tract),
           "Coord:tract_x" -> "%1$.10f".format(x_tract),
           "Coord:tract_y" -> "%1$.10f".format(y_tract),
-          "Coord:state_WKT" -> "POINT(%1$.10f %2$.10f)".format(x_state, y_state),
+          "Coord:state_WKT" -> "\"POINT(%1$.10f %2$.10f)\"".format(x_state, y_state),
           "Coord:state_x" -> "%1$.10f".format(x_state),
           "Coord:state_y" -> "%1$.10f".format(y_state),
-          "Coord:county_WKT" -> "POINT(%1$.10f %2$.10f)".format(x_county, y_county),
+          "Coord:county_WKT" -> "\"POINT(%1$.10f %2$.10f)\"".format(x_county, y_county),
           "Coord:county_x" -> "%1$.10f".format(x_county),
           "Coord:county_y" -> "%1$.10f".format(y_county),
           "uid" -> uid
-        ))
-      }).flatMap(_._2)
+        )
+        headerStr = tmpMap.toList.sortBy(_._1).map({row=> "\"%s\"".format(row._2)}).mkString(",")
+        tmpMap.toList.sortBy(_._1).map(_._2).mkString(",")
+      })
 
-      sqlContext.createDataFrame(dfBaseRdd).write.format("com.databricks.spark.csv").option("header", "true")
-        .save("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitterOutput/csv/%s.csv".format(state))
+      val headerRDD = sc.makeRDD(Seq[String](headerStr))
+
+      headerRDD.union(dfBaseRdd).saveAsTextFile("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitterOutput/csv/%s.csv"
+        .format(state))
 
     }
 
