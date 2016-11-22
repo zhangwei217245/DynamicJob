@@ -100,9 +100,9 @@ object AgeGenderPredictor extends App {
       val scanRst = sc.hbase[String]("machineLearn2012", Set("username"), scan)
       scanRst.map({ case (k, v) =>
         val uid = k;
-        val firstName = v("username").getOrElse("firstName", "");
+        val firstName = v("username").getOrElse("firstName", "").toUpperCase;
         // decide age
-        val nameYearGender = nameYearGenderMap.getOrElse(firstName, (1912L, "F", 0.0d));
+        val nameYearGender = nameYearGenderMap.getOrElse(firstName, (100L, "X", -0.001d));
 //        val age = Year.now().getValue.toLong - nameYearGender._1
         val year = nameYearGender._1
         val yearProb = nameYearGender._3;
