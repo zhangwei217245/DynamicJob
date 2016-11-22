@@ -47,6 +47,14 @@ object AgeGenderPredictor extends App {
           row.getAs[Long]("sum(occurance)")
           )
       }).collectAsMap
+
+    /**
+      * Possible Map Sample :
+      *
+      * Jane,(1921,F,49%)
+      * Jane,(2000,M,12%)
+      * Wei,(1912,M,99%)
+      */
     val nameYearGenderMap = nameMax.map({ case (k, v) =>
       val yearAndGenderRow = ageCSVDF.where("firstname='%s'".format(k)).where("occurance=%d".format(v._1))
         .select("year", "gender").first
@@ -67,6 +75,11 @@ object AgeGenderPredictor extends App {
 
     val genderCSVDF = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").schema(genderCSVSchema).load(genderCSVFile)
 
+    /**
+      * Map format:
+      *
+      * name, male_prob, female_prob
+      */
     val nameGenderMap = genderCSVDF.map({ row =>
       val name = row.getAs[String]("firstname");
       val total = row.getAs[Long]("occurrences").toDouble;

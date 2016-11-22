@@ -86,6 +86,8 @@ object RaceProbabilityWithCSV extends App {
     // READ tract.csv
     val tractPath = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitterCSV/tract.csv"
 
+    val tractName = "NAMELSAD10"
+
     val tractFieldName = Array("WKT","GEOID10","NAMELSAD10","ALAND10","AWATER10","INTPTLAT10","INTPTLON10",
       "DP0010001","DP0010002","DP0010003","DP0010004","DP0010005","DP0010006","DP0010007","DP0010008",
       "DP0010009","DP0010010","DP0010011","DP0010012","DP0010013","DP0010014","DP0010015","DP0010016",
@@ -123,6 +125,8 @@ object RaceProbabilityWithCSV extends App {
     // READ county.csv
     val countyPath = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitterCSV/county.csv"
 
+    val countyName = "NAMELSAD10"
+
     val countyFieldName = Array("WKT","GEOID10","NAMELSAD10","FUNCSTAT10","ALAND10","AWATER10","INTPTLAT10","INTPTLON10",
       "DP0010001","DP0010002","DP0010003","DP0010004","DP0010005","DP0010006","DP0010007","DP0010008","DP0010009",
       "DP0010010","DP0010011","DP0010012","DP0010013","DP0010014","DP0010015","DP0010016","DP0010017","DP0010018",
@@ -156,6 +160,8 @@ object RaceProbabilityWithCSV extends App {
 
     // READ state.csv
     val statePath = "hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitterCSV/state.csv"
+
+    val stateName = "NAME10"
 
     val stateFieldName = Array("WKT","GEOID10","STUSPS10","NAME10","ALAND10","AWATER10","INTPTLAT10","INTPTLON10",
       "DP0010001","DP0010002","DP0010003","DP0010004","DP0010005","DP0010006","DP0010007","DP0010008","DP0010009",
@@ -192,19 +198,23 @@ object RaceProbabilityWithCSV extends App {
     var precisionStr = "admin"
     var schema = stateSchema
     var csvPath = statePath
+    var geoName = stateName
 
     if (keySuffix.equalsIgnoreCase("state")){
       schema = stateSchema
       csvPath = statePath
       precisionStr = "admin"
+      geoName = stateName
     } else if (keySuffix.equalsIgnoreCase("county")){
       schema = countySchema
       csvPath = countyPath
       precisionStr = "city"
+      geoName = countyName
     } else if (keySuffix.equalsIgnoreCase("tract")){
       schema = tractSchema
       csvPath = tractPath
       precisionStr = "precise"
+      geoName = tractName
     }
 
 
@@ -212,7 +222,7 @@ object RaceProbabilityWithCSV extends App {
       .schema(schema).load(csvPath)
 
     // Do a for each loop to generate objects and create tree index
-    val shapeRecordPairRDD = dataFrame.select("WKT","GEOID10",
+    val shapeRecordPairRDD = dataFrame.select("WKT","GEOID10", geoName,
       "DP0110001",
       "DP0110002",
       "DP0110011",
@@ -224,6 +234,7 @@ object RaceProbabilityWithCSV extends App {
 
       val WKTString = row.getAs[String]("WKT").toString
       val GEOID10 = row.getAs[String]("GEOID10").toString
+      val geo_name = row.getAs[String](geoName).toString
       val total = row.getAs[Double]("DP0110001")
       val pcthispanic = 100.0 * row.getAs[Double]("DP0110002")/total
       val pctwhite = 100.0 * row.getAs[Double]("DP0110011")/total
@@ -240,7 +251,7 @@ object RaceProbabilityWithCSV extends App {
         "pcthispanic" -> pcthispanic,
         "pct2prace" -> pct2prace
       )
-      val sr = new ShapeRecord[Double](geom, dataFields, GEOID10)
+      val sr = new ShapeRecord[Double](geom, dataFields, GEOID10, geo_name)
       GEOID10 -> sr
     }).sortByKey()
 
@@ -298,6 +309,12 @@ object RaceProbabilityWithCSV extends App {
 
             val uid = rec._1
             val lastName = rec._2._1
+
+            val locationNameMap:Map[String, Array[Byte]] = Map(
+                "%s_name".format(keySuffix) -> Bytes.toBytes(shpRecord.getGeoName),
+                "%s_geoid".format(keySuffix) -> Bytes.toBytes(shpRecord.getGeoID10)
+            )
+
             var finalProbMap:Map[String,Double] = getSurnameProbability(surnameMap, lastName)
             var raceProbMap : Map[String,Double] = shpRecord.getDataFields
             if (raceProbMap.nonEmpty) {
@@ -324,7 +341,8 @@ object RaceProbabilityWithCSV extends App {
                     prob = numerator / denominator
                   }
                   fieldname -> Bytes.toBytes(prob)
-                })
+                }),
+              "location" -> locationNameMap
             )
             uid -> locationProb
           })
