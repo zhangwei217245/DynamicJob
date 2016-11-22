@@ -184,7 +184,7 @@ object CSVExporter extends App{
       val headerRDD = sc.makeRDD(Seq[String](headerStr))
 
       headerRDD.union(dfBaseRdd).saveAsTextFile("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitterOutput/csv/%s.csv"
-        .format(state))
+        .format(state.replace(" ","_")))
 
     }
 
