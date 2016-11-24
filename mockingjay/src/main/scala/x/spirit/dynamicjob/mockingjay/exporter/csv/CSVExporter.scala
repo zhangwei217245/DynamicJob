@@ -8,6 +8,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.types.{DoubleType, StringType, StructField, StructType}
 import org.json.{JSONArray, JSONException}
 import x.spirit.dynamicjob.mockingjay.hbase.{HBaseConfig, _}
+import x.spirit.dynamicjob.mockingjay.twitteruser.PoliticalPreference
 
 /**
   * Created by zhangwei on 11/21/16.
@@ -165,6 +166,9 @@ object CSVExporter extends App{
             var value:String = ""
             if (cfName.equalsIgnoreCase("political")){
               value = Bytes.toInt(colPair._2).toString
+              if (colName.equalsIgnoreCase("political:type")) {
+                value = "\"%s\"".format(PoliticalPreference(Bytes.toInt(colPair._2)).toString)
+              }
             } else if (cfName.startsWith("Race_")){
               value = Bytes.toDouble(colPair._2).toString
             } else if (colPair._1.endsWith("prob")){
