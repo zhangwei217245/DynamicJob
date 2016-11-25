@@ -97,7 +97,8 @@ object TweetsPoliticalPreferenceExporter extends App{
         val tweets = row._2("tweet").values.map({twtRow =>
           "\"%s\",\"%s\",\"%s\"".format(uid,politicalPreferenceString, Bytes.toString(twtRow))
         })
-      })
+        tweets
+      }).flatMap(_.seq)
       rstRDD.saveAsTextFile("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitterOutput/sentiment/%s.csv".format(k))
     }
 
