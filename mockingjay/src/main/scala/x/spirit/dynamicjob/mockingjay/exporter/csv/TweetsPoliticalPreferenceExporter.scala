@@ -75,19 +75,19 @@ object TweetsPoliticalPreferenceExporter extends App{
       NoneResult ++= temprst.filter({row=>
         val politicalType = Bytes.toInt(row._2("political").apply("type"))
         politicalType == 0
-      }).top(10)
+      }).take(10)
       BlueResult ++= temprst.filter({row=>
         val politicalType = Bytes.toInt(row._2("political").apply("type"))
         politicalType == 1
-      }).top(10)
+      }).take(10)
       RedResult ++= temprst.filter({row=>
         val politicalType = Bytes.toInt(row._2("political").apply("type"))
         politicalType == 2
-      }).top(10)
+      }).take(10)
       NeutralResult ++= temprst.filter({row=>
         val politicalType = Bytes.toInt(row._2("political").apply("type"))
         politicalType == 3
-      }).top(10)
+      }).take(10)
     }
 
     for ((k,v) <- outputMap){
