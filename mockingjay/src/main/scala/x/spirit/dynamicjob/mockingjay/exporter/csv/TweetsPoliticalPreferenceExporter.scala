@@ -101,7 +101,6 @@ object TweetsPoliticalPreferenceExporter extends App{
       rstRDD.saveAsTextFile("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitterOutput/sentiment/%s.csv".format(k))
     }
 
-
   }
 
 }
