@@ -88,6 +88,7 @@ object TweetsPoliticalPreferenceExporter extends App{
         val politicalType = Bytes.toInt(row._2("political").apply("type"))
         politicalType == 3
       }).take(10)
+      startRowPrefix=startRowPrefix+1;
     }
 
     for ((k,v) <- outputMap){
@@ -101,7 +102,6 @@ object TweetsPoliticalPreferenceExporter extends App{
       }).flatMap(_.seq)
       rstRDD.saveAsTextFile("hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/geotwitterOutput/sentiment/%s.csv".format(k))
     }
-    startRowPrefix = startRowPrefix+1;
   }
 
 }
