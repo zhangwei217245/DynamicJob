@@ -99,35 +99,42 @@ object AgeGenderPredictor extends App {
       scan.setFilter(new PrefixFilter(Bytes.toBytes(startRowPrefix.toString)))
       val scanRst = sc.hbase[String]("machineLearn2012", Set("username"), scan)
       scanRst.map({ case (k, v) =>
-        val uid = k;
+        val uid = k
         val firstName = v("username").getOrElse("firstName", "").toUpperCase;
+
+        var genderSource = "FB"
+
         // decide age
         val nameYearGender = nameYearGenderMap.getOrElse(firstName, (100L, "X", -0.001d));
-//        val age = Year.now().getValue.toLong - nameYearGender._1
         val year = nameYearGender._1
+        val socialSecurityGender = nameYearGender._2
         val yearProb = nameYearGender._3;
-        // decide gender
-        var gender = "X"
-        val genderYearProb = yearProb;
-        gender = nameYearGender._2
 
-        var tempGender = "X"
-        var tempGenderProb = 0.0d
-        val nameGenderTuple = nameGenderMap.getOrElse(firstName, (0.0d, 0.0d))
+
+        var gender = "X"
+        var male_prob = 0.5d
+        var female_prob = 0.5d
+
+        // decide gender first according to facebook data.
+        val nameGenderTuple = nameGenderMap.getOrElse(firstName, (0.5d, 0.5d))
         if (nameGenderTuple._1 > nameGenderTuple._2) {
-          tempGender = "M"
-          tempGenderProb = nameGenderTuple._1
+          gender = "M"
         } else if (nameGenderTuple._1 < nameGenderTuple._2) {
-          tempGender = "F"
-          tempGenderProb = nameGenderTuple._2
-        } else {
-          tempGender = "X"
-          tempGenderProb = 0.0d
+          gender = "F"
         }
 
-        if (!gender.equals(tempGender)) {
-          if (genderYearProb < tempGenderProb) {
-            gender = tempGender;
+        male_prob = nameGenderTuple._1
+        female_prob = nameGenderTuple._2
+
+        if (gender.equalsIgnoreCase("X") && (!socialSecurityGender.equalsIgnoreCase("X"))) {
+          gender = socialSecurityGender
+          genderSource = "SSO"
+          if (gender.equalsIgnoreCase("F")){
+            female_prob = yearProb
+            male_prob = 1.0d - yearProb
+          } else if (gender.equalsIgnoreCase("M")){
+            male_prob = yearProb
+            female_prob = 1.0d - yearProb
           }
         }
 
@@ -135,9 +142,10 @@ object AgeGenderPredictor extends App {
           "Age" -> Map("year" -> Bytes.toBytes(year), "prob" -> Bytes.toBytes(yearProb)),
           "Gender" -> Map(
             "gender" -> Bytes.toBytes(gender),
-            "year_prob" -> Bytes.toBytes(genderYearProb),
-            "male_prob" -> Bytes.toBytes(nameGenderTuple._1),
-            "female_prob" -> Bytes.toBytes(nameGenderTuple._2)
+            "year_prob" -> Bytes.toBytes(yearProb),
+            "male_prob" -> Bytes.toBytes(male_prob),
+            "female_prob" -> Bytes.toBytes(female_prob),
+            "source" -> Bytes.toBytes(genderSource)
           )
         )
         uid -> record
