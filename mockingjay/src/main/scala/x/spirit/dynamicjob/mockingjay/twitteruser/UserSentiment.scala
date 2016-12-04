@@ -35,26 +35,40 @@ object UserSentiment extends App {
           val uid = k;
           val tsent = v("tsent")
           val blue_red = tsent.map({ case (tid, jsonBytes) =>
-            val jsonArr = new JSONArray(Bytes.toString(jsonBytes));
+            val jsonArr = new JSONArray(Bytes.toString(jsonBytes))
+            val overallSenti = jsonArr.getInt(0)
             val blueScore = jsonArr.getInt(1)
             val redScore = jsonArr.getInt(2)
-            (blueScore, redScore, 1)
-          })
-          val sumBlue = blue_red.map(_._1).sum
-          val sumRed = blue_red.map(_._2).sum
-          var decision = None;
-          if (sumBlue.equals(sumRed)) {
-            decision = Neutral;
-          } else if (sumBlue > sumRed) {
-            decision = Blue;
-          } else {
-            decision = Red;
+            val numSentence = jsonArr.getInt(3)
+            (overallSenti, blueScore, redScore, numSentence)
+          }).filter(_._4 > 0)
+
+          var decision = None
+
+          var avgBlue = 0.0d
+          var avgRed = 0.0d
+
+          if (blue_red.nonEmpty){
+            val blueScores = blue_red.map({case (o, b,r, n)=> (b,n)}).filter(_._1 >= -10)
+            val redScores = blue_red.map({case (o, b, r, n) => (r,n)}).filter(_._1 >= -10)
+
+            avgBlue = blueScores.map(_._1).sum.toDouble/blueScores.map(_._2).sum.toDouble
+            avgRed = redScores.map(_._1).sum.toDouble/redScores.map(_._2).sum.toDouble
+
+            if (avgBlue.equals(avgRed)) {
+              decision = Neutral;
+            } else if (avgBlue > avgRed) {
+              decision = Blue;
+            } else {
+              decision = Red;
+            }
           }
+
           uid -> Map({
             "political" -> Map(
               "type" -> Bytes.toBytes(decision.id),
-              "sumblue" -> Bytes.toBytes(sumBlue),
-              "sumred" -> Bytes.toBytes(sumRed)
+              "sumblue" -> Bytes.toBytes(avgBlue),
+              "sumred" -> Bytes.toBytes(avgRed)
             )
           })
         }).toHBase("machineLearn2012")

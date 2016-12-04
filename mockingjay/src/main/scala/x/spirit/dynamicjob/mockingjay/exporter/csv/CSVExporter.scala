@@ -171,6 +171,24 @@ object CSVExporter extends App{
               }
             } else if (cfName.startsWith("Race_")){
               value = Bytes.toDouble(colPair._2).toString
+              try {
+                val prec_json = Bytes.toString(cfPair._2("precise"))
+                val city_json = Bytes.toString(cfPair._2("city"))
+                val admin_json = Bytes.toString(cfPair._2("admin"))
+                if (cfName.endsWith("Tract") && prec_json.equalsIgnoreCase("[]")) {
+                  value = (-99999.0d).toString
+                }
+                if (cfName.endsWith("County") && city_json.equalsIgnoreCase("[]")) {
+                  value = (-99999.0d).toString
+                }
+                if (cfName.endsWith("State") && admin_json.equalsIgnoreCase("[]")) {
+                  value = (-99999.0d).toString
+                }
+              } catch {
+                case t: Throwable =>
+                  println("uid : %s , fail to filter out inexist level of coordinates: %s"
+                    .format(uid, value))
+              }
             } else if (colPair._1.endsWith("prob")){
                value = Bytes.toDouble(colPair._2).toString
             } else if (colPair._1.equalsIgnoreCase("year")){
@@ -217,6 +235,7 @@ object CSVExporter extends App{
             }
             colName -> value
           })
+
           cfName -> colMap
         })
 

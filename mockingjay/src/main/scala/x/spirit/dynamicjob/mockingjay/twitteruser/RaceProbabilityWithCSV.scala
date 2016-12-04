@@ -332,16 +332,26 @@ object RaceProbabilityWithCSV extends App {
                 (kk, compoundProb)
               })
             }
+            var raceWithMaxProb = "N/A"
+            var maxRaceProb = -1.0d;
             val denominator = finalProbMap.values.sum
             val locationProb = Map[String, Map[String, Array[Byte]]](
-              key -> finalProbMap
-                .map({ case (fieldname, numerator) =>
-                  var prob = numerator
-                  if (denominator != 0.0d) {
-                    prob = numerator / denominator
-                  }
-                  fieldname -> Bytes.toBytes(prob)
-                }),
+              key -> (
+                  finalProbMap
+                  .map({ case (fieldname, numerator) =>
+                    var prob = numerator
+                    if (denominator != 0.0d) {
+                      prob = numerator / denominator
+                    }
+                    if (prob > maxRaceProb) {
+                      maxRaceProb = prob
+                      raceWithMaxProb = fieldname
+                    }
+                    fieldname -> Bytes.toBytes(prob)
+                  })++:Map[String, Array[Byte]](
+                  "max_race" -> Bytes.toBytes(raceWithMaxProb)
+                  )
+                ),
               "location" -> locationNameMap
             )
             uid -> locationProb
