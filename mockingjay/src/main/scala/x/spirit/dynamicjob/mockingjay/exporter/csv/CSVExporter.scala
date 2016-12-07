@@ -170,7 +170,12 @@ object CSVExporter extends App{
                 value = "\"%s\"".format(PoliticalPreference(Bytes.toInt(colPair._2)).toString)
               }
             } else if (cfName.startsWith("Race_")){
-              value = Bytes.toDouble(colPair._2).toString
+              if (colPair._1.equalsIgnoreCase("max_race")){
+                value = "\"%s\"".format(Bytes.toString(colPair._2))
+              } else {
+                value = Bytes.toDouble(colPair._2).toString
+              }
+
               try {
                 val prec_json = Bytes.toString(cfPair._2("precise"))
                 val city_json = Bytes.toString(cfPair._2("city"))
