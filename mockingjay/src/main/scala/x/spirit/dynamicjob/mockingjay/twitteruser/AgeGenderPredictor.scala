@@ -131,10 +131,10 @@ object AgeGenderPredictor extends App {
           genderSource = "SSO"
           if (gender.equalsIgnoreCase("F")){
             female_prob = yearProb
-            male_prob = 1.0d - yearProb
+            male_prob = 100.0d - yearProb
           } else if (gender.equalsIgnoreCase("M")){
             male_prob = yearProb
-            female_prob = 1.0d - yearProb
+            female_prob = 100.0d - yearProb
           }
         }
 
