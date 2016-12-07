@@ -82,7 +82,7 @@ object AgeGenderPredictor extends App {
       */
     val nameGenderMap = genderCSVDF.map({ row =>
       val name = row.getAs[String]("firstname");
-      val total = row.getAs[Long]("occurrences").toDouble;
+      val total = (row.getAs[Long]("male_times")+row.getAs[Long]("female_times")).toDouble;
       val male_pct = 100.0d * row.getAs[Long]("male_times").toDouble / total;
       val female_pct = 100.0d * row.getAs[Long]("female_times").toDouble / total;
       name.toUpperCase -> (male_pct, female_pct)
