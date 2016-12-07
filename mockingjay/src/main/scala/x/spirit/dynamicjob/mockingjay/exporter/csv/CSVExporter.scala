@@ -38,47 +38,51 @@ object CSVExporter extends App{
       "Gender:female_prob",
       "Gender:male_prob",
       "Gender:year_prob",
+      "Gender:source",
       "Age:prob",
       "Age:year",
       "political:sumblue",
       "political:sumred",
       "political:type",
-      "location:State_geoid",
-      "location:State_name",
-      "location:state",
-      "Coord:state_WKT",
-      "Coord:state_x",
-      "Coord:state_y",
-      "location:County_geoid",
-      "location:County_name",
-      "location:county",
-      "Coord:county_WKT",
-      "Coord:county_x",
-      "Coord:county_y",
       "location:Tract_geoid",
       "location:Tract_name",
       "location:tract",
       "Coord:tract_WKT",
       "Coord:tract_x",
       "Coord:tract_y",
-      "Race_State:pct2prace",
-      "Race_State:pctaian",
-      "Race_State:pctapi",
-      "Race_State:pctblack",
-      "Race_State:pcthispanic",
-      "Race_State:pctwhite",
+      "Race_Tract:max_race",
+      "Race_Tract:pct2prace",
+      "Race_Tract:pctaian",
+      "Race_Tract:pctapi",
+      "Race_Tract:pctblack",
+      "Race_Tract:pcthispanic",
+      "Race_Tract:pctwhite",
+      "location:County_geoid",
+      "location:County_name",
+      "location:county",
+      "Coord:county_WKT",
+      "Coord:county_x",
+      "Coord:county_y",
+      "Race_County:max_race",
       "Race_County:pct2prace",
       "Race_County:pctaian",
       "Race_County:pctapi",
       "Race_County:pctblack",
       "Race_County:pcthispanic",
       "Race_County:pctwhite",
-      "Race_Tract:pct2prace",
-      "Race_Tract:pctaian",
-      "Race_Tract:pctapi",
-      "Race_Tract:pctblack",
-      "Race_Tract:pcthispanic",
-      "Race_Tract:pctwhite"
+      "location:State_geoid",
+      "location:State_name",
+      "location:state",
+      "Coord:state_WKT",
+      "Coord:state_x",
+      "Coord:state_y",
+      "Race_State:max_race",
+      "Race_State:pct2prace",
+      "Race_State:pctaian",
+      "Race_State:pctapi",
+      "Race_State:pctblack",
+      "Race_State:pcthispanic",
+      "Race_State:pctwhite"
     )
 
     val headerStr = headers.map({row=> "\"%s\"".format(row)}).mkString(",")
@@ -145,7 +149,7 @@ object CSVExporter extends App{
       )
       val scanRst = sc.hbase[Array[Byte]]("machineLearn2012", columnFamilies , scan)
 
-      val dfBaseRdd = scanRst.map({bigRow=>
+      val dfBaseRdd = scanRst.map({ bigRow : (String, Map[String, Map[String, Array[Byte]]])=>
         val uid = bigRow._1
 
         var x_state:Double = 0.0d
@@ -165,34 +169,34 @@ object CSVExporter extends App{
 
             var value:String = ""
             if (cfName.equalsIgnoreCase("political")){
-              value = Bytes.toInt(colPair._2).toString
               if (colName.equalsIgnoreCase("political:type")) {
                 value = "\"%s\"".format(PoliticalPreference(Bytes.toInt(colPair._2)).toString)
+              } else if (colName.startsWith("political:sum")) {
+                value = Bytes.toDouble(colPair._2).toString
               }
             } else if (cfName.startsWith("Race_")){
               if (colPair._1.equalsIgnoreCase("max_race")){
                 value = "\"%s\"".format(Bytes.toString(colPair._2))
-              } else {
+              } else if (colPair._1.startsWith("pct")) {
                 value = Bytes.toDouble(colPair._2).toString
-              }
-
-              try {
-                val prec_json = Bytes.toString(cfPair._2("precise"))
-                val city_json = Bytes.toString(cfPair._2("city"))
-                val admin_json = Bytes.toString(cfPair._2("admin"))
-                if (cfName.endsWith("Tract") && prec_json.equalsIgnoreCase("[]")) {
-                  value = (-99999.0d).toString
+                try {
+                  val prec_json = Bytes.toString(bigRow._2("location")("precise"))
+                  val city_json = Bytes.toString(bigRow._2("location")("city"))
+                  val admin_json = Bytes.toString(bigRow._2("location")("admin"))
+                  if (cfName.endsWith("Tract") && prec_json.equalsIgnoreCase("[]")) {
+                    value = (0d).toString
+                  }
+                  if (cfName.endsWith("County") && city_json.equalsIgnoreCase("[]")) {
+                    value = (0d).toString
+                  }
+                  if (cfName.endsWith("State") && admin_json.equalsIgnoreCase("[]")) {
+                    value = (0d).toString
+                  }
+                } catch {
+                  case t: Throwable =>
+                    println("uid : %s , fail to filter out inexist level of coordinates: %s"
+                      .format(uid, value))
                 }
-                if (cfName.endsWith("County") && city_json.equalsIgnoreCase("[]")) {
-                  value = (-99999.0d).toString
-                }
-                if (cfName.endsWith("State") && admin_json.equalsIgnoreCase("[]")) {
-                  value = (-99999.0d).toString
-                }
-              } catch {
-                case t: Throwable =>
-                  println("uid : %s , fail to filter out inexist level of coordinates: %s"
-                    .format(uid, value))
               }
             } else if (colPair._1.endsWith("prob")){
                value = Bytes.toDouble(colPair._2).toString
