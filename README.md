@@ -124,7 +124,7 @@ drwxr-xr-x   - hadoopuser supergroup          0 2016-12-09 16:59 spark_log
 
 To know more about the HDFS shell, please click the link below:
 
-*Notice:* *Do not delete or make changes to exisiting HDFS files/directories. You make create your own file/directory and play with it.*
+**Notice: Do not delete or make changes to exisiting HDFS files/directories. You make create your own file/directory and play with it.**
 
 [HDFS shell](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/FileSystemShell.html)
 
@@ -159,7 +159,7 @@ Now, it means that HBase is successfully boosted.
 
 To know more about the HBase shell command, please follow the link below:
 
-*Notice:* *Do not delete or make changes to exisiting HBase tables. You make create your own HBase table and play with it.*
+**Notice: Do not delete or make changes to exisiting HBase tables. You make create your own HBase table and play with it.**
 
 [HBase Tutorial](https://www.tutorialspoint.com/hbase/index.htm)
 
