@@ -213,3 +213,8 @@ $ cd ~/hadoop/sbin
 $ ./stop-all.sh
 ```
 
+# Reproduce Data Mining Process on Spark
+
+Please click the link below:
+
+[Mockingjay Project Instructions](/mockingjay/readme.md)
