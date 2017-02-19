@@ -124,9 +124,15 @@ drwxr-xr-x   - hadoopuser supergroup          0 2016-12-09 16:59 spark_log
 
 To know more about the HDFS shell, please click the link below:
 
-**Notice: Do not delete or make changes to exisiting HDFS files/directories. You make create your own file/directory and play with it.**
+**Notice: Do not delete or make changes to exisiting HDFS files/directories. You may create your own file/directory and play with it.**
 
 [HDFS shell](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/FileSystemShell.html)
+
+Another way to examine whether HDFS is up :
+
+<http://geotwitter.ttu.edu:50070/dfshealth.html#tab-overview>  (*Only accessible via TTU campus network or TTU VPN*)
+
+
 
 ## To Boost HBase
 
@@ -159,11 +165,17 @@ Now, it means that HBase is successfully boosted.
 
 To know more about the HBase shell command, please follow the link below:
 
-**Notice: Do not delete or make changes to exisiting HBase tables. You make create your own HBase table and play with it.**
+**Notice: Do not delete or make changes to exisiting HBase tables. You may create your own HBase table and play with it.**
 
 [HBase Tutorial](https://www.tutorialspoint.com/hbase/index.htm)
 
 [HBase shell commands](https://learnhbase.wordpress.com/2013/03/02/hbase-shell-commands/)
+
+**To quit the HBase shell, simply press `Ctrl+d`**
+
+Another way to examin whether HBase is up:
+
+<http://geotwitter.ttu.edu:16010/master-status>  (*Only accessible via TTU campus network or TTU VPN*)
 
 
 ## To Boost Spark
@@ -172,6 +184,10 @@ To know more about the HBase shell command, please follow the link below:
 $ cd ~/spark/sbin
 $ ./start-all.sh
 ```
+
+After doing this, you may open the following link to see if the web console of Spark is up:
+
+<http://geotwitter.ttu.edu:8080> 
 
 
 ## To Shutdown Spark
