@@ -219,4 +219,5 @@ $ ./stop-all.sh
 * [Reporduce Liveness of Twitter Users - Nodejs version](/geotwitter/readme.md)
 * [Reporduce Liveness of Twitter Users - Python version](/pygeotwitter/readme.md)
 * [Running Tweets Crawler](/vampire/readme.md)
-* [Installing GEOS_CHEMS](/Geos_Chem_wiki/readme.md)
+* [Installing GEOS_CHEMS](/Geos_Chem_wiki/Installing.md)
+* [Usage of GEOS_CHEMS](/Geos_Chem_wiki/Usage.md)
