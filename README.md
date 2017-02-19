@@ -50,7 +50,7 @@ As shown in this table, basically, the head node serves as the controller/indexi
 servers as well as the computing servers. The only exception happens with Spark. To increase the parallelism, we increase the number of worker nodes to four, which 
 is to run one worker node on head node, so that more computation can be done at the same time. 
 
-# Login Head Node
+# Login Head Node and Computing Node
 
 Currently, you can use the following command to login the head node. 
 
@@ -58,7 +58,7 @@ Currently, you can use the following command to login the head node.
 $ ssh hadoopuser@geotwitter.ttu.edu
 ```
 
-For this step, you need to input the password. For the password, you need to contact X-Spirit.zhang@ttu.edu. 
+For this step, you need to input the password. For the password, you need to contact (X-Spirit.zhang@ttu.edu.) 
 
 And after that, you can use the any of following commands to access the cooresponding computing node. 
 
