@@ -121,6 +121,11 @@ drwxr-xr-x   - hadoopuser supergroup          0 2016-11-18 00:03 shapefiles
 drwxr-xr-x   - hadoopuser supergroup          0 2016-12-09 15:54 spark_job
 drwxr-xr-x   - hadoopuser supergroup          0 2016-12-09 16:59 spark_log
 ```
+
+To know more about the HDFS shell, please click the link below:
+
+[HDFS shell](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/FileSystemShell.html)
+
 ## To Boost HBase
 
 ```bash
@@ -129,6 +134,31 @@ $ ./start-hbase.sh
 ```
 
 After boosting HBase, it's better to wait for 5-10 minutes for the cluster to fully initiate everything. 
+
+Then you do the following to check whether HBase is ready.
+
+```bash
+$ cd ~/hbase/bin
+$ ./hbase shell
+```
+
+After entering the hbase shell, you can type `list` command to list all the tables .
+
+```
+hbase(main):001:0> list
+TABLE
+machineLearn2012
+sent_blue_red_2012
+twitterUser
+3 row(s) in 0.1940 seconds
+```
+
+Now, it means that HBase is successfully boosted.
+
+To know more about the HBase shell command, please follow the link below:
+
+[HBase Tutorial](https://www.tutorialspoint.com/hbase/index.htm)
+[HBase shell commands](https://learnhbase.wordpress.com/2013/03/02/hbase-shell-commands/)
 
 ## To Boost Spark
 
