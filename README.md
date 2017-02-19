@@ -98,6 +98,29 @@ $ ./start-all.sh
 
 Although this step will also bring up the YARN instances, but in some cases, you might just need to run Spark jobs through YARN clusters.
 
+After booting it, you need to wait 5-10 minutes to make sure all the initialization is done and the HDFS is providing service through 54310 port. 
+
+Then you can check the functionality of HDFS through the following command that aims to list the direcotries and files stored on HDFS:
+
+```bash
+$ hadoop fs -ls
+```
+
+You will see something like this:
+
+```
+Found 10 items
+drwxr-xr-x   - hadoopuser supergroup          0 2016-07-16 18:00 .sparkStaging
+drwxr-xr-x   - hadoopuser supergroup          0 2016-05-04 04:03 geotestdata
+drwxr-xr-x   - hadoopuser supergroup          0 2016-11-18 15:51 geotwitter
+drwxr-xr-x   - hadoopuser supergroup          0 2016-11-18 15:53 geotwitterCSV
+drwxr-xr-x   - hadoopuser supergroup          0 2016-11-24 20:28 geotwitterOutput
+drwxr-xr-x   - hadoopuser supergroup          0 2016-12-09 15:51 hbase
+drwxr-xr-x   - hadoopuser supergroup          0 2016-08-10 19:29 hbase-staging
+drwxr-xr-x   - hadoopuser supergroup          0 2016-11-18 00:03 shapefiles
+drwxr-xr-x   - hadoopuser supergroup          0 2016-12-09 15:54 spark_job
+drwxr-xr-x   - hadoopuser supergroup          0 2016-12-09 16:59 spark_log
+```
 ## To Boost HBase
 
 ```bash
