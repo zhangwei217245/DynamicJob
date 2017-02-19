@@ -10,6 +10,7 @@ categories:
 * Several auxiliary sub-projects.
 
 |Category|Platform|Sub-Projects|Output|
+|--------|--------|------------|------|
 |Demographic Analysis|Spark|mockingjay/core|csv|
 |Liveness of twitter users|Redis|geotwitter(NodeJS version)/pygeotwitter(Python version)|Geotiff|
 
