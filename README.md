@@ -216,8 +216,8 @@ $ ./stop-all.sh
 # Other important documents
 
 * [Reproduce Demographic Data Mining](/mockingjay/readme.md)
-* [Reporduce Liveness of Twitter Users - Nodejs version](/geotwitter/readme.md)
-* [Reporduce Liveness of Twitter Users - Python version](/pygeotwitter/readme.md)
-* [Running Tweets Crawler](/vampire/readme.md)
+* [Reporduce Liveness of Twitter Users - Nodejs version](/geotwitter/README.md)
+* [Reporduce Liveness of Twitter Users - Python version](/pygeotwitter/README.md)
+* [Running Tweets Crawler](/vampire/README.md)
 * [Installing GEOS_CHEMS](/Geos_Chem_wiki/Installing.md)
 * [Usage of GEOS_CHEMS](/Geos_Chem_wiki/Usage.md)
