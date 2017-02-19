@@ -213,8 +213,10 @@ $ cd ~/hadoop/sbin
 $ ./stop-all.sh
 ```
 
-# Reproduce Data Mining Process on Spark
+# Other important documents
 
-Please click the link below:
-
-[Mockingjay Project Instructions](/mockingjay/readme.md)
+* [Reproduce Demographic Data Mining](/mockingjay/readme.md)
+* [Reporduce Liveness of Twitter Users - Nodejs version](/geotwitter/readme.md)
+* [Reporduce Liveness of Twitter Users - Python version](/pygeotwitter/readme.md)
+* [Running Tweets Crawler](/vampire/readme.md)
+* [Installing GEOS_CHEMS](/Geos_Chem_wiki/readme.md)
