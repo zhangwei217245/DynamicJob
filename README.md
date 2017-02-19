@@ -11,7 +11,7 @@ categories:
 
 |        Category             |Platform|    Sub-Projects  |    Language    |                             Descrption                             |   Output   |
 |:---------------------------:|:------:|:----------------:|:--------------:|:-------------------------------------------------------------------|:----------:|
-|   Demographic Analysis      | Spark  |     mockingjay   |   Scala/Java   |  Main Project of                                                   |     CSV    |
+|   Demographic Analysis      | Spark  |     mockingjay   |   Scala/Java   |  Main Project where spark data mining scripts exist                |     CSV    |
 |  Liveness of twitter users  | Redis  |     geotwitter   |   NodeJS       |  Generating geotiff image on liveness of twitter user              |   Geotiff  |
 |                             | Redis  |    pygeotwitter  |   Python       |  The same function as above                                        |   Geotiff  |
 |  Auxiliary Project          | VA     |   vampire        |   Java         |  Reading twitter streaming API and store tweets on disk            | Gzipped TXT|
