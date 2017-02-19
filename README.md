@@ -60,11 +60,81 @@ $ ssh hadoopuser@geotwitter.ttu.edu
 
 For this step, you need to input the password. For the password, you need to contact <X-Spirit.zhang@ttu.edu.>
 
-And after that, you can use the any of following commands to access the cooresponding computing node. 
+And after that, you can use the any of following commands to access the cooresponding computing node, without entering password. 
 
 ```bash
 $ ssh hadoopuser@geotwitter-comp1.ttu.edu
 $ ssh hadoopuser@geotwitter-comp2.ttu.edu
 $ ssh hadoopuser@geotwitter-comp3.ttu.edu
+```
+
+For running Hadoop/Spark clusters, you need to ensure password-free mutual SSH access to all machines in the cluster. 
+If you want to know how to configure password-free SSH access between linux machines, please follow this link -> [SSH login without password](http://www.linuxproblem.org/art_9.html)
+
+# Boost everything from nothing.
+
+Suppose you don't have any instance of Hadoop/HDFS/Hbase/Spark running on your cluster. Then you need to follow the boost order below:
+
+    1. Boost HDFS
+    2. Boost HBase
+    3. Boost Spark
+
+In case if you have any instance of Hadoop/HDFS/Hbase/Spark running on your cluster, you may want to stop all these instance, and you have to follow the shutdown order below:
+
+    1. Shutdown Spark
+    2. Shutdown Hbase
+    3. Shutdown HDFS
+ 
+Now, we will introduce how to boost each of them and how to shutdown each of them. For all demonstrations here, we suppose that you are at the home directory of `hadoopuser`
+
+## To Boost HDFS
+
+First, it is necessary to boost HDFS in this cluster. On the head node, you login as user `hadoopuser`, and then:
+
+```bash
+$ cd ~/hadoop/sbin/
+$ ./start-all.sh
+```
+
+Although this step will also bring up the YARN instances, but in some cases, you might just need to run Spark jobs through YARN clusters.
+
+## To Boost HBase
+
+```bash
+$ cd ~/hbase/bin
+$ ./start-hbase.sh
+```
+
+After boosting HBase, it's better to wait for 5-10 minutes for the cluster to fully initiate everything. 
+
+## To Boost Spark
+
+```bash
+$ cd ~/spark/sbin
+$ ./start-all.sh
+```
+
+
+## To Shutdown Spark
+
+```bash
+$ cd ~/spark/sbin
+$ ./stop-all.sh
+```
+
+## To Shutdown HBase
+
+
+```bash
+$ cd ~/hbase/bin
+$ ./stop-hbase.sh
+```
+
+
+## To Shutdown HDFS
+
+```bash
+$ cd ~/hadoop/sbin
+$ ./stop-all.sh
 ```
 
