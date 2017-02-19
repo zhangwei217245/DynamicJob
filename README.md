@@ -221,3 +221,4 @@ $ ./stop-all.sh
 * [Running Tweets Crawler](/vampire/README.md)
 * [Installing GEOS_CHEMS](/Geos_Chem_wiki/Installing.md)
 * [Usage of GEOS_CHEMS](/Geos_Chem_wiki/Usage.md)
+* [Instruction on Configuring Scripts](/script/README.md)
