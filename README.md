@@ -158,7 +158,10 @@ Now, it means that HBase is successfully boosted.
 To know more about the HBase shell command, please follow the link below:
 
 [HBase Tutorial](https://www.tutorialspoint.com/hbase/index.htm)
+
 [HBase shell commands](https://learnhbase.wordpress.com/2013/03/02/hbase-shell-commands/)
+
+Please notice that when you practice shell command, do not delete or make changes to any existing table. You can create your own test table and play with it!
 
 ## To Boost Spark
 
