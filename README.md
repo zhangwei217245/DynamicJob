@@ -25,6 +25,14 @@ But here, we will only talk about the configuration of the entire computing envi
 
 # Cluster Configuration
 
+Overall, we design the entire software stack like this:
+
+| Software |                                                                             Function                                                              |
+|:--------:|:--------------------------------------------------------------------------------------------------------------------------------------------------|
+|   SPARK  | To work on top of HBase and HDFS. Read txt file from HDFS and store extracted information into HBase, and then conduct data mining on top of HBase|
+|   HBASE  | To work on top of HDFS. The database file is stored in a certain folder on HDFS                                                                   |
+|   HDFS   | A distributed file system. All the raw data and database files are stored in this layer.                                                          |
+
 In total, we have 4 commodity machines running Ubuntu 16.04.1 LTS. 
 They play different role in different software:
 
@@ -36,12 +44,8 @@ They play different role in different software:
 |   geotwitter-comp2.ttu.edu  |  Computing/Storage Node   |         DataNode                        |         HRegionServer    |   Worker Node                     |
 |   geotwitter-comp3.ttu.edu  |  Computing/Storage Node   |         DataNode                        |         HRegionServer    |   Worker Node                     |
 
+As you can see in this table, basically, the head node serves as the controller/indexing server for each software, and the computing nodes serve as both the storage 
+servers as well as the computing servers. The only exception happens with Spark. To increase the parallelism, we increase the number of worker nodes to four, which 
+is to run one worker node on head node, so that more computation can be done at the same time. 
 
-Overall, we design the entire software stack like this:
-
-| Software |                                                                             Function                                                              |
-|:--------:|:--------------------------------------------------------------------------------------------------------------------------------------------------|
-|   SPARK  | To work on top of HBase and HDFS. Read txt file from HDFS and store extracted information into HBase, and then conduct data mining on top of HBase|
-|   HBASE  | To work on top of HDFS. The database file is stored in a certain folder on HDFS                                                                   |
-|   HDFS   | A distributed file system. All the raw data and database files are stored in this layer.                                                          |
 
