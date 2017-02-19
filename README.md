@@ -58,7 +58,7 @@ Currently, you can use the following command to login the head node.
 $ ssh hadoopuser@geotwitter.ttu.edu
 ```
 
-For this step, you need to input the password. For the password, you need to contact (X-Spirit.zhang@ttu.edu.) 
+For this step, you need to input the password. For the password, you need to contact <X-Spirit.zhang@ttu.edu.>
 
 And after that, you can use the any of following commands to access the cooresponding computing node. 
 
