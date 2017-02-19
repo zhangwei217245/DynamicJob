@@ -9,9 +9,10 @@ categories:
 * A series of projects written for generating Geotiff images relecting liveness of twitter users in entire U.S.
 * Several auxiliary sub-projects.
 
-|Category|Platform|Sub-Projects|Output|
-|--------|--------|------------|------|
-|Demographic Analysis|Spark|mockingjay/core|csv|
-|Liveness of twitter users|Redis|geotwitter(NodeJS version)/pygeotwitter(Python version)|Geotiff|
+|        Category             |Platform|    Sub-Projects  |    Language    |                    Descrption               |   Output   |
+|-----------------------------|--------|------------------|----------------|---------------------------------------------|------------|
+|   Demographic Analysis      | Spark  |     mockingjay   |   Scala/Java   |  Main Project of                            |     CSV    |
+| Liveness of twitter users   | Redis  |     geotwitter   |   NodeJS       |  pygeotwitter(Python version)               |   Geotiff  |
+
 
 
