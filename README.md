@@ -10,7 +10,7 @@ categories:
 * Several auxiliary sub-projects.
 
 |        Category             |Platform|    Sub-Projects  |    Language    |                    Descrption               |   Output   |
-|-----------------------------|--------|------------------|----------------|---------------------------------------------|------------|
+|:---------------------------:|:------:|:----------------:|:--------------:|:-------------------------------------------:|:----------:|
 |   Demographic Analysis      | Spark  |     mockingjay   |   Scala/Java   |  Main Project of                            |     CSV    |
 | Liveness of twitter users   | Redis  |     geotwitter   |   NodeJS       |  pygeotwitter(Python version)               |   Geotiff  |
 
