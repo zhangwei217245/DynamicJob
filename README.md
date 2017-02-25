@@ -60,6 +60,8 @@ $ ssh hadoopuser@geotwitter.ttu.edu
 
 For this step, you need to input the password. For the password, you need to contact <X-Spirit.zhang@ttu.edu.>
 
+However, you can setup your own cluster on top of Ubuntu 16.04.1 LTS. In that case, you can specify your own password. 
+
 And after that, you can use the any of following commands to access the cooresponding computing node, without entering password. 
 
 ```bash
@@ -68,8 +70,10 @@ $ ssh hadoopuser@geotwitter-comp2.ttu.edu
 $ ssh hadoopuser@geotwitter-comp3.ttu.edu
 ```
 
-For running Hadoop/Spark clusters, you need to ensure password-free mutual SSH access to all machines in the cluster. 
+For running Hadoop/Spark clusters, you need to ensure password-free **mutual** SSH access to all machines in the cluster. 
 If you want to know how to configure password-free SSH access between linux machines, please follow this link -> [SSH login without password](http://www.linuxproblem.org/art_9.html)
+
+
 
 # Boost everything from nothing.
 
