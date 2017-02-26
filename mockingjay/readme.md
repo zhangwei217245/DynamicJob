@@ -135,7 +135,19 @@ $ cp -r hadoop-snappy-0.0.1-SNAPSHOT/lib/* <HADOOP_HOME>/lib
 
 Here, we suppose `<HADOOP_HOME>` to be `/home/hadoopuser/hadoop`.
 
+Add the following key/value pair into `<HADOOP_HOME>/etc/hadoop/core-site.xml`
 
+```xml
+  <property>
+    <name>io.compression.codecs</name>
+    <value>
+      org.apache.hadoop.io.compress.GzipCodec,
+      org.apache.hadoop.io.compress.DefaultCodec,
+      org.apache.hadoop.io.compress.BZip2Codec,
+      org.apache.hadoop.io.compress.SnappyCodec
+    </value>
+  </property>
+```
 
 
 
