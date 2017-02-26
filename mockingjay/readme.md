@@ -40,6 +40,10 @@ $ ln -s ~/hadoop/etc/hadoop/hdfs-site.xml ./
 
 ## Installing Snappy Codec for data compression on HBase and Spark. 
 
+If you just installed Hadoop/HBase/Spark from scratch, you need to also install snappy data compression library. 
+
+But if this step is done before, just jump over this entire section and go to HBase Table Creation section.
+
 ### Preconditions:
 
 Make sure you have the following software. 
@@ -97,6 +101,8 @@ more information, such as the ld(1) and ld.so(8) manual pages.
 ----------------------------------------------------------------------
 ```
 
+Follow the the above instruction to setup the specified environment variables. 
+
 Now, if you go to `/usr/local/lib`, you will see the following files:
 
 ```
@@ -106,6 +112,32 @@ lrwxrwxrwx 1 root root    18 Feb 26 16:52 libsnappy.so -> libsnappy.so.1.3.0*
 lrwxrwxrwx 1 root root    18 Feb 26 16:52 libsnappy.so.1 -> libsnappy.so.1.3.0*
 -rwxr-xr-x 1 root root  265K Feb 26 16:52 libsnappy.so.1.3.0*
 ```
+
+### Installing Hadoop-Snappy 
+
+Go to <https://github.com/electrum/hadoop-snappy>
+
+```bash
+$ cd ~/download
+$ git clone "https://github.com/electrum/hadoop-snappy.git"
+$ cd hadoop-snappy
+$ mvn package -Dsnappy.prefix=/usr/local
+$ cp target/hadoop-snappy-0.0.1-SNAPSHOT.tar.gz ~/download
+$ cd ~/download
+$ tar zxvf hadoop-snappy-0.0.1-SNAPSHOT.tar.gz
+```
+
+Copy necessary library to Hadoop
+
+```bash
+$ cp -r hadoop-snappy-0.0.1-SNAPSHOT/lib/* <HADOOP_HOME>/lib
+```
+
+Here, we suppose `<HADOOP_HOME>` to be `/home/hadoopuser/hadoop`.
+
+
+
+
 
 
 Note for snappy on HBase and Hadoop.
