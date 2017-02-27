@@ -149,8 +149,116 @@ Add the following key/value pair into `<HADOOP_HOME>/etc/hadoop/core-site.xml`
   </property>
 ```
 
+Now, add the following line to `<HADOOP_HOME>/etc/hadoop/hadoop-env.sh`
+
+```bash
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HADOOP_HOME/lib/native/Linux-amd64-64/:/usr/local/lib/
+```
+
+In the file `<HADOOP_HOME>/etc/hadoop/mapred-site.xml`, add one or several of these configurations about compression as much as you need it:
+
+```xml
+<property>
+  <name>mapred.output.compress</name>
+  <value>false</value>
+  <description>Should the job outputs be compressed?</description>
+</property>
+
+ 
+
+<property>
+  <name>mapred.output.compression.type</name>
+  <value>RECORD</value>
+  <description>If the job outputs are to compressed as SequenceFiles, how should they
+ be compressed? Should be one of NONE, RECORD or BLOCK.
+  </description>
+</property>
+
+<property>
+  <name>mapred.output.compression.codec</name>
+  <value>org.apache.hadoop.io.compress.DefaultCodec</value>
+  <description>If
+ the job outputs are compressed, how should they be compressed?
+  </description>
+</property>
+
+<property>
+  <name>mapred.compress.map.output</name>
+  <value>false</value>
+  <description>Should the outputs of the maps be compressed before being sent
+ across the network. Uses SequenceFile compression.
+  </description>
+</property>
+
+<property>
+  <name>mapred.map.output.compression.codec</name>
+  <value>org.apache.hadoop.io.compress.DefaultCodec</value>
+  <description>If the map outputs are compressed, how should they be compressed?
+  </description>
+</property>
+
+```
+
+Make sure you make the above changes on all machines of you cluster. 
+
+Then, reboot hadoop on all machines of your cluster. 
+
+For testing the installation, you may upload a txt file to HDFS by the following command
+
+```bash
+$ hadoop fs -put txtfile.txt ~/
+```
+
+Then run a wordcount program to calculate the word count of that file and store the result on HDFS. 
+
+If everything is fine and the result is written in the text file, then clearly snappy is successfully installed for Hadoop
+
+### Install Snappy for HBase
+
+```bash
+$ cd ~/hbase/lib
+$ cp -r ~/hadoop/lib/hadoop-snappy-0.0.1-SNAPSHOT.jar ./
+$ cp -r ~/hadoop/lib/native ./
+```
+
+Edit the file `~/hbase/conf/hbase-env.sh`, add the following lines:
+
+```bash
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HADOOP_HOME/lib/native/Linux-amd64-64/:/usr/local/lib/
+export HBASE_LIBRARY_PATH=$HBASE_LIBRARY_PATH:$HBASE_HOME/lib/native/Linux-amd64-64/:/usr/local/lib/
+```
+
+Restart HBase.
+
+For testing, run the following command:
+
+```bash
+$ cd ~/hbase/bin 
+$ ./hbase org.apache.hadoop.hbase.util.CompressionTest hdfs://<HDFS_NAME_NODE>:<NAME_NODE_PORT>/output/part-r-00000 snappy
+```
+
+If you can see `SUCCESS` at the end of running, then you are good to go. 
+
+Now you may try to create an HBase table to see if snappy is supported. 
+
+```bash
+$ cd ~/hbase/bin 
+$ ./hbase shell
+> create 'tsnappy', { NAME => 'cf', COMPRESSION => 'snappy'}
+> describe 'tsnappy'
+> put 'tsnappy','row1','f:col1','value'
+> scan 'tsnappy'
+```
+
+If you passed all test, then you are good to go. Don't forget press `Ctrl+D` to exit HBase console.
+
+### Install Snappy for Spark.
 
 
+
+```
+
+```
 
 Note for snappy on HBase and Hadoop.
 
