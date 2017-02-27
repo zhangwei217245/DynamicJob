@@ -320,52 +320,62 @@ You should have the following files:
 Each time when you make change to the source code of this spark project, then you have to run the following command to compile the entire project and then upload the jar file to HDFS. 
 
 1. Download the project code
+
 ```bash
 $ mkdir ~/software/; cd ~/software
 $ git clone "git@gitlab.com:zhangwei217245/DynamicJob.git" 
 ```
 2. Update the code
+
 ```
 $ cd ~/software/DynamicJob
 $ mvn clean package
 ```
 3. Upload distribution to HDFS
+
 ```bash
 $ hadoop fs -mkdir spark_job
 $ hadoop fs -put -f /home/hadoopuser/software/DynamicJob/mockingjay/target/mockingjay-1.1-SNAPSHOT-jar-with-dependencies.jar /user/hadoopuser/spark_job/
 ```
 4. Run spark job to import raw data into HBase Table `twitterUser`
+
 ```bash
 $ cd ~/spark/bin
 $ ./spark-submit --class x.spirit.dynamicjob.mockingjay.importer.FeedImporter --master spark://geotwitter.ttu.edu:6066 --deploy-mode cluster hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/spark_job/mockingjay-1.1-SNAPSHOT-jar-with-dependencies.jar 2012
 ```
 Notice that the argument `2012` here corresponds to the table `sent_blue_red_2012`. For 2016, you need to pass another parameter. And you possibly need to create another table in advance, and make corresponding changes to the code. 
 5. Run spark job to do sentiment analysis on the basis of `twitterUser` table and put the output into `sent_blue_red_2012` table.
+
 ```bash
 $ cd ~/spark/bin
 $ ./spark-submit --class x.spirit.dynamicjob.mockingjay.twitter.UserSentiment --master spark://geotwitter.ttu.edu:6066 --deploy-mode cluster hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/spark_job/mockingjay-1.1-SNAPSHOT-jar-with-dependencies.jar
 ```
 6. Run spark job to do clustering based residential locating.
+
 ```bash
 $ cd ~/spark/bin
 $ ./spark-submit --class x.spirit.dynamicjob.mockingjay.twitter.ResidencyLocator --master spark://geotwitter.ttu.edu:6066 --deploy-mode cluster hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/spark_job/mockingjay-1.1-SNAPSHOT-jar-with-dependencies.jar
 ```
 7. Run spark job to fill in the blanks of those unresolved places.
+
 ```bash
 $ cd ~/spark/bin
 $ ./spark-submit --class x.spirit.dynamicjob.mockingjay.twitter.LocationFillInBlank --master spark://geotwitter.ttu.edu:6066 --deploy-mode cluster hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/spark_job/mockingjay-1.1-SNAPSHOT-jar-with-dependencies.jar
 ```
 8. Run spark job to extract first name and last name in the HBase table
+
 ```bash
 $ cd ~/spark/bin
 $ ./spark-submit --class x.spirit.dynamicjob.mockingjay.twitter.NameExtractor --master spark://geotwitter.ttu.edu:6066 --deploy-mode cluster hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/spark_job/mockingjay-1.1-SNAPSHOT-jar-with-dependencies.jar
 ```
 9. Run spark job to do Age Gender prediction
+
 ```bash
 $ cd ~/spark/bin
 $ ./spark-submit --class x.spirit.dynamicjob.mockingjay.twitter.AgeGenderPredictor --master spark://geotwitter.ttu.edu:6066 --deploy-mode cluster hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/spark_job/mockingjay-1.1-SNAPSHOT-jar-with-dependencies.jar
 ```
 10. Run spark job to predict race probablity. 
+
 ```bash
 $ cd ~/spark/bin
 $ ./spark-submit --class x.spirit.dynamicjob.mockingjay.twitter.RaceProbabilityWithCSV --master spark://geotwitter.ttu.edu:6066 --deploy-mode cluster hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/spark_job/mockingjay-1.1-SNAPSHOT-jar-with-dependencies.jar
