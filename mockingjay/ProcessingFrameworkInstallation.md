@@ -1,3 +1,5 @@
+Back to [README](readme.md)
+
 # Installing Hadoop/HDFS, HBase, Spark.
 
 What is written here is specifically for **Hadoop 2.7.2**, **HBase 1.1.5** and **Spark 1.6.1**
@@ -264,3 +266,6 @@ spark.driver.extraLibraryPath    /home/hadoopuser/hadoop/lib/native
 Make this change to all the computing nodes as well. 
 
 Reboot Spark cluster. 
+
+
+Back to [README](readme.md)
