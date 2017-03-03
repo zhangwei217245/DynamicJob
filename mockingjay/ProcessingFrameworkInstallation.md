@@ -1,5 +1,7 @@
 # Installing Hadoop/HDFS, HBase, Spark.
 
+What is written here is specifically for Hadoop 2.7.2, HBase 1.1.5 and Spark 1.6.1
+
 If you didn't install them, you have to download them from the official site. 
 
 Follow the official document, you should be able to install them on your cluster. 
