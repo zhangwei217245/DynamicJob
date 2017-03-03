@@ -6,31 +6,31 @@ The output CSV file contains the following fields, and the meaning of each field
 | Field Name                    | Description                                                               |
 |:------------------------------|:--------------------------------------------------------------------------|
 |      "uid",                   | Real User ID of each twitter user                                         |
-|      "username:firstName",    | First Name. By separate name field in Twitter user.                       | 
-|      "username:lastName",     | Last Name. By separate name field in Twitter user.    See [NameExtractor.scala](src/main/scala/x/spirit/dynamicjob/mockingjay/twitteruser/NameExtractor.scala) for details                    | 
-|      "Gender:gender",         |                                                                           | 
-|      "Gender:female_prob",    |                                                                           |   
-|      "Gender:male_prob",      |                                                                           | 
-|      "Gender:year_prob",      |                                                                           | 
-|      "Gender:source",         |                                                                           |               
-|      "Age:prob",              |                                                                           | 
-|      "Age:year",              |                                                                           | 
-|      "political:sumblue",     |                                                                           | 
-|      "political:sumred",      |                                                                           | 
-|      "political:type",        |                                                                           | 
-|      "location:Tract_geoid",  |                                                                           | 
-|      "location:Tract_name",   |                                                                           | 
-|      "location:tract",        |                                                                           | 
-|      "Coord:tract_WKT",       |                                                                           | 
-|      "Coord:tract_x",         |                                                                           | 
-|      "Coord:tract_y",         |                                                                           | 
-|      "Race_Tract:max_race",   |                                                                           | 
-|      "Race_Tract:pct2prace",  |                                                                           | 
-|      "Race_Tract:pctaian",    |                                                                           | 
-|      "Race_Tract:pctapi",     |                                                                           | 
-|      "Race_Tract:pctblack",   |                                                                           | 
-|      "Race_Tract:pcthispanic",|                                                                           | 
-|      "Race_Tract:pctwhite",   |                                                                           | 
+|      "username:firstName",    | First Name. By separating name field in Twitter user.   See [NameExtractor.scala](src/main/scala/x/spirit/dynamicjob/mockingjay/twitteruser/NameExtractor.scala) for details                    | 
+|      "username:lastName",     | Last Name. By separating name field in Twitter user.    See [NameExtractor.scala](src/main/scala/x/spirit/dynamicjob/mockingjay/twitteruser/NameExtractor.scala) for details                    | 
+|      "Gender:gender",         | The gender decided by Facebook data or SSO data. Facebook data is used at the first priority. But if facebook data cannot decide, we use SSO data. See [AgeGenderPredictor.scala](src/main/scala/x/spirit/dynamicjob/mockingjay/twitteruser/AgeGenderPredictor.scala) for details.                                                                          | 
+|      "Gender:female_prob",    | Probability of this user to be female.                                                                          |   
+|      "Gender:male_prob",      | Probability of this user to be male.                                                                          | 
+|      "Gender:year_prob",      | When source = SSO,  $(gender)_prob = year_prob. $(!$gender)_prob = 1-year_prob. When source = FB, ignore year_prob.See [AgeGenderPredictor.scala](src/main/scala/x/spirit/dynamicjob/mockingjay/twitteruser/AgeGenderPredictor.scala) for details.                                                                          | 
+|      "Gender:source",         | When source = SSO,  $(gender)_prob = year_prob. $(!$gender)_prob = 1-year_prob. When source = FB, ignore year_prob.See [AgeGenderPredictor.scala](src/main/scala/x/spirit/dynamicjob/mockingjay/twitteruser/AgeGenderPredictor.scala) for details.                                                                          | 
+|      "Age:prob",              | Probability of this user to be born in $(year)                                                                          | 
+|      "Age:year",              | See [AgeGenderPredictor.scala](src/main/scala/x/spirit/dynamicjob/mockingjay/twitteruser/AgeGenderPredictor.scala) for details.                                                                          | 
+|      "political:sumblue",     | Score of a user having the tendency to support blue  See [UserSentiment.scala](src/main/scala/x/spirit/dynamicjob/mockingjay/twitteruser/UserSentiment.scala) for details                                                                          | 
+|      "political:sumred",      | Score of a user having the tendency to support red  See [UserSentiment.scala](src/main/scala/x/spirit/dynamicjob/mockingjay/twitteruser/UserSentiment.scala) for details                                                                          | 
+|      "political:type",        | Final decision of a user being blue-supported or red-supported.                                                                          | 
+|      "location:Tract_geoid",  | The GEOID10 in the original tract-level census data                         | 
+|      "location:Tract_name",   | The NAME10 in the original tract-level census data                         | 
+|      "location:tract",        | Location coordinate  "[x,y]"                                                                          | 
+|      "Coord:tract_WKT",       | WKT format user coordinate "POINT(x y)"                                                                       | 
+|      "Coord:tract_x",         | x-coordinate                                                                          | 
+|      "Coord:tract_y",         | y-coordinate                                                                          | 
+|      "Race_Tract:max_race",   | Track-level race decision with maximum race probability                                                                          | 
+|      "Race_Tract:pct2prace",  | Percent Non-Hispanic of Two or More Races                                                                          | 
+|      "Race_Tract:pctaian",    | Percent Non-Hispanic American Indian and Alaskan Native Only                                                                          | 
+|      "Race_Tract:pctapi",     | Percent Non-Hispanic Asian and Pacific Islander Only                                                                          | 
+|      "Race_Tract:pctblack",   | Percent Non-Hispanic Black Only           |
+|      "Race_Tract:pcthispanic",| Percent Non-Hispanic Hispanic Only           | 
+|      "Race_Tract:pctwhite",   | Percent Hispanic Origin           | 
 |      "location:County_geoid", |                                                                           | 
 |      "location:County_name",  |                                                                           | 
 |      "location:county",       |                                                                           | 
