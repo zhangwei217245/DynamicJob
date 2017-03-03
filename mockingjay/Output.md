@@ -6,8 +6,8 @@ The output CSV file contains the following fields, and the meaning of each field
 | Field Name                    | Description                                                               |
 |:------------------------------|:--------------------------------------------------------------------------|
 |      "uid",                   | Real User ID of each twitter user                                         |
-|      "username:firstName",    |                                                                           | 
-|      "username:lastName",     |                                                                           | 
+|      "username:firstName",    | First Name. By separate name field in Twitter user.                       | 
+|      "username:lastName",     | Last Name. By separate name field in Twitter user.    See [NameExtractor.scala](src/main/scala/x/spirit/dynamicjob/mockingjay/twitteruser/NameExtractor.scala) for details                    | 
 |      "Gender:gender",         |                                                                           | 
 |      "Gender:female_prob",    |                                                                           |   
 |      "Gender:male_prob",      |                                                                           | 
