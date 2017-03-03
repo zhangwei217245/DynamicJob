@@ -381,6 +381,8 @@ $ cd ~/spark/bin
 $ ./spark-submit --class x.spirit.dynamicjob.mockingjay.twitter.RaceProbabilityWithCSV --master spark://geotwitter.ttu.edu:6066 --deploy-mode cluster hdfs://geotwitter.ttu.edu:54310/user/hadoopuser/spark_job/mockingjay-1.1-SNAPSHOT-jar-with-dependencies.jar
 ```
 
+Once a job is submitted, you can go to <http://geotwitter.ttu.edu:8080/> to check the status of the job you just submitted.
+
 ## Generate output
 
 ```bash
@@ -395,3 +397,5 @@ $ hadoop fs -ls geotwitterOutput/csv/|grep "geotwitter"|awk '{print $NF}'|awk -F
 ```
 
 Everything is done now. 
+
+Please refer to [Output Intepretation]()
