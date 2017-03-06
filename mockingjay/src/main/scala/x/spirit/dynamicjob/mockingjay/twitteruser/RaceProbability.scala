@@ -23,6 +23,7 @@ import scala.collection.mutable
  * DEPRECATED!!!!
  * Notice: This piece of code is already DPRECATED!!!
  * Please use RaceProbabilityWithCSV instead.
+ * We leave this code here just for a reference. It is not as tricky as the other one. 
  * Created by zhangwei on 9/16/16.
  */
 object RaceProbability extends App {
