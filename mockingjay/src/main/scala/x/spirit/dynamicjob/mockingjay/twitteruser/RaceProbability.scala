@@ -20,6 +20,9 @@ import x.spirit.dynamicjob.shapefile.datastore.SerializableShapeFileStore
 import scala.collection.mutable
 
 /**
+ * DEPRECATED!!!!
+ * Notice: This piece of code is already DPRECATED!!!
+ * Please use RaceProbabilityWithCSV instead.
   * Created by zhangwei on 9/16/16.
   */
 object RaceProbability extends App {
