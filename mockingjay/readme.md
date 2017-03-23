@@ -1,6 +1,5 @@
 Back to [Project README](/README.md)
 
-$`\frac{a}{b}`$
 
 # Introduction
 
