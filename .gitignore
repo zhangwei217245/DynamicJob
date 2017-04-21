@@ -112,7 +112,7 @@ node_modules
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
+# *.py[cod]
 *$py.class
 
 # C extensions
@@ -195,9 +195,4 @@ ENV/
 
 # Rope project settings
 .ropeproject
-core/src/main/resources/
-core/src/test/
-mockingjay/src/main/java/
-mockingjay/src/test/
-vampire/src/main/java/x/
-vampire/src/test/
+
