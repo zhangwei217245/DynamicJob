@@ -13,6 +13,12 @@
      scale: 500  # scale in meters.
 ```
 
+# Initializing the Project:
+
+```
+     npm install
+```
+
 # Boot Arguments:
 
 * For running data aggregator:
